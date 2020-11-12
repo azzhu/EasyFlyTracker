@@ -1,0 +1,34 @@
+# main
+#guoyingfang_video_path: 20201019_w1118_MPHcurve1_016/202010121025.avi
+guoyingfang_video_path: 20201104_w1118_ADHDtest_004/202011041013.avi
+rois: [[[0, 8, 0, 9], All],
+       [[0, 8, 0, 3], C],
+       [[0, 8, 3, 6], M-1],
+       [[0, 8, 6, 9], A-0.25],]
+#rois: [[[0, 6, 0, 6], ALL],
+#       [[0, 6, 0, 3], 1],
+#       [[0, 6, 3, 6], 2]]
+
+# seg
+h_num: 8
+w_num: 9
+dish_exclude: None
+#dish_exclude: [48] # 被排除的、异常的果盘。numpy矩阵或者indexs的list
+seg_th: 120 # 像素值本身阈值
+background_th: 70 # 跟背景相比差的阈值
+#fly_area_th: 5 # 面积小于该值，判定该果盘该时刻没有果蝇 【未实现】
+area_th: 0.5  # 内圈面积阈值
+#minR_maxR_minD: [40, 50, 90]
+#minR_maxR_minD: [28, 36, 66]  # 霍夫检测圆时的阈值
+minR_maxR_minD: [24, 32, 60]  # 霍夫检测圆时的阈值，加畸变矫正
+duration_time: 2
+#cpus: 23  # 多核并行CPU个数
+cpus: 45  # 多核并行CPU个数
+mapxy_path: mapx_y.npy
+
+
+# ana
+dish_radius_mm: 8 # 每个果盘实际半径（毫米）
+ana_time_duration: 10
+sleep_dist_th_per_second: 5 # 判断是否睡眠的阈值（该秒内移动的距离）
+sleep_time_th: 300  # 每秒是睡眠的状态持续多长时间算是真正的睡眠(秒)
