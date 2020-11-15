@@ -7,6 +7,8 @@
 @Software: PyCharm
 '''
 import setuptools
+import easyFlyTracker
+
 '''
 发布自己的Python库官方教程：
 https://packaging.python.org/tutorials/packaging-projects/
@@ -22,22 +24,40 @@ twine upload --repository pypi dist/*
 pip list所显示的包名跟import的包名的区别：
 pip list显示的名字跟setup函数里的name指定的名字对应；
 import的包名跟setup函数里的packages指定的模块名对应（注意，这里可以有多个模块）；
+
+国内源找不到该包，一定要使用官方源安装：
+pip install -i https://pypi.org/simple/ easyFlyTracker
 '''
 
+with open('requirements.txt') as f:
+    req = [line.strip() for line in f.readlines() if line.strip()]
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="easyFlyTracker",  # Replace with your own username
-    version="0.0.1",
-    author="zqj",
+    name="easyFlyTracker",
+    version=easyFlyTracker.__version__,
+    author="azzhu",
     author_email="zhu.qingjie@qq.com",
-    description="A small example package",
+    description="An easy-to-use program for analyzing Drosophila Activity.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/pypa/sampleproject",
+    url="https://github.com/azzhu/EasyFlyTracker",
+    install_requires=req,
+    license='MIT',
     packages=setuptools.find_packages(),
+    project_urls={
+        "Source Code": "https://github.com/azzhu/EasyFlyTracker",
+        "Bug Tracker": "https://github.com/azzhu/EasyFlyTracker/issues",
+        "Documentation": "",  # 待补充修改
+    },
+    entry_points={
+        'console_scripts': [
+            'easyFlyTracker=easyFlyTracker.cli:_easyFlyTracker',
+            # 这里可以继续添加新的命令
+        ]
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

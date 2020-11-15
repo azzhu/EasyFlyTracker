@@ -6,5 +6,7 @@
 @FileName: __init__.py.py
 @Software: PyCharm
 '''
-from .utils import Pbar
 
+__version__ = '0.0.2'
+
+from .utils import Pbar
