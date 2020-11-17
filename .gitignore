@@ -12,3 +12,5 @@ dist
 *.egg-info
 *.pyc
 easyFlyTracker/__pycache__/
+tests/*.zip
+tests/demo

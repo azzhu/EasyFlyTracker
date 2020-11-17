@@ -9,15 +9,14 @@
 import numpy as np
 import cv2, time, random, math
 from pathlib import Path
-from .utils import Pbar
 from scipy import stats
 from multiprocessing import Pool
 from threading import Thread
-import matplotlib.pyplot as plt
-from detecting_circle import Det_cir
-from utils import printc as print
-from Camera_Calibration import Undistortion
-from utils import stop_thread
+from easyFlyTracker.src_code.utils import Pbar
+# from easyFlyTracker.src_code.utils import printc as print
+from easyFlyTracker.src_code.Camera_Calibration import Undistortion
+from easyFlyTracker.src_code.utils import stop_thread
+from easyFlyTracker.src_code.gui_config import GUI_CFG
 
 
 class FlySeg():
@@ -34,47 +33,43 @@ class FlySeg():
             video_path,  # 视频路径
             save_txt_name,  # 要保存的txt name（同时保存txt和同名npy）,不要求绝对路径，只要求name即可
             begin_time,  # 从哪个时间点开始
-            h_num, w_num,  # 盘子是几乘几的
-            mapxy_path,  # 畸变矫正参数路径
+            # h_num, w_num,  # 盘子是几乘几的
+            mapxy_path=None,  # 畸变矫正参数路径
             duration_time=2,  # 要持续多长时间
-            dish_exclude=None,  # 排除的特殊圆盘，比如空盘、死果蝇等情况,可以一维或者（h_num, w_num），被排除的圆盘结果用(-1,-1)表示
+            # dish_exclude=None,  # 排除的特殊圆盘，比如空盘、死果蝇等情况,可以一维或者（h_num, w_num），被排除的圆盘结果用(-1,-1)表示
             seg_th=120,  # 分割阈值
             background_th=70,  # 跟背景差的阈值
             area_th=0.5,  # 内圈面积阈值
-            minR_maxR_minD=(40, 50, 90),  # 霍夫检测圆时的参数，最小半径，最大半径，最小距离
+            # minR_maxR_minD=(40, 50, 90),  # 霍夫检测圆时的参数，最小半径，最大半径，最小距离
+            config_it=True,
     ):
         self.video_path = video_path
         self.video_stem = str(Path(video_path).stem)
         self.seg_th = seg_th
         self.undistort = Undistortion(mapxy_path)
-        if type(dish_exclude) == np.ndarray:
-            self.dish_exclude = dish_exclude.reshape([-1])
-        elif type(dish_exclude) == list:
-            if type(dish_exclude[0]) == list:
-                self.dish_exclude = np.ones([h_num, w_num], np.bool)
-                for de in dish_exclude: self.dish_exclude[de[0], de[1]] = False
-                self.dish_exclude = self.dish_exclude.reshape([-1])
-            else:
-                self.dish_exclude = np.array([True] * h_num * w_num)
-                self.dish_exclude[dish_exclude] = False
-        else:
-            self.dish_exclude = np.array([True] * h_num * w_num)
         self.duration_time = duration_time
-        self.cps, self.dish_radius = self._get_all_centre_points(video_path, h_num, w_num, minR_maxR_minD,
-                                                                 self.undistort)
-        self.region_radius = int(round(math.sqrt(area_th) * self.dish_radius))
         self.background_th = background_th
-        self.minR_maxR_minD = minR_maxR_minD
 
         saved_dir = Path(Path(video_path).parent, Path(video_path).stem)
         saved_dir.mkdir(exist_ok=True)
         self.saved_dir = saved_dir
         self.save_txt_path = str(Path(saved_dir, save_txt_name))
-        self._get_rois()
         self.video = cv2.VideoCapture(self.video_path)
         self.video_frames_num = int(self.video.get(cv2.CAP_PROP_FRAME_COUNT))
         self.video_fps = round(self.video.get(cv2.CAP_PROP_FPS))
-        # self.video_fps = self.video.get(cv2.CAP_PROP_FPS)
+
+        # gui config
+        _, temp_frame = self.video.read()
+        g = GUI_CFG(temp_frame, [], str(Path(video_path).parent))
+        res = g.CFG_circle(direct_get_res=not config_it)
+        if len(res) == 0: raise ValueError
+        rs = [re[-1] for re in res]
+        self.dish_radius = int(round(float(np.mean(np.array(rs)))))
+        self.region_radius = int(round(math.sqrt(area_th) * self.dish_radius))
+        self.cps = [tuple(re[:2]) for re in res]
+
+        # get rois and mask images
+        self._get_rois()
         self._get_maskimgs()
 
         # 计算背景
@@ -84,26 +79,9 @@ class FlySeg():
         # set begin frame
         begin_frame = round(begin_time * 60 * self.video_fps)
         self.begin_frame = begin_frame
-        self.video.set(cv2.CAP_PROP_POS_FRAMES, begin_frame)
+        self.video.set(cv2.CAP_PROP_POS_FRAMES, self.begin_frame)
 
         self.duration_frames = duration_time * 60 * self.video_fps
-
-    @staticmethod
-    def _get_all_centre_points(video_path, h_num, w_num, minR_maxR_minD, undistort, auto=True):
-        if auto:
-            save_path = Path(Path(video_path).parent, Path(video_path).stem, 'all_centre_points.npy')
-            save_path.parent.mkdir(exist_ok=True)
-            if save_path.exists():
-                res = np.load(save_path)
-            else:
-                dc = Det_cir(video_path, circles_row_number=h_num, circles_col_number=w_num)
-                res = dc.get_circul(*minR_maxR_minD, undistort=undistort)
-                np.save(save_path, res)
-            dish_radius = res[0][-1]
-            ret = [tuple(r[:2]) for r in res]
-            return ret, dish_radius
-        else:
-            raise NotImplementedError('param auto=False')
 
     def _get_rois(self):
         r = self.dish_radius
@@ -134,7 +112,7 @@ class FlySeg():
         if self.bg_img_path.exists():
             bg = cv2.imread(str(self.bg_img_path))
         else:
-            print('背景计算中...')
+            print('Calculate the background image...')
             tim = time.time()
             inds = list(range(self.video_frames_num))
             random.shuffle(inds)
@@ -173,13 +151,11 @@ class FlySeg():
             frame = frame < self.seg_th
             frame *= self.mask_all
             frame = frame.astype(np.uint8) * 255 * foreground_mask
-            for cp, exc in zip(self.cps, self.dish_exclude):
-                if exc:
-                    pass
-                    cv2.circle(frame, cp, self.dish_radius, 255, 1)
-                    cv2.circle(src, cp, self.dish_radius, (0, 0, 255), 1)
-                    # cv2.circle(frame, cp, cfg.Region.radius, 175, 1)
-                    # cv2.circle(src, cp, cfg.Region.radius, 200, 1)
+            for cp in self.cps:
+                cv2.circle(frame, cp, self.dish_radius, 255, 1)
+                cv2.circle(src, cp, self.dish_radius, (0, 0, 255), 1)
+                # cv2.circle(frame, cp, cfg.Region.radius, 175, 1)
+                # cv2.circle(src, cp, cfg.Region.radius, 200, 1)
             if just_save_one_frame:
                 saved_dir = Path(self.video_path).parent
                 cv2.imwrite(str(Path(saved_dir, f'{self.video_stem}_1_mask.bmp')), frame)
@@ -196,18 +172,20 @@ class FlySeg():
                 break
 
     def play_and_show_trackingpoints(self, just_save_one_frame=False):
-        res_dir = self.saved_dir
-        txts_path = [Path(res_dir, f'{t:0>4d}.txt') for t in range(0, 10000, self.duration_time)]
-        npys_path = [Path(res_dir, f'{t:0>4d}.npy') for t in range(0, 10000, self.duration_time)]
-        txts_path = [p for p in txts_path if p.exists()]
-        npys_path = [p for p in npys_path if p.exists()]
-        begin_points = [int(open(txt, 'r').readlines()[0].strip()) for txt in txts_path]
-        npys = [np.load(p) for p in npys_path]
-        res = np.zeros([self.video_frames_num, npys[0].shape[1], npys[0].shape[2]], npys[0].dtype)
-        for npy, bp in zip(npys, begin_points):
-            res[bp:bp + len(npy)] = npy
-        # res = np.concatenate(npys, axis=0)
-        res = res[self.begin_frame:]
+        # res_dir = self.saved_dir
+        # txts_path = [Path(res_dir, f'{t:0>4d}.txt') for t in range(0, 10000, self.duration_time)]
+        # npys_path = [Path(res_dir, f'{t:0>4d}.npy') for t in range(0, 10000, self.duration_time)]
+        # txts_path = [p for p in txts_path if p.exists()]
+        # npys_path = [p for p in npys_path if p.exists()]
+        # begin_points = [int(open(txt, 'r').readlines()[0].strip()) for txt in txts_path]
+        # npys = [np.load(p) for p in npys_path]
+        # res = np.zeros([self.video_frames_num, npys[0].shape[1], npys[0].shape[2]], npys[0].dtype)
+        # for npy, bp in zip(npys, begin_points):
+        #     res[bp:bp + len(npy)] = npy
+        # # res = np.concatenate(npys, axis=0)
+        # res = res[self.begin_frame:]
+
+        res = np.load(Path(Path(self.save_txt_path).parent, f'{Path(self.save_txt_path).stem}.npy'))
 
         i = 0
         pbar = Pbar(total=self.duration_frames)
@@ -215,14 +193,13 @@ class FlySeg():
             ret, frame = self.video.read()
             if not ret: break
             frame = self.undistort.do(frame)
-            for cp, tp, exc in zip(self.cps, res[i], self.dish_exclude):
-                if exc:
-                    cv2.circle(frame, cp, self.dish_radius, (255, 0, 0), 1)
-                    cv2.circle(frame, cp, self.region_radius, (0, 255, 0), 1)
-                    tp = (int(round(tp[0])), int(round(tp[1])))
-                    # cv2.circle(frame, tp, 3, (0, 0, 255), -1)
-                    cv2.line(frame, (tp[0] - 10, tp[1]), (tp[0] + 10, tp[1]), (0, 0, 255), 1)
-                    cv2.line(frame, (tp[0], tp[1] - 10), (tp[0], tp[1] + 10), (0, 0, 255), 1)
+            for cp, tp in zip(self.cps, res[i]):
+                cv2.circle(frame, cp, self.dish_radius, (255, 0, 0), 1)
+                cv2.circle(frame, cp, self.region_radius, (0, 255, 0), 1)
+                tp = (int(round(tp[0])), int(round(tp[1])))
+                # cv2.circle(frame, tp, 3, (0, 0, 255), -1)
+                cv2.line(frame, (tp[0] - 10, tp[1]), (tp[0] + 10, tp[1]), (0, 0, 255), 1)
+                cv2.line(frame, (tp[0], tp[1] - 10), (tp[0], tp[1] + 10), (0, 0, 255), 1)
             if just_save_one_frame:
                 saved_dir = Path(self.video_path).parent
                 cv2.imwrite(str(Path(saved_dir, f'{self.video_stem}_3_frame.bmp')), frame)
@@ -235,11 +212,12 @@ class FlySeg():
                 pbar.close()
                 break
 
-    def run(self):
-        if Path(self.save_txt_path).exists():
-            print(f'{self.save_txt_path} has existed!')
-            return
+    def run(self, use_pbar=True):
+        # if Path(self.save_txt_path).exists():
+        #     print(f'{self.save_txt_path} has existed!')
+        #     return
         self.fly_centroids = []
+        if use_pbar:    pbar = Pbar(total=self.duration_frames)
         i = 0
         while True:
             ret, frame = self.video.read()
@@ -251,10 +229,7 @@ class FlySeg():
             frame *= self.mask_all
             frame = frame.astype(np.uint8) * 255 * foreground_mask
             oneframe_centroids = []
-            for roi, exc in zip(self.rois, self.dish_exclude):
-                if not exc:
-                    oneframe_centroids.append((-1, -1))
-                    continue
+            for roi in self.rois:
                 img = frame[roi[0]:roi[1], roi[2]:roi[3]]
                 retval, labels, stats, centroids = cv2.connectedComponentsWithStats(img)
                 if retval < 2:
@@ -266,8 +241,10 @@ class FlySeg():
                 oneframe_centroids.append(cent)
             self.fly_centroids.append(oneframe_centroids)
             i += 1
+            if use_pbar: pbar.update()
             if i >= self.duration_frames: break
         self._save()
+        self.video.set(cv2.CAP_PROP_POS_FRAMES, self.begin_frame)
 
     def _save(self):
         with open(self.save_txt_path, 'w') as f:
@@ -345,9 +322,12 @@ def run(cf, mode, just_save_one_frame=True):
 
 
 if __name__ == '__main__':
-    from load_configyaml import load_config
-
-    cf = load_config()
-
-    run(cf, 3, False)
-    exit()
+    f = FlySeg(
+        video_path=r'D:\Pycharm_Projects\qu_holmes_su_release\tests\demo.mp4',
+        save_txt_name='0000.txt',
+        begin_time=0,
+        duration_time=1,
+        # config_it=False,
+    )
+    f.run()
+    f.play_and_show_trackingpoints()

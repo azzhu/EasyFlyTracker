@@ -28,13 +28,14 @@ x：微调，减小半径；
 enter：确认调整，并退出。
 '''
 
+
 class GUI_CFG():
     __doc__ = '''
     通过鼠标和键盘来便捷配置一些参数；
     【注意】：返回的结果并没有排序。
     '''
 
-    def __init__(self, img_path, init_res):
+    def __init__(self, img_path, init_res, saved_dir=None):
         '''
         传入两个参数
         :param img_path: 可以是其中一帧的路径，也可以是背景图的路径；
@@ -42,7 +43,12 @@ class GUI_CFG():
                          可以传空list，不管传什么，只要同文件夹下有config.pkl文件，
                          则读取其结果作为默认config。
         '''
-        img = cv2.imread(img_path)
+        if type(img_path) is str:
+            img = cv2.imread(img_path)
+            self.res_pkl = str(Path(img_path).parent) + '/config.pkl'
+        else:
+            img = img_path
+            self.res_pkl = str(saved_dir) + '/config.pkl'
         self.col = (0, 0, 0) if img.mean() > 256 / 2 else (255, 255, 255)
         h, w = img.shape[:2]
         self.srcimg = img.copy()
@@ -57,7 +63,6 @@ class GUI_CFG():
 
         # result
         self.res = []
-        self.res_pkl = str(Path(img_path).parent) + '/config.pkl'
         self._init_res_2_res()
 
     def _get_point_in_which_circle(self, x, y):
@@ -116,7 +121,9 @@ class GUI_CFG():
 
         return img
 
-    def CFG_circle(self):
+    def CFG_circle(self, direct_get_res=False):
+        if direct_get_res:
+            return self.res
         while True:
             # cv2.imshow('img', self.img)
             cv2.imshow(self.winname, self._draw_img_from_res())
@@ -158,6 +165,10 @@ class GUI_CFG():
 
 
 if __name__ == '__main__':
-    g = GUI_CFG(r'Z:\dataset\qususu\1103\202011031030_bg.bmp', [])
-    g.CFG_circle()
+    p_ = r'D:\Pycharm_Projects\qu_holmes_su_release\tests\demo.mp4'
+    cap = cv2.VideoCapture(p_)
+    _, frame = cap.read()
+
+    g = GUI_CFG(frame, [], r'D:\Pycharm_Projects\qu_holmes_su_release\tests')
+    res = g.CFG_circle()
     exit()

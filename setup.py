@@ -50,7 +50,7 @@ setuptools.setup(
     project_urls={
         "Source Code": "https://github.com/azzhu/EasyFlyTracker",
         "Bug Tracker": "https://github.com/azzhu/EasyFlyTracker/issues",
-        "Documentation": "",  # 待补充修改
+        # "Documentation": "",  # 待补充修改
     },
     entry_points={
         'console_scripts': [
