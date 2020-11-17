@@ -1,6 +1,7 @@
 seaborn
 moviepy
 opencv_python
+opencv-utf-8
 scipy
 pandas
 numpy

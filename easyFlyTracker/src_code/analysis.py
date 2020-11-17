@@ -10,12 +10,10 @@ import numpy as np
 import cv2, time, random, math
 from pathlib import Path
 import scipy.signal
-# from config import printc as print
 import pandas as pd
-from fly_seg import FlySeg
-from utils import printc as print
-from utils import Pbar
-from utils import NumpyArrayHasNanValuesExceptin
+from easyFlyTracker.src_code.fly_seg import FlySeg
+from easyFlyTracker.src_code.utils import Pbar
+from easyFlyTracker.src_code.utils import NumpyArrayHasNanValuesExceptin
 
 
 class Analysis():
@@ -315,7 +313,7 @@ class Analysis():
 
 
 if __name__ == '__main__':
-    old = np.load(r'Z:\dataset\qususu\0922\202009221057 - 副本\analysis_result\region_status.npy')
-    new = np.load(r'Z:\dataset\qususu\0922\202009221057\analysis_result\region_status.npy')
-    print(old.sum())
-    print(new.sum())
+    import inspect
+
+    res = inspect.getfullargspec(Analysis.__init__)
+    print()

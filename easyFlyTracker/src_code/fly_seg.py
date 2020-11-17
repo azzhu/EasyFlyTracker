@@ -7,7 +7,7 @@
 @Software: PyCharm
 '''
 import numpy as np
-import cv2, time, random, math
+import cv2, time, random, math, cv2_ext
 from pathlib import Path
 from scipy import stats
 from multiprocessing import Pool
@@ -35,7 +35,7 @@ class FlySeg():
             begin_time,  # 从哪个时间点开始
             # h_num, w_num,  # 盘子是几乘几的
             mapxy_path=None,  # 畸变矫正参数路径
-            duration_time=2,  # 要持续多长时间
+            duration_time=None,  # 要持续多长时间
             # dish_exclude=None,  # 排除的特殊圆盘，比如空盘、死果蝇等情况,可以一维或者（h_num, w_num），被排除的圆盘结果用(-1,-1)表示
             seg_th=120,  # 分割阈值
             background_th=70,  # 跟背景差的阈值
@@ -47,7 +47,6 @@ class FlySeg():
         self.video_stem = str(Path(video_path).stem)
         self.seg_th = seg_th
         self.undistort = Undistortion(mapxy_path)
-        self.duration_time = duration_time
         self.background_th = background_th
 
         saved_dir = Path(Path(video_path).parent, Path(video_path).stem)
@@ -81,7 +80,10 @@ class FlySeg():
         self.begin_frame = begin_frame
         self.video.set(cv2.CAP_PROP_POS_FRAMES, self.begin_frame)
 
-        self.duration_frames = duration_time * 60 * self.video_fps
+        if duration_time is None:
+            self.duration_frames = self.video_frames_num - self.begin_frame
+        else:
+            self.duration_frames = duration_time * 60 * self.video_fps
 
     def _get_rois(self):
         r = self.dish_radius
@@ -172,19 +174,6 @@ class FlySeg():
                 break
 
     def play_and_show_trackingpoints(self, just_save_one_frame=False):
-        # res_dir = self.saved_dir
-        # txts_path = [Path(res_dir, f'{t:0>4d}.txt') for t in range(0, 10000, self.duration_time)]
-        # npys_path = [Path(res_dir, f'{t:0>4d}.npy') for t in range(0, 10000, self.duration_time)]
-        # txts_path = [p for p in txts_path if p.exists()]
-        # npys_path = [p for p in npys_path if p.exists()]
-        # begin_points = [int(open(txt, 'r').readlines()[0].strip()) for txt in txts_path]
-        # npys = [np.load(p) for p in npys_path]
-        # res = np.zeros([self.video_frames_num, npys[0].shape[1], npys[0].shape[2]], npys[0].dtype)
-        # for npy, bp in zip(npys, begin_points):
-        #     res[bp:bp + len(npy)] = npy
-        # # res = np.concatenate(npys, axis=0)
-        # res = res[self.begin_frame:]
-
         res = np.load(Path(Path(self.save_txt_path).parent, f'{Path(self.save_txt_path).stem}.npy'))
 
         i = 0
@@ -247,6 +236,7 @@ class FlySeg():
         self.video.set(cv2.CAP_PROP_POS_FRAMES, self.begin_frame)
 
     def _save(self):
+        # 考虑到发布版本一次运行所保存的单个文件比较大，所以这里不再保存txt仅保存npy文件
         with open(self.save_txt_path, 'w') as f:
             # 由于计算出来的begin_frame点可能跟上次计算的结果有重复，导致所有结果相加长度不等于总帧数，所以在此保存一下每次结果的起始点
             f.write(f'{self.begin_frame}\n')

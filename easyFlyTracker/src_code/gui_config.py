@@ -7,7 +7,7 @@
 @Software: PyCharm
 '''
 import numpy as np
-import cv2, pickle, random
+import cv2, cv2_ext, pickle, random
 import math
 from pathlib import Path
 
@@ -44,7 +44,7 @@ class GUI_CFG():
                          则读取其结果作为默认config。
         '''
         if type(img_path) is str:
-            img = cv2.imread(img_path)
+            img = cv2_ext.imread(img_path)
             self.res_pkl = str(Path(img_path).parent) + '/config.pkl'
         else:
             img = img_path
@@ -53,6 +53,7 @@ class GUI_CFG():
         h, w = img.shape[:2]
         self.srcimg = img.copy()
         self.img = img
+        self.drawed_img = img
         self.init_res = init_res
         self.winname = 'gui config'
         self.lbutton_down = False
@@ -108,8 +109,9 @@ class GUI_CFG():
         img = self.img.copy()
 
         # 画圆
-        for x, y, r in self.res:
+        for i, (x, y, r) in enumerate(self.res):
             cv2.circle(img, (x, y), r, self.col, 1)
+            cv2.putText(img, f'{i}', (x - 5, y + 5), 1, 1, self.col)
 
         # 越界判断
         if self.roi_id < 0: self.roi_id = 0
@@ -118,7 +120,10 @@ class GUI_CFG():
         if len(self.res) > 0:
             x, y, r = self.res[self.roi_id]
             cv2.circle(img, (x, y), r, (0, 0, 255), 1)
+            cv2.putText(img, f'{self.roi_id}', (x - 5, y + 5), 1, 1, (0, 0, 255), 2)
 
+        # 当前画的图像备份，退出的时候保存时用
+        self.drawed_img = img
         return img
 
     def CFG_circle(self, direct_get_res=False):
@@ -161,6 +166,7 @@ class GUI_CFG():
         with open(self.res_pkl, 'wb') as f:
             pickle.dump(self.res, f)
             print(f'saved config params to: {self.res_pkl}')
+        cv2_ext.imwrite(str(self.res_pkl)[:-3] + 'bmp', self.drawed_img)
         return self.res
 
 
