@@ -40,6 +40,12 @@ def printc(s='null', **kargs):
     print(f"\033[1;31m{s}\033[0m", **kargs)
 
 
+def args_filter(kwargs, fn):
+    arg_keys = inspect.getfullargspec(fn).args
+    return {k: kwargs[k] for k in kwargs if k in arg_keys}
+
+
+# 弃用，args_filter代替
 def get_Class_params(cfg, cls):
     '''
     从cfg文件获取flyseg的传参字典

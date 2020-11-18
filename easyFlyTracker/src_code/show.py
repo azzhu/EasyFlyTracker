@@ -10,9 +10,8 @@ import numpy as np
 import cv2
 from pathlib import Path
 import matplotlib.pyplot as plt
-from analysis import Analysis
-from utils import get_Class_params
-from utils import printc as print
+from easyFlyTracker.src_code.analysis import Analysis
+from easyFlyTracker.src_code.utils import get_Class_params
 
 
 class Show():

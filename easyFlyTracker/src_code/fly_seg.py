@@ -172,6 +172,7 @@ class FlySeg():
             if i >= self.duration_frames:
                 pbar.close()
                 break
+        pbar.close()
 
     def play_and_show_trackingpoints(self, just_save_one_frame=False):
         res = np.load(Path(Path(self.save_txt_path).parent, f'{Path(self.save_txt_path).stem}.npy'))

@@ -9,9 +9,10 @@
 import numpy as np
 import cv2, time, random, math
 from pathlib import Path
-import scipy.signal
+# import scipy.signal
 import pandas as pd
-from easyFlyTracker.src_code.fly_seg import FlySeg
+import pickle
+# from easyFlyTracker.src_code.fly_seg import FlySeg
 from easyFlyTracker.src_code.utils import Pbar
 from easyFlyTracker.src_code.utils import NumpyArrayHasNanValuesExceptin
 
@@ -26,50 +27,38 @@ class Analysis():
     def __init__(
             self,
             video_path,  # 视频路径
-            h_num, w_num,  # 盘子是几乘几的
             roi_flys_flag,
-            roi_flys_mask_arry,
-            dish_radius,  # 每个孔的半径，像素
             area_th,  # 内圈面积占比
-            duration_time=2,  # 要持续多长时间
-            ana_time_duration=10,
-            minR_maxR_minD=(40, 50, 90),
+            roi_flys_ids=None,
+            ana_time_duration=10.,
             sleep_dist_th_per_second=5,
             sleep_time_th=300,  # 每秒睡眠状态持续多久算是真正的睡眠
-            dish_exclude=None,  # 排除的特殊圆盘，比如空盘、死果蝇等情况,可以一维或者（h_num, w_num）
     ):
-        self.video_path = video_path
-        if type(dish_exclude) == np.ndarray:
-            self.dish_exclude = dish_exclude.reshape([-1])
-        elif type(dish_exclude) == list:
-            if type(dish_exclude[0]) == list:
-                self.dish_exclude = np.ones([h_num, w_num], np.bool)
-                for de in dish_exclude: self.dish_exclude[de[0], de[1]] = False
-                self.dish_exclude = self.dish_exclude.reshape([-1])
-            else:
-                self.dish_exclude = np.array([True] * h_num * w_num)
-                self.dish_exclude[dish_exclude] = False
-        else:
-            self.dish_exclude = np.array([True] * h_num * w_num)
-        self.h_num = h_num
-        self.w_num = w_num
-        self.duration_time = duration_time
-        self.dish_radius = dish_radius
+        # load cps and radius
+        config_pk = pickle.load(open(Path(Path(video_path).parent, 'config.pkl'), 'rb'))
+        config_pk = np.array(config_pk)
+        self.cps = config_pk[:, :2]
+        self.dish_radius = int(round(float(np.mean(config_pk[:, -1]))))
+
+        self.video_path = Path(video_path)
         self.roi_flys_flag = roi_flys_flag
         self.ana_time_duration = ana_time_duration
-        self.minR_maxR_minD = minR_maxR_minD
         self.sleep_dist_th_per_second = sleep_dist_th_per_second
         self.sleep_time_th = sleep_time_th
         self.region_radius = int(round(math.sqrt(area_th) * self.dish_radius))
 
         self.res_dir = Path(Path(video_path).parent, Path(video_path).stem)
-        cap = cv2.VideoCapture(video_path)
+        cap = cv2.VideoCapture(str(video_path))
         self.fps = round(cap.get(cv2.CAP_PROP_FPS))
         self.video_frames_num = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         cap.release()
 
         # 果蝇总数，这个结果是综合了roi_flys_mask_arry和Dish_exclude后的结果
-        self.roi_flys_list = roi_flys_mask_arry.reshape([-1, ]) * self.dish_exclude
+        if roi_flys_ids == None:
+            self.roi_flys_list = np.array([True] * len(self.cps))
+        else:
+            self.roi_flys_list = np.array([False] * len(self.cps))
+            self.roi_flys_list[roi_flys_ids] = True
         self.roi_flys_id = [i for i, r in enumerate(self.roi_flys_list) if r]
         self.roi_flys_nubs = self.roi_flys_list.sum()
 
@@ -83,34 +72,18 @@ class Analysis():
         self._get_speed_perframe_dist_perframe()
 
     def _get_all_res(self):
-        temp_npy = f'{self.res_dir}/total.npy'
-        if Path(temp_npy).exists():
-            self.all_datas = np.load(temp_npy)
-            return
-        txts_path = [Path(self.res_dir, f'{t:0>4d}.txt') for t in range(0, 1000, self.duration_time)]
-        npys_path = [Path(self.res_dir, f'{t:0>4d}.npy') for t in range(0, 1000, self.duration_time)]
-        txts_path = [p for p in txts_path if p.exists()]
-        npys_path = [p for p in npys_path if p.exists()]
-        begin_points = [int(open(txt, 'r').readlines()[0].strip()) for txt in txts_path]
-        npys = [np.load(p) for p in npys_path]
+        vp = self.video_path
+        npy_file_path = Path(vp.parent, vp.stem, f'{vp.stem}.npy')
+        npy_file_path_cor = Path(vp.parent, vp.stem, f'{vp.stem}_cor.npy')
+        if npy_file_path_cor.exists():
+            self.all_datas = np.load(npy_file_path_cor)
+        else:
+            res = np.load(npy_file_path)
+            self.all_datas = np.transpose(res, [1, 0, 2])
+            self._cor()
+            np.save(npy_file_path_cor, self.all_datas)
 
-        res = np.zeros([self.video_frames_num, npys[0].shape[1], npys[0].shape[2]], npys[0].dtype)
-        for npy, bp in zip(npys, begin_points):
-            res[bp:bp + len(npy)] = npy
-        self.all_datas = np.transpose(res, [1, 0, 2])
-        self._smooth()
-        np.save(temp_npy, self.all_datas)
-
-    def _smooth(self):
-        def sgolay2d_points(ps, window_size=27, order=5):
-            vs0 = [p[0] for p in ps]
-            vs1 = [p[1] for p in ps]
-            vs0 = scipy.signal.savgol_filter(vs0, window_size, order)
-            vs1 = scipy.signal.savgol_filter(vs1, window_size, order)
-            vs = np.array(list(zip(vs0, vs1)))
-            vs = np.round(vs, 2)
-            return vs
-
+    def _cor(self):
         def _correction(l):
             '''
             对一个向量进行校正，以下规则：
@@ -138,16 +111,12 @@ class Analysis():
             return list(zip(_correction(ps[:, 0]), _correction(ps[:, 1])))
 
         res = []
-        for ps, exc in zip(self.all_datas, self.dish_exclude):
-            if exc:
-                # 判断是不是空盘（空盘值全部为(-1,-1)），空盘直接返回
-                if ps.min() == -1 and ps.max() == -1:
-                    res.append(ps)
-                else:
-                    # res.append(sgolay2d_points(correction2D(ps))) # 有平滑
-                    res.append(correction2D(ps))  # 无平滑
-            else:
+        for ps in self.all_datas:
+            # 判断是不是空盘（空盘值全部为(-1,-1)），空盘直接返回
+            if ps.min() == -1 and ps.max() == -1:
                 res.append(ps)
+            else:
+                res.append(correction2D(ps))
         res = np.array(res)
         if np.isnan(res).sum() != 0:
             raise NumpyArrayHasNanValuesExceptin(res)
@@ -166,11 +135,11 @@ class Analysis():
         all_fly_speeds = []  # 长度等于帧数
         all_fly_displacement = []  # 长度等于帧数减一
         mperframe = 1 / self.fps
-        for fly, exc in zip(self.all_datas, self.dish_exclude):
-            if not exc:
-                all_fly_displacement.append([0] * (self.all_datas.shape[1] - 1))
-                all_fly_speeds.append([0] * self.all_datas.shape[1])
-                continue
+        for fly in self.all_datas:
+            # if not exc:
+            #     all_fly_displacement.append([0] * (self.all_datas.shape[1] - 1))
+            #     all_fly_speeds.append([0] * self.all_datas.shape[1])
+            #     continue
             ds = [fn2(fly, i) for i in range(len(fly) - 1)]
             all_fly_displacement.append(ds)
             ds = [ds[0]] + ds + [ds[-1]]
@@ -194,9 +163,8 @@ class Analysis():
         '''
         speed_npy = Path(self.saved_dir, f'time_duration_stat_speed_{self.roi_flys_flag}.npy')
         disp_npy = Path(self.saved_dir, f'time_duration_stat_displacement_{self.roi_flys_flag}.npy')
-        # if speed_npy.exists() and disp_npy.exists() and not redo:
-        #     return speed_npy, disp_npy
-        self._get_speed_perframe_dist_perframe()
+        if speed_npy.exists() and disp_npy.exists() and not redo:
+            return speed_npy, disp_npy
         duration_frames = int(round(self.ana_time_duration * 60 * self.fps))
         frame_start_ind = list(range(0, self.all_datas.shape[1], duration_frames))
         all_fly_speeds = self.all_fly_speeds_per_frame * \
@@ -259,27 +227,23 @@ class Analysis():
         sleep_dist_th = self.sleep_dist_th_per_second
         all_sleep_status_per_s = np.array(all_dist_per_s) < sleep_dist_th
         self.all_sleep_status_per_s = all_sleep_status_per_s
-        exclude_ids = list(np.squeeze(np.argwhere(np.array(self.dish_exclude) == False)))
         # all_sleep_status_per_s = np.delete(all_sleep_status_per_s, exclude_ids, axis=0)
         sleep_time_th = self.sleep_time_th
         all_sleep_status = []
         for k, sleep_status_per_s in enumerate(all_sleep_status_per_s):
-            if k in exclude_ids:
-                all_sleep_status.append(np.zeros([len(sleep_status_per_s), ], np.bool))
-            else:
-                sleep_time = 0  # 用于保存截止当前秒已经睡了多久（单位秒）
-                sleep_status_per_s = np.concatenate(
-                    [sleep_status_per_s, np.array([False])])  # 在末尾加一个false，防止末尾是True时遍历结束时无法判断睡眠
-                sleep_status = np.zeros([len(sleep_status_per_s) - 1, ], np.bool)  # 新创建的list，用于保存睡眠状态
-                for i, ss in enumerate(sleep_status_per_s):
-                    if ss:
-                        sleep_time += 1
-                    else:
-                        # 到没睡的时候都判断一下，上一刻截止是不是满足睡眠条件
-                        if sleep_time >= sleep_time_th:
-                            sleep_status[i - sleep_time:i] = True
-                        sleep_time = 0
-                all_sleep_status.append(sleep_status)
+            sleep_time = 0  # 用于保存截止当前秒已经睡了多久（单位秒）
+            sleep_status_per_s = np.concatenate(
+                [sleep_status_per_s, np.array([False])])  # 在末尾加一个false，防止末尾是True时遍历结束时无法判断睡眠
+            sleep_status = np.zeros([len(sleep_status_per_s) - 1, ], np.bool)  # 新创建的list，用于保存睡眠状态
+            for i, ss in enumerate(sleep_status_per_s):
+                if ss:
+                    sleep_time += 1
+                else:
+                    # 到没睡的时候都判断一下，上一刻截止是不是满足睡眠条件
+                    if sleep_time >= sleep_time_th:
+                        sleep_status[i - sleep_time:i] = True
+                    sleep_time = 0
+            all_sleep_status.append(sleep_status)
         np.save(str(npy_path), np.array(all_sleep_status))
         return str(npy_path)
 
@@ -292,19 +256,16 @@ class Analysis():
         if Path(region_status_npy).exists():
             self.all_region_status = np.load(region_status_npy)
             return str(region_status_npy)
-        cps, _ = FlySeg._get_all_centre_points(
-            self.video_path, self.h_num, self.w_num, self.minR_maxR_minD, None)
+
+        cps = self.cps
         all_datas = self.all_datas.astype(np.float16)
         all_region_status = []
         print('get_region_status:')
         pbar = Pbar(total=len(cps))
-        for i, (cp, da, exc) in enumerate(zip(cps, all_datas, self.dish_exclude)):
-            if exc:
-                dist_to_cp = lambda x: math.sqrt(math.pow(x[0] - cp[0], 2) + math.pow(x[1] - cp[1], 2))
-                region_status = np.array([dist_to_cp(p) < self.region_radius for p in da])
-                all_region_status.append(region_status)
-            else:
-                all_region_status.append([False] * len(da))
+        for i, (cp, da) in enumerate(zip(cps, all_datas)):
+            dist_to_cp = lambda x: math.sqrt(math.pow(x[0] - cp[0], 2) + math.pow(x[1] - cp[1], 2))
+            region_status = np.array([dist_to_cp(p) < self.region_radius for p in da])
+            all_region_status.append(region_status)
             pbar.update()
         pbar.close()
         self.all_region_status = np.array(all_region_status)
@@ -313,7 +274,8 @@ class Analysis():
 
 
 if __name__ == '__main__':
-    import inspect
-
-    res = inspect.getfullargspec(Analysis.__init__)
-    print()
+    a = Analysis(
+        video_path=r'D:\Pycharm_Projects\qu_holmes_su_release\tests\demo.mp4',
+        roi_flys_flag='1', area_th=0.5, ana_time_duration=0.5,
+    )
+    a.PARAM_speed_displacement()

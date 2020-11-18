@@ -27,6 +27,7 @@ import的包名跟setup函数里的packages指定的模块名对应（注意，�
 
 国内源找不到该包，一定要使用官方源安装：
 pip install -i https://pypi.org/simple/ easyFlyTracker
+pip install --upgrade -i https://pypi.org/simple/ easyFlyTracker
 '''
 
 with open('requirements.txt') as f:
@@ -54,8 +55,9 @@ setuptools.setup(
     },
     entry_points={
         'console_scripts': [
-            'easyFlyTracker=easyFlyTracker.cli:_easyFlyTracker',
-            # 这里可以继续添加新的命令
+            'easyFlyTracker=easyFlyTracker.cli:easyFlyTracker_',
+            'easyFlyTracker_analysis=easyFlyTracker.cli:easyFlyTracker_analysis',
+            # 'easyFlyTracker_plot=easyFlyTracker.cli:easyFlyTracker_plot',
         ]
     },
     classifiers=[

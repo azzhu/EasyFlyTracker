@@ -9,59 +9,72 @@
 import argparse
 import inspect
 from pathlib import Path
+from easyFlyTracker.src_code.utils import args_filter
 from easyFlyTracker.src_code.fly_seg import FlySeg
 from easyFlyTracker.src_code.analysis import Analysis
+from easyFlyTracker.src_code.show import Show
 
 
-def __args_filter(kwargs, fn):
-    arg_keys = inspect.getfullargspec(fn).args
-    return {k: kwargs[k] for k in kwargs if k in arg_keys}
+def __fly_seg(**kwargs):  # 果蝇跟踪并保存结果
+    show_track_result = kwargs['show_track_result']
+    kwargs = args_filter(kwargs, FlySeg.__init__)
+    if show_track_result:
+        f = FlySeg(**kwargs, config_it=False)
+        f.play_and_show_trackingpoints()
+    else:
+        f = FlySeg(**kwargs)
+        f.run()
 
 
-def __fly_seg(**kwargs):
-    kwargs = __args_filter(kwargs, FlySeg.__init__)
-    f = FlySeg(**kwargs)
-    f.run()
-    f.play_and_show_trackingpoints()
-
-
-def __analysis(**kwargs):
-    kwargs = __args_filter(kwargs, Analysis.__init__)
+def __analysis(**kwargs):  # 分析结果并展示
+    kwargs = args_filter(kwargs, Analysis.__init__)
     a = Analysis(**kwargs)
 
 
-def __show(*args, **kwargs):
-    pass
+def easyFlyTracker_():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--video_path', type=str, help='the path of the video',
+                        # default=r'D:\Pycharm_Projects\qu_holmes_su_release\tests\demo.mp4',
+                        default=None,
+                        )
+    parser.add_argument('--begin_time', type=int, default=0,
+                        help='optional, default 0. begin calculate time point, (minute)')
+    parser.add_argument('--duration_time', type=int, default=None,
+                        help='optional, how long time to calculate, (minute)')
+    parser.add_argument('--show_track_result', type=bool, default=True,
+                        help='optional, default False. show track result')
+    args = parser.parse_args()
+    params = vars(args)
 
-
-def _checkargs(p):
-    if p['video_path'] is None or (not Path(p['video_path']).exists()):
+    if params['video_path'] is None or (not Path(params['video_path']).exists()):
         print('The [video path] is not existing, please check it!')
         exit()
 
+    params.update({'save_txt_name': f'{Path(params["video_path"]).stem}.txt'})
+    __fly_seg(**params)
 
-def _easyFlyTracker():
+
+def easyFlyTracker_analysis():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--video_path', type=str, help='the path of the video')
-    parser.add_argument('--begin_time', type=int, default=0, help='begin calculate time point, (minute)')
-    parser.add_argument('--duration_time', type=int, help='how long time to calculate, (minute)')
+    parser.add_argument('--video_path', type=str, help='the path of the video',
+                        default=r'D:\Pycharm_Projects\qu_holmes_su_release\tests\demo.mp4',
+                        # default=None,
+                        )
+    parser.add_argument('--begin_time', type=int, default=0,
+                        help='optional, default 0. begin calculate time point, (minute)')
+    parser.add_argument('--duration_time', type=int, default=None,
+                        help='optional, how long time to calculate, (minute)')
+    parser.add_argument('--show_track_result', type=bool, default=True,
+                        help='optional, default False. show track result')
     args = parser.parse_args()
     params = vars(args)
-    _checkargs(params)
-    params.update({'save_txt_name': f'{params["video_path"]}.txt'})
 
-    # params = {
-    #     'video_path': r'D:\Pycharm_Projects\qu_holmes_su_release\tests\demo.mp4',
-    #     'save_txt_name': 'qudashen.txt',
-    #     'begin_time': 0,
-    #     'duration_time': 1,
-    #     'config_it': False,
-    #     'wu': 89,
-    # }
-    params = __args_filter(params, FlySeg.__init__)
-    __fly_seg(**params)
-    print()
+    if params['video_path'] is None or (not Path(params['video_path']).exists()):
+        print('The [video path] is not existing, please check it!')
+        exit()
+
+    params.update({'save_txt_name': f'{Path(params["video_path"]).stem}.txt'})
 
 
 if __name__ == '__main__':
-    _easyFlyTracker()
+    easyFlyTracker_analysis()
