@@ -92,4 +92,5 @@ def easyFlyTracker_analysis():
 
 if __name__ == '__main__':
     # easyFlyTracker_()
-    easyFlyTracker_analysis()
+    # easyFlyTracker_analysis()
+    import tkinter

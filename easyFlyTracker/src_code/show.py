@@ -10,8 +10,9 @@ import numpy as np
 import cv2, pickle
 from pathlib import Path
 import matplotlib.pyplot as plt
+
+plt.rcParams['backend'] = 'module://backend_interagg'
 from easyFlyTracker.src_code.analysis import Analysis
-from easyFlyTracker.src_code.utils import get_Class_params
 from easyFlyTracker.src_code.utils import args_filter
 
 
