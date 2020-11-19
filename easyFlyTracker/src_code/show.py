@@ -7,11 +7,12 @@
 @Software: PyCharm
 '''
 import numpy as np
-import cv2
+import cv2, pickle
 from pathlib import Path
 import matplotlib.pyplot as plt
 from easyFlyTracker.src_code.analysis import Analysis
 from easyFlyTracker.src_code.utils import get_Class_params
+from easyFlyTracker.src_code.utils import args_filter
 
 
 class Show():
@@ -29,10 +30,10 @@ class Show():
     def __init__(
             self,
             video_path,
-            roi_flys_mask_arry,
             ana_params,  # 获取analysis实例的时候需要的参数
-            suffix,  # 保存的图片结果后缀
             dish_radius_mm,
+            suffix='all',  # 保存的图片结果后缀
+            roi_flys_ids=None,
     ):
         '''
 
@@ -44,23 +45,30 @@ class Show():
         cap = cv2.VideoCapture(video_path)
         self.fps = round(cap.get(cv2.CAP_PROP_FPS))  # 从opencv得到的帧率不太准，实际是30，opencv给的却是29.99，对后续计算有影响，所以取整
         cap.release()
-        self.roi_flys_mask_arry = roi_flys_mask_arry
 
         # 初始化保存的文件夹
-        saved_dir = Path(self.dir, f'show_result_{self.video_stem}')
+        saved_dir = Path(self.dir, self.video_stem, f'show_result')
         saved_dir.mkdir(exist_ok=True)
         self.saved_dir = saved_dir
         self.saved_suffix = suffix
 
         # roi_flys
-        roi_flys_arry = roi_flys_mask_arry
-        self.roi_flys_list = roi_flys_arry.reshape([-1, ])
+        vp = Path(self.video_path)
+        npy_file_path = Path(vp.parent, vp.stem, f'{vp.stem}.npy')
+        res = np.load(npy_file_path)
+        if roi_flys_ids == None:
+            self.roi_flys_list = np.array([True] * len(res))
+        else:
+            self.roi_flys_list = np.array([False] * len(res))
+            self.roi_flys_list[roi_flys_ids] = True
         self.roi_flys_id = [i for i, r in enumerate(self.roi_flys_list) if r]
 
         # 计算比例尺
-        all_centre_points = np.load(Path(Path(video_path).parent, Path(video_path).stem, 'all_centre_points.npy'))
-        r = all_centre_points[0, -1]
-        self.sacle = dish_radius_mm / r
+        config_pk = pickle.load(open(Path(Path(video_path).parent, 'config.pkl'), 'rb'))
+        config_pk = np.array(config_pk)
+        # self.cps = config_pk[:, :2]
+        self.dish_radius = int(round(float(np.mean(config_pk[:, -1]))))
+        self.sacle = dish_radius_mm / self.dish_radius
         # self.sacle = 1.
 
         # 获取视频对应的Analysis实例
@@ -83,8 +91,8 @@ class Show():
         plt.plot(datas, label=self.video_stem)
         plt.legend(loc='upper left')
         # plt.show()
-        plt.savefig(str(Path(self.saved_dir, f'avg_dist_per10min_{self.saved_suffix}.png')))
-        np.save(str(Path(self.saved_dir, f'avg_dist_per10min_{self.saved_suffix}.npy')), datas)
+        plt.savefig(str(Path(self.saved_dir, f'avg_dist_per_x_min_{self.saved_suffix}.png')))
+        np.save(str(Path(self.saved_dir, f'avg_dist_per_x_min_{self.saved_suffix}.npy')), datas)
 
     def SHOW_dist_change_per_h(self):
         da = self.ana.PARAM_dist_per_h()
@@ -158,14 +166,14 @@ class Show():
 
 
 def merge_result(cf):
-    suffixs = [v[-1] for v in cf['rois']][1:]
+    suffixs = [v[-1] for v in cf['rois']]
     prefixs = [
-        'avg_dist_per10min',
+        'avg_dist_per_x_min',
         # 'dist_change_per_h',
         # 'in_centre_prob_per_h',
         # 'sleep_time_per_h',
     ]
-    dir = Path(Path(cf['video_path']).parent, 'show_result_' + Path(cf['video_path']).stem)
+    dir = Path(Path(cf['video_path']).parent, Path(cf['video_path']).stem, 'show_result')
     for pre in prefixs:
         plt.close()
         plt.rcParams['figure.figsize'] = (15.0, 8.0)
@@ -180,43 +188,49 @@ def merge_result(cf):
         np.save(str(Path(dir, f'{pre}_merge.npy')), das)
 
 
-def one_step_run(cf):
-    rois = cf['rois']
-    dish_radius = \
-        np.load(Path(Path(cf['video_path']).parent, Path(cf['video_path']).stem, 'all_centre_points.npy'))[0][-1]
-    ana_params = get_Class_params(cf, Analysis)
-    ana_params.update({'dish_radius': dish_radius})
+def one_step_run(params):
+    '''
+    Show类只针对一次roi的运算，多个区域的roi运算要分多次运行
+    :param params:
+    :return:
+    '''
+    rois = params['rois']
 
-    for (a, b, c, d), flag in rois:
-        roi_flys_mask_arry = np.zeros([cf['h_num'], cf['w_num']], np.bool)
-        roi_flys_mask_arry[a:b, c:d] = True
+    for ids, flag in rois:
+        ana_params = args_filter(params, Analysis)
         ana_params['roi_flys_flag'] = flag
-        ana_params['roi_flys_mask_arry'] = roi_flys_mask_arry
+        ana_params['roi_flys_ids'] = ids
+        show_params = args_filter(params, Show)
+        show_params['roi_flys_ids'] = ids
+        show_params['suffix'] = flag
+        show_params['ana_params'] = ana_params
         print(f'---------- {flag} ----------')
-        print(roi_flys_mask_arry.astype(np.uint8))
-        s = Show(video_path=cf['video_path'],
-                 roi_flys_mask_arry=roi_flys_mask_arry,
-                 suffix=flag,
-                 ana_params=ana_params,
-                 dish_radius_mm=cf['dish_radius_mm'])
+        print(ids)
+        s = Show(**show_params)
         s.show_all()
 
-    merge_result(cf)
+    merge_result(params)
 
 
 if __name__ == '__main__':
-    # s0 = np.load(r'Z:\dataset\qususu\0924\202009241030_bak\total.npy')
-    # s1 = np.load(r'Z:\dataset\qususu\0924\202009241030\total.npy')
-    # print(s0.sum())
-    # print(s0.shape)
-    # print(s1.sum())
-    # print(s1.shape)
-    # exit()
+    exit()
 
-    from load_configyaml import load_config
+    rois = [
+        [[0, 1, 2, 3], '1'],
+        [[4, 5, 6, 7], '2'],
+    ]
+    ana_params = {
+        'video_path': r'D:\Pycharm_Projects\qu_holmes_su_release\tests\demo.mp4',
+        'roi_flys_flag': '1', 'area_th': 0.5, 'ana_time_duration': 0.5,
+    }
 
-    cf = load_config()
-    one_step_run(cf)
-    # x = np.array([1, 1, 1, np.NaN, 1, np.NaN])
-    # contain_nan = np.isnan(x).sum()
-    # print(contain_nan)
+    for ids, flag in rois:
+        ana_params['roi_flys_flag'] = flag
+        ana_params['roi_flys_ids'] = ids
+        print(f'---------- {flag} ----------')
+        s = Show(video_path=r'D:\Pycharm_Projects\qu_holmes_su_release\tests\demo.mp4',
+                 roi_flys_ids=ids,
+                 suffix=flag,
+                 ana_params=ana_params,
+                 dish_radius_mm=10)
+        s.show_all()
