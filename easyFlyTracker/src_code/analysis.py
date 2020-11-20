@@ -73,8 +73,8 @@ class Analysis():
 
     def _get_all_res(self):
         vp = self.video_path
-        npy_file_path = Path(vp.parent, vp.stem, f'{vp.stem}.npy')
-        npy_file_path_cor = Path(vp.parent, vp.stem, f'{vp.stem}_cor.npy')
+        npy_file_path = Path(vp.parent, vp.stem, f'track.npy')
+        npy_file_path_cor = Path(vp.parent, vp.stem, f'track_cor.npy')
         if npy_file_path_cor.exists():
             self.all_datas = np.load(npy_file_path_cor)
         else:

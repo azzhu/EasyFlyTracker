@@ -53,7 +53,7 @@ class Show():
 
         # roi_flys
         vp = Path(self.video_path)
-        npy_file_path = Path(vp.parent, vp.stem, f'{vp.stem}.npy')
+        npy_file_path = Path(vp.parent, vp.stem, f'track.npy')
         res = np.load(npy_file_path)
         if roi_flys_ids == None:
             self.roi_flys_list = np.array([True] * len(res))

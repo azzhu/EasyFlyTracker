@@ -71,7 +71,7 @@ class FlySeg():
         self._get_maskimgs()
 
         # 计算背景
-        self.bg_img_path = Path(Path(self.video_path).parent, Path(self.video_path).stem, 'bg.bmp')
+        self.bg_img_path = Path(Path(self.video_path).parent, Path(self.video_path).stem, 'background_image.bmp')
         self.comp_bg()
 
         # set begin frame
