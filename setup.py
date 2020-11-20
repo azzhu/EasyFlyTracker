@@ -10,21 +10,6 @@ import setuptools
 import easyFlyTracker
 
 '''
-发布自己的Python库官方教程：
-https://packaging.python.org/tutorials/packaging-projects/
-知乎链接：
-https://zhuanlan.zhihu.com/p/66603015?utm_source=qq
-
-1，Generating distribution archives
-python setup.py sdist bdist_wheel
-
-2，Uploading the distribution archives
-twine upload --repository pypi dist/*
-
-pip list所显示的包名跟import的包名的区别：
-pip list显示的名字跟setup函数里的name指定的名字对应；
-import的包名跟setup函数里的packages指定的模块名对应（注意，这里可以有多个模块）；
-
 国内源找不到该包，一定要使用官方源安装：
 pip install -i https://pypi.org/simple/ easyFlyTracker
 pip install --upgrade -i https://pypi.org/simple/ easyFlyTracker

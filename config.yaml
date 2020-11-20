@@ -9,7 +9,7 @@ duration_time: 2
 # show track result
 show_track_result: False
 
-# config roi path, find in the video_path directory if None
+# config roi path, search in the video_path directory if None
 config_roi:
 #
 area_th: 0.5

@@ -10,8 +10,6 @@ import numpy as np
 import cv2, pickle
 from pathlib import Path
 import matplotlib.pyplot as plt
-
-plt.rcParams['backend'] = 'module://backend_interagg'
 from easyFlyTracker.src_code.analysis import Analysis
 from easyFlyTracker.src_code.utils import args_filter
 
@@ -210,7 +208,8 @@ def one_step_run(params):
         s = Show(**show_params)
         s.show_all()
 
-    merge_result(params)
+    if len(rois) > 1:
+        merge_result(params)
 
 
 if __name__ == '__main__':

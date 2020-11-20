@@ -76,6 +76,7 @@ def easyFlyTracker_():
     else:
         f = FlySeg(**params)
         f.run()
+        # f.play_and_show_trackingpoints()
 
 
 # Command line 2
@@ -92,5 +93,4 @@ def easyFlyTracker_analysis():
 
 if __name__ == '__main__':
     # easyFlyTracker_()
-    # easyFlyTracker_analysis()
-    import tkinter
+    easyFlyTracker_analysis()

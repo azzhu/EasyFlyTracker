@@ -13,7 +13,6 @@ from scipy import stats
 from multiprocessing import Pool
 from threading import Thread
 from easyFlyTracker.src_code.utils import Pbar
-# from easyFlyTracker.src_code.utils import printc as print
 from easyFlyTracker.src_code.Camera_Calibration import Undistortion
 from easyFlyTracker.src_code.utils import stop_thread
 from easyFlyTracker.src_code.gui_config import GUI_CFG
