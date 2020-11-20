@@ -71,7 +71,8 @@ def easyFlyTracker_():
     show_track_result = params['show_track_result']
     params = args_filter(params, FlySeg.__init__)
     if show_track_result:
-        f = FlySeg(**params, config_it=False)
+        params['params'] = True
+        f = FlySeg(**params)
         f.play_and_show_trackingpoints()
     else:
         f = FlySeg(**params)
@@ -92,5 +93,5 @@ def easyFlyTracker_analysis():
 
 
 if __name__ == '__main__':
-    # easyFlyTracker_()
-    easyFlyTracker_analysis()
+    easyFlyTracker_()
+    # easyFlyTracker_analysis()

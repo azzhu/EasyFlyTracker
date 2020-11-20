@@ -40,7 +40,7 @@ class FlySeg():
             background_th=70,  # 跟背景差的阈值
             area_th=0.5,  # 内圈面积阈值
             # minR_maxR_minD=(40, 50, 90),  # 霍夫检测圆时的参数，最小半径，最大半径，最小距离
-            config_it=True,
+            skip_config=False,
     ):
         self.video_path = video_path
         self.video_stem = str(Path(video_path).stem)
@@ -59,7 +59,7 @@ class FlySeg():
         # gui config
         _, temp_frame = self.video.read()
         g = GUI_CFG(temp_frame, [], str(Path(video_path).parent))
-        res = g.CFG_circle(direct_get_res=not config_it)
+        res = g.CFG_circle(direct_get_res=skip_config)
         if len(res) == 0: raise ValueError
         rs = [re[-1] for re in res]
         self.dish_radius = int(round(float(np.mean(np.array(rs)))))
@@ -128,12 +128,12 @@ class FlySeg():
                     break
                 frames.append(frame)
             frames = np.array(frames)
-            print(frames.shape)
+            # print(frames.shape)
             sx = stats.mode(frames)
             bg = sx[0][0]
             bg = cv2.medianBlur(bg, 3)
             cv2.imwrite(str(self.bg_img_path), bg)
-            print(f'背景计算完成，耗时:{time.time() - tim}s')
+            print(f'Finished, time consuming:{time.time() - tim}s')
             self.video.set(cv2.CAP_PROP_POS_FRAMES, 0)
         self.bg = bg
         self.gray_bg_int16 = cv2.cvtColor(bg, cv2.COLOR_BGR2GRAY).astype(np.int16)
@@ -208,6 +208,7 @@ class FlySeg():
         self.fly_centroids = []
         if use_pbar:    pbar = Pbar(total=self.duration_frames)
         i = 0
+        print('tracking...')
         while True:
             ret, frame = self.video.read()
             if not ret: break
