@@ -7,7 +7,7 @@
 @Software: PyCharm
 '''
 
-__version__ = '0.0.7'
+__version__ = '0.0.9'
 
 # from easyFlyTracker.src_code.fly_seg import FlySeg
 # from easyFlyTracker.src_code.analysis import Analysis
