@@ -14,7 +14,7 @@ from easyFlyTracker.src_code.show import one_step_run
 from easyFlyTracker.src_code.utils import (
     args_filter,
     __get_params,
-    __load_config_roi,
+    __load_group,
 )
 
 
@@ -29,19 +29,19 @@ def easyFlyTracker_():
     show_track_result = params['show_track_result']
     params = args_filter(params, FlySeg.__init__)
     if show_track_result:
-        params['params'] = True
+        params['skip_config'] = True
         f = FlySeg(**params)
         f.play_and_show_trackingpoints()
     else:
         f = FlySeg(**params)
         f.run()
-        # f.play_and_show_trackingpoints()
+        f.play_and_show_trackingpoints()
 
 
 # Command line 2
 def easyFlyTracker_analysis():
     params = __get_params()
-    rois = __load_config_roi(params)
+    rois = __load_group(params)
     params.update({
         'rois': rois,
     })

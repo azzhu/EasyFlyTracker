@@ -30,6 +30,7 @@ class FlySeg():
     def __init__(
             self,
             video_path,  # 视频路径
+            output_dir,  # 输出文件夹
             save_txt_name,  # 要保存的txt name（同时保存txt和同名npy）,不要求绝对路径，只要求name即可
             begin_time,  # 从哪个时间点开始
             # h_num, w_num,  # 盘子是几乘几的
@@ -42,23 +43,27 @@ class FlySeg():
             # minR_maxR_minD=(40, 50, 90),  # 霍夫检测圆时的参数，最小半径，最大半径，最小距离
             skip_config=False,
     ):
-        self.video_path = video_path
+        # 初始化各种文件夹
+        self.video_path = Path(video_path)
+        self.output_dir = Path(output_dir)
+        self.saved_dir = Path(self.output_dir, '.cache')  # 中间结果文件夹
+        self.bg_img_path = Path(self.saved_dir, 'background_image.bmp')
+        self.res_txt_path = Path(self.output_dir, save_txt_name)  # txt结果给用户看，所以保存到用户文件夹
+        self.res_npy_path = Path(self.saved_dir, f'{save_txt_name[:-3]}npy')
+        self.saved_dir.mkdir(exist_ok=True)
+
         self.video_stem = str(Path(video_path).stem)
         self.seg_th = seg_th
         self.undistort = Undistortion(mapxy_path)
         self.background_th = background_th
 
-        saved_dir = Path(Path(video_path).parent, Path(video_path).stem)
-        saved_dir.mkdir(exist_ok=True)
-        self.saved_dir = saved_dir
-        self.save_txt_path = str(Path(saved_dir, save_txt_name))
-        self.video = cv2.VideoCapture(self.video_path)
+        self.video = cv2.VideoCapture(str(self.video_path))
         self.video_frames_num = int(self.video.get(cv2.CAP_PROP_FRAME_COUNT))
         self.video_fps = round(self.video.get(cv2.CAP_PROP_FPS))
 
         # gui config
         _, temp_frame = self.video.read()
-        g = GUI_CFG(temp_frame, [], str(Path(video_path).parent))
+        g = GUI_CFG(temp_frame, [], str(self.output_dir))
         res = g.CFG_circle(direct_get_res=skip_config)
         if len(res) == 0: raise ValueError
         rs = [re[-1] for re in res]
@@ -71,7 +76,6 @@ class FlySeg():
         self._get_maskimgs()
 
         # 计算背景
-        self.bg_img_path = Path(Path(self.video_path).parent, Path(self.video_path).stem, 'background_image.bmp')
         self.comp_bg()
 
         # set begin frame
@@ -158,9 +162,8 @@ class FlySeg():
                 # cv2.circle(frame, cp, cfg.Region.radius, 175, 1)
                 # cv2.circle(src, cp, cfg.Region.radius, 200, 1)
             if just_save_one_frame:
-                saved_dir = Path(self.video_path).parent
-                cv2.imwrite(str(Path(saved_dir, f'{self.video_stem}_1_mask.bmp')), frame)
-                cv2.imwrite(str(Path(saved_dir, f'{self.video_stem}_1_src.bmp')), src)
+                cv2.imwrite(str(Path(self.saved_dir, f'{self.video_stem}_1_mask.bmp')), frame)
+                cv2.imwrite(str(Path(self.saved_dir, f'{self.video_stem}_1_src.bmp')), src)
                 return
 
             cv2.imshow('mask', frame)
@@ -174,7 +177,7 @@ class FlySeg():
         pbar.close()
 
     def play_and_show_trackingpoints(self, just_save_one_frame=False):
-        res = np.load(Path(Path(self.save_txt_path).parent, f'{Path(self.save_txt_path).stem}.npy'))
+        res = np.load(self.res_npy_path)
 
         i = 0
         pbar = Pbar(total=self.duration_frames)
@@ -190,8 +193,7 @@ class FlySeg():
                 cv2.line(frame, (tp[0] - 10, tp[1]), (tp[0] + 10, tp[1]), (0, 0, 255), 1)
                 cv2.line(frame, (tp[0], tp[1] - 10), (tp[0], tp[1] + 10), (0, 0, 255), 1)
             if just_save_one_frame:
-                saved_dir = Path(self.video_path).parent
-                cv2.imwrite(str(Path(saved_dir, f'{self.video_stem}_3_frame.bmp')), frame)
+                cv2.imwrite(str(Path(self.saved_dir, f'{self.video_stem}_3_frame.bmp')), frame)
                 return
             cv2.imshow('frame', frame)
             cv2.waitKey(3)
@@ -202,9 +204,6 @@ class FlySeg():
                 break
 
     def run(self, use_pbar=True):
-        # if Path(self.save_txt_path).exists():
-        #     print(f'{self.save_txt_path} has existed!')
-        #     return
         self.fly_centroids = []
         if use_pbar:    pbar = Pbar(total=self.duration_frames)
         i = 0
@@ -233,19 +232,18 @@ class FlySeg():
             i += 1
             if use_pbar: pbar.update()
             if i >= self.duration_frames: break
+        if use_pbar: pbar.close()
         self._save()
         self.video.set(cv2.CAP_PROP_POS_FRAMES, self.begin_frame)
 
     def _save(self):
         # 考虑到发布版本一次运行所保存的单个文件比较大，所以这里不再保存txt仅保存npy文件
-        with open(self.save_txt_path, 'w') as f:
+        with open(self.res_txt_path, 'w') as f:
             # 由于计算出来的begin_frame点可能跟上次计算的结果有重复，导致所有结果相加长度不等于总帧数，所以在此保存一下每次结果的起始点
             f.write(f'{self.begin_frame}\n')
             for line in self.fly_centroids:
                 f.write(f'{line}\n')
-        np.save(self.save_txt_path[:-3] + 'npy', self.fly_centroids)
-        # files_nub = len(list(Path(self.save_txt_path).parent.rglob('*.npy')))
-        # print(f'{files_nub} saved: {self.save_txt_path[:-3] + "npy"}')
+        np.save(self.res_npy_path, np.array(self.fly_centroids, dtype=np.float16))
 
 
 def pbarFilenubs(dir, total, fmt='*.npy'):

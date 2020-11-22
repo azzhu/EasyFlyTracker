@@ -1,7 +1,9 @@
-# config file
+############## config file ###################
 
 # video path
-video_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\demo.mp4
+video_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\qudashen.mp4
+# 输出文件夹
+output_dir: D:\Pycharm_Projects\qu_holmes_su_release\tests\output
 # begin calculate time point, (minute)
 begin_time: 0
 # how long time to calculate, (minute)
@@ -9,10 +11,10 @@ duration_time: 2
 # show track result, True or False
 show_track_result: False
 #, True or False
-skip_config: True
+skip_config: False
 
 # config roi path, search in the video_path directory if None
-config_roi:
+group_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\output\group.xlsx
 #
 area_th: 0.5
 #

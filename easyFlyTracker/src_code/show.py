@@ -29,6 +29,7 @@ class Show():
     def __init__(
             self,
             video_path,
+            output_dir,  # 输出文件夹
             ana_params,  # 获取analysis实例的时候需要的参数
             dish_radius_mm,
             suffix='all',  # 保存的图片结果后缀

@@ -27,6 +27,7 @@ class Analysis():
     def __init__(
             self,
             video_path,  # 视频路径
+            output_dir,  # 输出文件夹
             roi_flys_flag,
             area_th,  # 内圈面积占比
             roi_flys_ids=None,
@@ -47,7 +48,17 @@ class Analysis():
         self.sleep_time_th = sleep_time_th
         self.region_radius = int(round(math.sqrt(area_th) * self.dish_radius))
 
-        self.res_dir = Path(Path(video_path).parent, Path(video_path).stem)
+        # 初始化各种文件夹
+        self.res_dir = Path(output_dir)  # 保存用户需要的结果
+        self.cache_dir = Path(self.res_dir, '.cache')  # 保存程序计算的中间结果
+        self.saved_dir = Path(self.cache_dir, 'analysis_result')  # analysis计算出的结果
+        self.npy_file_path = Path(self.cache_dir, f'track.npy')
+        self.npy_file_path_cor = Path(self.cache_dir, f'track_cor.npy')
+        self.speeds_npy = Path(self.saved_dir, 'all_fly_speeds_per_frame.npy')
+        self.dist_npy = Path(self.saved_dir, 'all_fly_dist_per_frame.npy')
+        self.cache_dir.mkdir(exist_ok=True)
+        self.saved_dir.mkdir(exist_ok=True)
+
         cap = cv2.VideoCapture(str(video_path))
         self.fps = round(cap.get(cv2.CAP_PROP_FPS))
         self.video_frames_num = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -62,26 +73,18 @@ class Analysis():
         self.roi_flys_id = [i for i, r in enumerate(self.roi_flys_list) if r]
         self.roi_flys_nubs = self.roi_flys_list.sum()
 
-        # 初始化保存的文件夹
-        saved_dir = Path(self.res_dir, 'analysis_result')
-        saved_dir.mkdir(exist_ok=True)
-        self.saved_dir = saved_dir
-
         # 初始化加载某些数据
         self._get_all_res()
         self._get_speed_perframe_dist_perframe()
 
     def _get_all_res(self):
-        vp = self.video_path
-        npy_file_path = Path(vp.parent, vp.stem, f'track.npy')
-        npy_file_path_cor = Path(vp.parent, vp.stem, f'track_cor.npy')
-        if npy_file_path_cor.exists():
-            self.all_datas = np.load(npy_file_path_cor)
+        if self.npy_file_path_cor.exists():
+            self.all_datas = np.load(self.npy_file_path_cor)
         else:
-            res = np.load(npy_file_path)
+            res = np.load(self.npy_file_path)
             self.all_datas = np.transpose(res, [1, 0, 2])
             self._cor()
-            np.save(npy_file_path_cor, self.all_datas)
+            np.save(self.npy_file_path_cor, self.all_datas)
 
     def _cor(self):
         def _correction(l):
@@ -123,11 +126,9 @@ class Analysis():
         self.all_datas = res
 
     def _get_speed_perframe_dist_perframe(self, redo=False):
-        speeds_npy = f'{self.res_dir}/all_fly_speeds_per_frame.npy'
-        dist_npy = f'{self.res_dir}/all_fly_dist_per_frame.npy'
-        if Path(speeds_npy).exists() and Path(dist_npy).exists() and not redo:
-            self.all_fly_speeds_per_frame = np.load(speeds_npy)
-            self.all_fly_dist_per_frame = np.load(dist_npy)
+        if self.speeds_npy.exists() and self.dist_npy.exists() and not redo:
+            self.all_fly_speeds_per_frame = np.load(self.speeds_npy)
+            self.all_fly_dist_per_frame = np.load(self.dist_npy)
             return
         fn = lambda x, y: math.sqrt(pow(x, 2) + pow(y, 2))
         fn2 = lambda ps, k: fn(ps[k][0] - ps[k + 1][0],  # 两点之间的距离
@@ -149,8 +150,8 @@ class Analysis():
             raise NumpyArrayHasNanValuesExceptin(all_fly_speeds)
         if np.isnan(all_fly_displacement).sum() != 0:
             raise NumpyArrayHasNanValuesExceptin(all_fly_displacement)
-        np.save(speeds_npy, all_fly_speeds)
-        np.save(dist_npy, all_fly_displacement)
+        np.save(self.speeds_npy, all_fly_speeds)
+        np.save(self.dist_npy, all_fly_displacement)
         self.all_fly_speeds_per_frame = np.array(all_fly_speeds)
         self.all_fly_dist_per_frame = np.array(all_fly_displacement)
 

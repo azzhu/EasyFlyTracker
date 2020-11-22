@@ -7,6 +7,7 @@
 *.iml
 *.psd
 *.pptx
+*.xlsx
 build
 dist
 *.egg-info

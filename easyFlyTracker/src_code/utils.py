@@ -13,6 +13,7 @@ import time, yaml
 import inspect
 import ctypes
 from pathlib import Path
+import pandas as pd
 
 
 def stop_thread(thread):
@@ -34,30 +35,6 @@ def stop_thread(thread):
 def args_filter(kwargs, fn):
     arg_keys = inspect.getfullargspec(fn).args
     return {k: kwargs[k] for k in kwargs if k in arg_keys}
-
-
-# # 弃用，args_filter代替
-# def get_Class_params(cfg, cls):
-#     '''
-#     从cfg文件获取flyseg的传参字典
-#     当flyseg参数有变化的时候这个地方也有对应变化
-#
-#     只返回从cfg中读取的参数，某些参数（如roi_flys_mask_arry）若需要修改，可以在返回结果中从新修改
-#     :param cfg:
-#     :return:
-#     '''
-#     if cls.__doc__ == 'flyseg':
-#         raise NotImplementedError
-#     elif cls.__doc__ == 'ana':
-#         args = ['video_path', 'h_num', 'w_num', 'roi_flys_mask_arry', 'sleep_time_th',
-#                 'area_th', 'duration_time', 'ana_time_duration',
-#                 'minR_maxR_minD', 'sleep_dist_th_per_second', 'dish_exclude',
-#                 ]
-#         params = {arg: cfg[arg] for arg in args}
-#         params.update({
-#             # 'dish_exclude': None,
-#         })
-#         return params
 
 
 class NumpyArrayHasNanValuesExceptin(Exception):
@@ -122,10 +99,19 @@ class Pbar():
         print()  # 把光标移到下一行
 
 
+HELP = \
+    '''
+usage: easyFlyTracker [config file path].    
+    '''
+
+
 def __get_params():
     args = sys.argv
     if len(args) == 1:
-        print('please set the path of config file!')
+        print(HELP)
+        exit()
+    if args[1] == '-h' or args[1] == '--help':
+        print(HELP)
         exit()
     cfg_p = Path(args[1])
     if not cfg_p.exists():
@@ -139,33 +125,29 @@ def __get_params():
     return params
 
 
-def __load_config_roi(params):
-    p = params['config_roi']
+def __load_group(params):
+    p = params['group_path']
+    groups = []
     if p:  # 配置了该路径
         if Path(p).exists():
-            dst_p = p
+            df = pd.read_excel(p)
+            vs = df.values
+            cs = df.columns.values
+
+            for i, c in enumerate(cs):
+                flag = c
+                gp = [int(v) for v in vs[:, i] if not np.isnan(v)]
+                groups.append([gp, flag])
+
+            if len(groups) == 0:  # 空文件
+                return [[None, 'all']]
+            else:
+                return groups
         else:
-            print('the path, [config_roi], is not exists!')
+            print('the path, [group_path], is not exists!')
             exit()
     else:  # 未配置该路径
-        vp = Path(params['video_path'])
-        cp = Path(vp.parent, 'config_roi.txt')
-        dst_p = cp if cp.exists() else None  # 未配置也没找到，设为None
-
-    # load config roi
-    config_rois = []
-    if dst_p:
-        with open(dst_p, 'r') as f:
-            lines = f.readlines()
-            for line in lines:
-                l = line.strip()
-                flag, roi = l.split()
-                roi = roi.split(',')
-                roi = list(map(int, roi))
-                config_rois.append([roi, flag])
-    else:
-        config_rois.append([None, 'all'])  # roi设为空的时候就是全部，色即是空，空即是色。
-    return config_rois
+        return [[None, 'all']]  # roi设为空的时候就是全部，色即是空，空即是色。
 
 
 def gen_reqs():
@@ -174,7 +156,7 @@ def gen_reqs():
 
 
 if __name__ == '__main__':
-    gen_reqs()
+    # gen_reqs()
     exit()
     # from analysis import Analysis
     # from load_configyaml import load_config
