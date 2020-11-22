@@ -35,20 +35,8 @@ class Analysis():
             sleep_dist_th_per_second=5,
             sleep_time_th=300,  # 每秒睡眠状态持续多久算是真正的睡眠
     ):
-        # load cps and radius
-        config_pk = pickle.load(open(Path(Path(video_path).parent, 'config.pkl'), 'rb'))
-        config_pk = np.array(config_pk)
-        self.cps = config_pk[:, :2]
-        self.dish_radius = int(round(float(np.mean(config_pk[:, -1]))))
-
+        # 初始化各种文件夹及路径
         self.video_path = Path(video_path)
-        self.roi_flys_flag = roi_flys_flag
-        self.ana_time_duration = ana_time_duration
-        self.sleep_dist_th_per_second = sleep_dist_th_per_second
-        self.sleep_time_th = sleep_time_th
-        self.region_radius = int(round(math.sqrt(area_th) * self.dish_radius))
-
-        # 初始化各种文件夹
         self.res_dir = Path(output_dir)  # 保存用户需要的结果
         self.cache_dir = Path(self.res_dir, '.cache')  # 保存程序计算的中间结果
         self.saved_dir = Path(self.cache_dir, 'analysis_result')  # analysis计算出的结果
@@ -56,8 +44,21 @@ class Analysis():
         self.npy_file_path_cor = Path(self.cache_dir, f'track_cor.npy')
         self.speeds_npy = Path(self.saved_dir, 'all_fly_speeds_per_frame.npy')
         self.dist_npy = Path(self.saved_dir, 'all_fly_dist_per_frame.npy')
+        config_pkl_path = Path(self.res_dir, 'config.pkl')
         self.cache_dir.mkdir(exist_ok=True)
         self.saved_dir.mkdir(exist_ok=True)
+
+        # load cps and radius
+        config_pk = np.array(pickle.load(open(config_pkl_path, 'rb')))
+        self.cps = config_pk[:, :2]
+        self.dish_radius = int(round(float(np.mean(config_pk[:, -1]))))
+
+        self.roi_flys_flag = roi_flys_flag
+        self.ana_time_duration = ana_time_duration
+        self.sleep_dist_th_per_second = sleep_dist_th_per_second
+        self.sleep_time_th = sleep_time_th
+        self.region_radius = int(round(math.sqrt(area_th) * self.dish_radius))
+
 
         cap = cv2.VideoCapture(str(video_path))
         self.fps = round(cap.get(cv2.CAP_PROP_FPS))

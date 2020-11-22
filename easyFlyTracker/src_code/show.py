@@ -8,6 +8,7 @@
 '''
 import numpy as np
 import cv2, pickle
+import pandas as pd
 from pathlib import Path
 import matplotlib.pyplot as plt
 from easyFlyTracker.src_code.analysis import Analysis
@@ -39,23 +40,22 @@ class Show():
 
         :param suffix: 保存的图片或者npy文件的后缀，用于区分不同统计方式的结果
         '''
-        self.video_path = video_path
+        # 初始化各种文件夹
+        self.video_path = Path(video_path)
+        self.output_dir = output_dir
+        self.saved_dir = Path(output_dir, 'plot_images')
+        self.saved_dir_npys = Path(self.saved_dir, '.npys')
+        self.saved_dir.mkdir(exist_ok=True)
+        self.saved_dir_npys.mkdir(exist_ok=True)
+
         self.video_stem = Path(video_path).stem
-        self.dir = Path(video_path).parent
-        cap = cv2.VideoCapture(video_path)
+        cap = cv2.VideoCapture(str(self.video_path))
         self.fps = round(cap.get(cv2.CAP_PROP_FPS))  # 从opencv得到的帧率不太准，实际是30，opencv给的却是29.99，对后续计算有影响，所以取整
         cap.release()
-
-        # 初始化保存的文件夹
-        saved_dir = Path(self.dir, self.video_stem, f'show_result')
-        saved_dir.mkdir(exist_ok=True)
-        self.saved_dir = saved_dir
         self.saved_suffix = suffix
 
         # roi_flys
-        vp = Path(self.video_path)
-        npy_file_path = Path(vp.parent, vp.stem, f'track.npy')
-        res = np.load(npy_file_path)
+        res = np.load(Path(self.output_dir, '.cache', 'track.npy'))
         if roi_flys_ids == None:
             self.roi_flys_list = np.array([True] * len(res))
         else:
@@ -64,7 +64,7 @@ class Show():
         self.roi_flys_id = [i for i, r in enumerate(self.roi_flys_list) if r]
 
         # 计算比例尺
-        config_pk = pickle.load(open(Path(Path(video_path).parent, 'config.pkl'), 'rb'))
+        config_pk = pickle.load(open(Path(self.output_dir, 'config.pkl'), 'rb'))
         config_pk = np.array(config_pk)
         # self.cps = config_pk[:, :2]
         self.dish_radius = int(round(float(np.mean(config_pk[:, -1]))))
@@ -92,7 +92,9 @@ class Show():
         plt.legend(loc='upper left')
         # plt.show()
         plt.savefig(str(Path(self.saved_dir, f'avg_dist_per_x_min_{self.saved_suffix}.png')))
-        np.save(str(Path(self.saved_dir, f'avg_dist_per_x_min_{self.saved_suffix}.npy')), datas)
+        np.save(str(Path(self.saved_dir_npys, f'avg_dist_per_x_min_{self.saved_suffix}.npy')), datas)
+        df = pd.DataFrame(data=datas)
+        df.to_excel(Path(self.output_dir, f'avg_dist_per_x_min_{self.saved_suffix}.xlsx'))
 
     def SHOW_dist_change_per_h(self):
         da = self.ana.PARAM_dist_per_h()
@@ -108,7 +110,9 @@ class Show():
         plt.legend(loc='upper left')
         # plt.show()
         plt.savefig(str(Path(self.saved_dir, f'dist_change_per_h_{self.saved_suffix}.png')))
-        np.save(str(Path(self.saved_dir, f'dist_change_per_h_{self.saved_suffix}.npy')), vs)
+        np.save(str(Path(self.saved_dir_npys, f'dist_change_per_h_{self.saved_suffix}.npy')), vs)
+        df = pd.DataFrame(data=vs)
+        df.to_excel(Path(self.output_dir, f'dist_change_per_h_{self.saved_suffix}.xlsx'))
 
     def SHOW_in_centre_prob_per_h(self):
         datas_path = self.ana.PARAM_region_status()
@@ -130,7 +134,9 @@ class Show():
         plt.legend(loc='upper left')
         # plt.show()
         plt.savefig(str(Path(self.saved_dir, f'in_centre_prob_per_h_{self.saved_suffix}.png')))
-        np.save(str(Path(self.saved_dir, f'in_centre_prob_per_h_{self.saved_suffix}.npy')), in_centre_prob_per_h)
+        np.save(str(Path(self.saved_dir_npys, f'in_centre_prob_per_h_{self.saved_suffix}.npy')), in_centre_prob_per_h)
+        df = pd.DataFrame(data=in_centre_prob_per_h)
+        df.to_excel(Path(self.output_dir, f'in_centre_prob_per_h_{self.saved_suffix}.xlsx'))
 
     def SHOW_sleep_time_per_h(self):
         '''
@@ -156,7 +162,9 @@ class Show():
         plt.legend(loc='upper left')
         # plt.show()
         plt.savefig(str(Path(self.saved_dir, f'sleep_time_per_h_{self.saved_suffix}.png')))
-        np.save(str(Path(self.saved_dir, f'sleep_time_per_h_{self.saved_suffix}.npy')), sleep_time_per_h)
+        np.save(str(Path(self.saved_dir_npys, f'sleep_time_per_h_{self.saved_suffix}.npy')), sleep_time_per_h)
+        df = pd.DataFrame(data=sleep_time_per_h)
+        df.to_excel(Path(self.output_dir, f'sleep_time_per_h_{self.saved_suffix}.xlsx'))
 
     def show_all(self):
         self.SHOW_avg_dist_per10min()
@@ -165,15 +173,16 @@ class Show():
         # self.SHOW_sleep_time_per_h()
 
 
-def merge_result(cf):
-    suffixs = [v[-1] for v in cf['rois']]
+def merge_result(params):
+    suffixs = [v[-1] for v in params['rois']]
     prefixs = [
         'avg_dist_per_x_min',
         # 'dist_change_per_h',
         # 'in_centre_prob_per_h',
         # 'sleep_time_per_h',
     ]
-    dir = Path(Path(cf['video_path']).parent, Path(cf['video_path']).stem, 'show_result')
+    dir = Path(params['output_dir'], 'plot_images', '.npys')
+    dst_dir = Path(params['output_dir'], 'plot_images')
     for pre in prefixs:
         plt.close()
         plt.rcParams['figure.figsize'] = (15.0, 8.0)
@@ -184,7 +193,7 @@ def merge_result(cf):
             da = np.squeeze(da)
             plt.plot(da, label=' ' + str(lb))
         plt.legend(loc='upper left')
-        plt.savefig(str(Path(dir, f'{pre}_merge.png')))
+        plt.savefig(str(Path(dst_dir, f'{pre}_merge.png')))
         np.save(str(Path(dir, f'{pre}_merge.npy')), das)
 
 

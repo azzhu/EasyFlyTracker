@@ -180,6 +180,7 @@ class FlySeg():
         res = np.load(self.res_npy_path)
 
         i = 0
+        print('showing...')
         pbar = Pbar(total=self.duration_frames)
         while True:
             ret, frame = self.video.read()
