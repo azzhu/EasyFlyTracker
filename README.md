@@ -22,3 +22,7 @@ pip install -i https://pypi.org/simple/ easyFlyTracker
 ```
 
 ## Example
+
+```commandline
+easyFlyTracker config.yaml
+```

@@ -87,7 +87,7 @@ class Show():
         plt.grid(linewidth=1)
         plt.xlabel('time')
         plt.ylabel('distances (mm)')
-        plt.title('Average distances of 36 flies in every 10mins at different time')
+        plt.title('Average distances of 36 flies in every x mins at different time')
         plt.plot(datas, label=self.video_stem)
         plt.legend(loc='upper left')
         # plt.show()
