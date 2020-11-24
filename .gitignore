@@ -15,3 +15,4 @@ dist
 easyFlyTracker/__pycache__/
 tests/*.zip
 tests/demo
+tests/output
