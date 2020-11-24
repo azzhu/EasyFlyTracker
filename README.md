@@ -11,9 +11,15 @@ An easy-to-use program for analyzing Drosophila Activity.
 
 ## Features
 
-babababa
+* babababa
 
+* babababa
 
+* babababa
+
+* babababa
+
+* babababa
 
 ## Usage
 
@@ -50,6 +56,32 @@ python setup.py install
 
 ## Example
 
+程序包含两个命令：
+
+#### easyFlyTracker
+
+* Usage
+```commandline
+easyFlyTracker config_file_path
+```
+
+* Note
+
+
+#### easyFlyTracker_analysis
+
 ```commandline
 easyFlyTracker config.yaml
+```
+
+or get the help information use:
+
+```commandline
+easyFlyTracker -h
+```
+
+or
+
+```commandline
+easyFlyTracker --help
 ```

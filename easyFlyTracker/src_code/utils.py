@@ -103,11 +103,13 @@ HELP = \
     '''
 Usage: 
     easyFlyTracker [config file path].
-
+    and:
+    easyFlyTracker_analysis [config file path].
+    
 For example:
     easyFlyTracker D:/config.yaml
     
-If you want to know more about how to configure, you can see the file config.yaml. 
+You can find more detail information in this file: config.yaml. 
     '''
 
 
