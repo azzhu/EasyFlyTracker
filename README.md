@@ -5,7 +5,8 @@
 </div>
 
 
-An easy-to-use program for analyzing Drosophila Activity.
+**An easy-to-use program for analyzing Drosophila Activity.**
+![show](imgs/show.jpg)
 
 ---
 
