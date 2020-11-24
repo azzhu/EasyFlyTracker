@@ -101,7 +101,13 @@ class Pbar():
 
 HELP = \
     '''
-usage: easyFlyTracker [config file path].    
+Usage: 
+    easyFlyTracker [config file path].
+
+For example:
+    easyFlyTracker D:/config.yaml
+    
+If you want to know more about how to configure, you can see the file config.yaml. 
     '''
 
 
