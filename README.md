@@ -21,7 +21,7 @@ An easy-to-use program for analyzing Drosophila Activity.
 
 * babababa
 
-## Usage
+## Installation
 
 #### Online installation
 
@@ -54,34 +54,40 @@ python setup.py build
 python setup.py install
 ```
 
-## Example
+## Usage
 
 程序包含两个命令：
 
 #### easyFlyTracker
 
-* Usage
+* SYNOPSIS
 ```commandline
-easyFlyTracker config_file_path
+easyFlyTracker [config_file_path]
+easyFlyTracker -h 
+easyFlyTracker --help
 ```
 
-* Note
+* DESCRIPTION
 
+babababababba
 
 #### easyFlyTracker_analysis
 
+* SYNOPSIS
 ```commandline
-easyFlyTracker config.yaml
+easyFlyTracker_analysis [config_file_path]
+easyFlyTracker_analysis -h 
+easyFlyTracker_analysis --help
 ```
 
-or get the help information use:
+* DESCRIPTION
 
-```commandline
-easyFlyTracker -h
-```
+babababababba
 
-or
+## Quick Start
 
-```commandline
-easyFlyTracker --help
-```
+bababa
+
+## License
+
+Detectron2 is released under the [MIT license](https://github.com/azzhu/EasyFlyTracker/blob/master/LICENSE).
