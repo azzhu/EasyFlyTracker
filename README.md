@@ -6,19 +6,23 @@
 
 
 **An easy-to-use program for analyzing Drosophila Activity.**
-![show](imgs/show.jpg)
+
+<div align='center'>
+
+![show](imgs/img2.jpg)
+</div>
 
 ---
 
 ## Features
 
-* babababa
+* 快速的果蝇跟踪
 
-* babababa
+* 支持同时追踪多个腔室的果蝇
 
-* babababa
+* 可自由选择特定的腔室
 
-* babababa
+* 支持分组对比
 
 * babababa
 

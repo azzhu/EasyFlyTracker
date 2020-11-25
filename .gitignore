@@ -14,5 +14,4 @@ dist
 *.pyc
 easyFlyTracker/__pycache__/
 tests/*.zip
-tests/demo
-tests/output
+tests/output2

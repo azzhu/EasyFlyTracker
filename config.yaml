@@ -3,7 +3,7 @@
 # video path
 video_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\qudashen.mp4
 # 输出文件夹
-output_dir: D:\Pycharm_Projects\qu_holmes_su_release\tests\output
+output_dir: D:\Pycharm_Projects\qu_holmes_su_release\tests\output2
 # begin calculate time point, (minute)
 begin_time: 0
 # how long time to calculate, (minute)
