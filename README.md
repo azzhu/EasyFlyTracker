@@ -24,7 +24,7 @@
 
 * 支持分组对比
 
-* babababa
+* 可以选取视频中感兴趣的时间段来分析
 
 ## Installation
 
@@ -74,7 +74,9 @@ easyFlyTracker --help
 
 * DESCRIPTION
 
-babababababba
+该命令主要用来跟踪果蝇，并保存跟踪的结果。
+接收一个命令行参数，当传递配置文件路径时，程序正常运行。有关配置文件中参数详细说明参见[config.yaml](https://github.com/azzhu/EasyFlyTracker/blob/master/config.yaml).
+如果想查看该命令的帮助信息，可以传递 ***-h*** 或者 ***--help*** 来查看。
 
 #### easyFlyTracker_analysis
 
@@ -87,11 +89,25 @@ easyFlyTracker_analysis --help
 
 * DESCRIPTION
 
-babababababba
+该命令主要用于分析跟踪的结果，并以图形的方式展示。
+接收一个命令行参数，当传递配置文件路径时，程序正常运行。有关配置文件中参数详细说明参见[config.yaml](https://github.com/azzhu/EasyFlyTracker/blob/master/config.yaml).
+如果想查看该命令的帮助信息，可以传递 ***-h*** 或者 ***--help*** 来查看。
 
 ## Quick Start
 
-bababa
+[tests](https://github.com/azzhu/EasyFlyTracker/tree/master/tests) 文件夹下有demo视频，您可以拿该数据来快速上手。
+
+1. 在config.yaml中设置正确的视频路径、输出文件夹路径以及其他关注的参数；
+
+2. 跟踪果蝇，运行命令：
+    ```commandline
+    easyFlyTracker [your config file path]
+    ```
+3. 分析跟踪结果，运行命令：
+    ```commandline
+    easyFlyTracker_analysis [config_file_path]
+    ```
+    等待分析完成，结果保存在输出文件夹中。
 
 ## License
 
