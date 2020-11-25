@@ -18,7 +18,7 @@ pip install --upgrade -i https://pypi.org/simple/ easyFlyTracker
 with open('requirements.txt') as f:
     req = [line.strip() for line in f.readlines() if line.strip()]
 
-with open("README.md", "r") as fh:
+with open("README.md", "r", encoding='utf-8') as fh:
     long_description = fh.read()
 
 setuptools.setup(

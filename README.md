@@ -111,4 +111,4 @@ easyFlyTracker_analysis --help
 
 ## License
 
-Detectron2 is released under the [MIT license](https://github.com/azzhu/EasyFlyTracker/blob/master/LICENSE).
+EasyFlyTracker is released under the [MIT license](https://github.com/azzhu/EasyFlyTracker/blob/master/LICENSE).
