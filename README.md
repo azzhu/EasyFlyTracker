@@ -9,7 +9,7 @@
 
 <div align='center'>
 
-![show](imgs/img2.jpg)
+![gif](imgs/gif.gif)
 </div>
 
 ---

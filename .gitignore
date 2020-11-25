@@ -13,5 +13,6 @@ dist
 *.egg-info
 *.pyc
 easyFlyTracker/__pycache__/
+easyFlyTracker/__pycache__
 tests/*.zip
 tests/output2
