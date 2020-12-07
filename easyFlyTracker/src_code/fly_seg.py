@@ -83,7 +83,7 @@ class FlySeg():
         self.begin_frame = begin_frame
         self.video.set(cv2.CAP_PROP_POS_FRAMES, self.begin_frame)
 
-        if duration_time is None:
+        if duration_time in (None, 'None', 0):
             self.duration_frames = self.video_frames_num - self.begin_frame
         else:
             self.duration_frames = duration_time * 60 * self.video_fps

@@ -6,7 +6,7 @@ video_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\qudashen.mp4
 output_dir: D:\Pycharm_Projects\qu_holmes_su_release\tests\output2
 # begin calculate time point, (minute)
 begin_time: 0
-# how long time to calculate, (minute)，可以设为None，到视频结束停止
+# how long time to calculate, (minute)，可以设为None或者0，到视频结束停止
 duration_time: 2
 # show track result, True or False
 show_track_result: False
