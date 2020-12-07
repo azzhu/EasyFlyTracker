@@ -7,7 +7,6 @@
 *.iml
 *.psd
 *.pptx
-*.xlsx
 build
 dist
 *.egg-info
@@ -16,3 +15,4 @@ easyFlyTracker/__pycache__/
 easyFlyTracker/__pycache__
 tests/*.zip
 tests/output2
+tests/output*

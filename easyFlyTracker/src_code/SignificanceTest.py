@@ -104,4 +104,6 @@ if __name__ == '__main__':
     )
     s.fly()
 
-    print()
+
+    # print(dir(s))
+    # print(s.fly.__doc__)
