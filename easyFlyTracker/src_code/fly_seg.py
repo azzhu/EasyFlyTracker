@@ -181,6 +181,7 @@ class FlySeg():
 
         i = 0
         print('showing...')
+        print('q: exit')
         pbar = Pbar(total=self.duration_frames)
         while True:
             ret, frame = self.video.read()
@@ -197,7 +198,9 @@ class FlySeg():
                 cv2.imwrite(str(Path(self.saved_dir, f'{self.video_stem}_3_frame.bmp')), frame)
                 return
             cv2.imshow('frame', frame)
-            cv2.waitKey(3)
+            k = cv2.waitKey(3) & 0xFF
+            if chr(k) == 'q' or chr(k) == 'Q':
+                break
             i += 1
             pbar.update(1)
             if i >= self.duration_frames:
