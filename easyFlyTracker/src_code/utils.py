@@ -138,7 +138,7 @@ def __load_group(params):
     groups = []
     if p:  # 配置了该路径
         if Path(p).exists():
-            df = pd.read_excel(p)
+            df = pd.read_excel(p, engine='openpyxl')
             vs = df.values
             cs = df.columns.values
 
@@ -164,7 +164,7 @@ def gen_reqs():
 
 
 if __name__ == '__main__':
-    # gen_reqs()
+    df = pd.read_excel(r'D:\Pycharm_Projects\qu_holmes_su_release\tests\output2\group.xlsx', engine='openpyxl')
     exit()
     # from analysis import Analysis
     # from load_configyaml import load_config

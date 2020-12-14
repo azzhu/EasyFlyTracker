@@ -8,3 +8,4 @@ numpy
 imageio
 matplotlib
 PyYAML
+openpyxl
