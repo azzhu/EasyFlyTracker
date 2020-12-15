@@ -14,7 +14,7 @@ show_track_result: False
 skip_config: False
 
 # config roi path, search in the video_path directory if None
-group_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\output\group.xlsx
+group_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\output2\group.xlsx
 #
 area_th: 0.5
 #

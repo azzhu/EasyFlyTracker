@@ -125,7 +125,8 @@ def __get_params():
     if not cfg_p.exists():
         print('please check that if the config file path is correct')
         exit()
-    params = yaml.safe_load(open(cfg_p, 'r', encoding='utf-8'))
+    with open(cfg_p, 'r', encoding='utf-8') as f:
+        params = yaml.safe_load(f)
     vp = params['video_path']
     if vp is None or not Path(vp).exists():
         print('The [video_path] is not existing, please check it!')
@@ -164,7 +165,9 @@ def gen_reqs():
 
 
 if __name__ == '__main__':
-    df = pd.read_excel(r'D:\Pycharm_Projects\qu_holmes_su_release\tests\output2\group.xlsx', engine='openpyxl')
+    with open(cfg_p, 'r', encoding='utf-8') as f:
+        params = yaml.safe_load(f)
+    df = __load_group(params)
     exit()
     # from analysis import Analysis
     # from load_configyaml import load_config
