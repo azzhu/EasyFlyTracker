@@ -102,14 +102,14 @@ class Pbar():
 HELP = \
     '''
 Usage: 
-    easyFlyTracker [config file path].
+    easyFlyTracker [config file path]
     and:
-    easyFlyTracker_analysis [config file path].
+    easyFlyTracker_analysis [config file path]
     
 For example:
     easyFlyTracker D:/config.yaml
     
-You can find more detail information in this file: config.yaml. 
+You can find more detail information in this file: config.yaml
     '''
 
 
@@ -146,6 +146,7 @@ def __load_group(params):
             for i, c in enumerate(cs):
                 flag = c
                 gp = [int(v) for v in vs[:, i] if not np.isnan(v)]
+                gp = list(set(gp))
                 groups.append([gp, flag])
 
             if len(groups) == 0:  # 空文件
@@ -165,7 +166,7 @@ def gen_reqs():
 
 
 if __name__ == '__main__':
-    with open(cfg_p, 'r', encoding='utf-8') as f:
+    with open(r'D:\Pycharm_Projects\qu_holmes_su_release\config.yaml', 'r', encoding='utf-8') as f:
         params = yaml.safe_load(f)
     df = __load_group(params)
     exit()
