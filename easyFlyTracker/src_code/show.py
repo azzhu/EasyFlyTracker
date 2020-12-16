@@ -79,7 +79,7 @@ class Show():
         十分钟一个值，
         :return:
         '''
-        datas_paths = self.ana.PARAM_speed_displacement()
+        datas_paths = self.ana.PARAM_speed_displacement(redo=True)  # 不调缓存，重新计算
         datas = np.load(datas_paths[1])
         datas *= self.sacle
         plt.close()
@@ -93,7 +93,7 @@ class Show():
         # plt.show()
         plt.savefig(str(Path(self.saved_dir, f'avg_dist_per_x_min_{self.saved_suffix}.png')))
         np.save(str(Path(self.saved_dir_npys, f'avg_dist_per_x_min_{self.saved_suffix}.npy')), datas)
-        df = pd.DataFrame(data=datas)
+        df = pd.DataFrame(data=datas, columns=[self.saved_suffix])
         df.to_excel(Path(self.output_dir, f'avg_dist_per_x_min_{self.saved_suffix}.xlsx'))
 
     def SHOW_dist_change_per_h(self):

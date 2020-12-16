@@ -166,9 +166,8 @@ def gen_reqs():
 
 
 if __name__ == '__main__':
-    with open(r'D:\Pycharm_Projects\qu_holmes_su_release\config.yaml', 'r', encoding='utf-8') as f:
-        params = yaml.safe_load(f)
-    df = __load_group(params)
+    df = pd.DataFrame(data=np.array([1, 0, 12, 0.5]), columns=['nihao'])
+    df.to_excel('avg.xlsx')
     exit()
     # from analysis import Analysis
     # from load_configyaml import load_config
