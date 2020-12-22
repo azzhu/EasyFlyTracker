@@ -3,7 +3,7 @@
 # video path
 video_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\qudashen.mp4
 # 输出文件夹
-output_dir: D:\Pycharm_Projects\qu_holmes_su_release\tests\output2
+output_dir: D:\Pycharm_Projects\qu_holmes_su_release\tests\output4
 # begin calculate time point, (minute)
 begin_time: 0
 # how long time to calculate, (minute)，可以设为None或者0，到视频结束停止
@@ -14,7 +14,7 @@ show_track_result: False
 skip_config: False
 
 # config roi path, search in the video_path directory if None
-group_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\output2\group.xlsx
+group_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\output4\group.xlsx
 #
 area_th: 0.5
 #

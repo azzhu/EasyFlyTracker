@@ -49,7 +49,6 @@ def easyFlyTracker_analysis():
     # 分析结果并展示
     one_step_run(params)
 
-# todo: analysis计算时不读缓存，每次groups有改动都重新计算。
 
 if __name__ == '__main__':
     # easyFlyTracker_()

@@ -129,20 +129,28 @@ class GUI_CFG():
     def CFG_circle(self, direct_get_res=False):
         if direct_get_res:
             return self.res
+
+        # 键盘右边上下左右键waitKeyEx返回值
+        key_up, key_down, key_left, key_right = (
+            2490368,
+            2621440,
+            2424832,
+            2555904)
+
         while True:
             # cv2.imshow('img', self.img)
             cv2.imshow(self.winname, self._draw_img_from_res())
             cv2.setMouseCallback(self.winname, self._opencv_mouse_callback)
-            k = cv2.waitKey(30) & 0xFF
+            k = cv2.waitKeyEx(30)
 
             # 正常移动
-            if k == 119:  # w，向上移动
+            if k == 119 or k == key_up:  # w，向上移动
                 self.res[self.roi_id][1] -= 1
-            elif k == 115:  # s，向下
+            elif k == 115 or k == key_down:  # s，向下
                 self.res[self.roi_id][1] += 1
-            elif k == 97:  # a，向左
+            elif k == 97 or k == key_left:  # a，向左
                 self.res[self.roi_id][0] -= 1
-            elif k == 100:  # d，向右
+            elif k == 100 or k == key_right:  # d，向右
                 self.res[self.roi_id][0] += 1
             # 按住shift再按相应按键【整体移动】
             elif k == 87:  # w，整体向上移动
@@ -171,7 +179,7 @@ class GUI_CFG():
 
 
 if __name__ == '__main__':
-    p_ = r'D:\Pycharm_Projects\qu_holmes_su_release\tests\demo.mp4'
+    p_ = r'D:\Pycharm_Projects\qu_holmes_su_release\tests\qudashen.mp4'
     cap = cv2.VideoCapture(p_)
     _, frame = cap.read()
 
