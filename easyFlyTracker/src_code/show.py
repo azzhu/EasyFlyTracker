@@ -87,7 +87,7 @@ class Show():
         plt.grid(linewidth=1)
         plt.xlabel('time')
         plt.ylabel('distances (mm)')
-        plt.title('Average distances of 36 flies in every x mins at different time')
+        plt.title('Average distances of flies in every duration at different time')
         plt.plot(datas, label=self.video_stem)
         plt.legend(loc='upper left')
         # plt.show()
@@ -187,7 +187,8 @@ def merge_result(params):
         plt.close()
         plt.rcParams['figure.figsize'] = (15.0, 8.0)
         plt.grid(linewidth=1)
-        plt.title(pre)
+        # 目前只有一个指标，所以默认这个，如果后续有多个，这个地方要改
+        plt.title('Average distances of flies in every duration at different time')
         das = [np.load(Path(dir, f'{pre}_{suf}.npy')) for suf in suffixs]
         for da, lb in zip(das, suffixs):
             da = np.squeeze(da)

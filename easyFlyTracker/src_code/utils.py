@@ -14,6 +14,7 @@ import inspect
 import ctypes
 from pathlib import Path
 import pandas as pd
+import platform
 
 
 def stop_thread(thread):
@@ -82,7 +83,8 @@ class Pbar():
         if pbar_now > self.pbar_len: pbar_now = self.pbar_len  # 允许now>total，但是不允许pbar_now>pbar_len
         blank_len = self.pbar_len - pbar_now
         time_used = time.time() - self.time  # 当前更新耗时
-        speed = nb / time_used  # 速度
+        eps = 1e-4  # 一个比较小的值，加在被除数上，防止除零
+        speed = nb / (time_used + eps)  # 速度
         total_time_used = time.time() - self.start_time  # 总耗时
         total_time_used_min, total_time_used_sec = divmod(total_time_used, 60)
         total_time_used = f'{int(total_time_used_min):0>2d}:{int(total_time_used_sec):0>2d}'
@@ -139,14 +141,17 @@ def __load_group(params):
     groups = []
     if p:  # 配置了该路径
         if Path(p).exists():
-            df = pd.read_excel(p, engine='openpyxl')
+            try:
+                df = pd.read_excel(p, engine='openpyxl')
+            except:  # 如果这里面的还不能正常执行，那就报错吧
+                df = pd.read_excel(p)
             vs = df.values
             cs = df.columns.values
 
             for i, c in enumerate(cs):
                 flag = c
                 gp = [int(v) for v in vs[:, i] if not np.isnan(v)]
-                gp = list(set(gp))
+                gp = sorted(list(set(gp)))
                 groups.append([gp, flag])
 
             if len(groups) == 0:  # 空文件
@@ -166,32 +171,12 @@ def gen_reqs():
 
 
 if __name__ == '__main__':
-    df = pd.DataFrame(data=np.array([1, 0, 12, 0.5]), columns=['nihao'])
-    df.to_excel('avg.xlsx')
-    exit()
-    # from analysis import Analysis
-    # from load_configyaml import load_config
-    #
-    # cf = load_config()
-    # params = get_Class_params(cf, Analysis)
-    # print(params)
-    # del_files('/home/zhangli_lab/zhuqingjie/dataset/qususu/1012/202010121025.avi')
-    import cv2
-    from Camera_Calibration import Undistortion
+    def fn(k):
+        return 100 / k
 
-    img0923 = cv2.imread(r'Z:\dataset\qususu\0923\202009231045_bg.bmp')
-    img1012 = cv2.imread(r'Z:\dataset\qususu\1012\202010121025_bg.bmp')
-    ud = Undistortion(r'Z:\dataset\qususu\mapx_y.npy')
-    img0923 = ud.do(img0923, sc=31 / 46)
-    img1012 = ud.do(img1012, sc=1)
-    cv2.imshow('1012', img1012)
-    cv2.imshow('0923', img0923)
-    cv2.waitKey()
 
-    pb = Pbar(total=50)
-    for i in range(50):
-        time.sleep(0.1)
-        _, sv = divmod(i, 10)
-        pb.update(set=True, set_value=sv)
-    pb.close()
-    print('ok')
+    try:
+        res = fn(0)
+    except:
+        res = fn(0)
+    print(res)
