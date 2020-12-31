@@ -34,7 +34,7 @@ class FlySeg():
             save_txt_name,  # 要保存的txt name（同时保存txt和同名npy）,不要求绝对路径，只要求name即可
             begin_time,  # 从哪个时间点开始
             # h_num, w_num,  # 盘子是几乘几的
-            mapxy_path=None,  # 畸变矫正参数路径
+            Undistortion_model_path=None,  # 畸变矫正参数路径
             duration_time=None,  # 要持续多长时间
             # dish_exclude=None,  # 排除的特殊圆盘，比如空盘、死果蝇等情况,可以一维或者（h_num, w_num），被排除的圆盘结果用(-1,-1)表示
             seg_th=120,  # 分割阈值
@@ -54,7 +54,7 @@ class FlySeg():
 
         self.video_stem = str(Path(video_path).stem)
         self.seg_th = seg_th
-        self.undistort = Undistortion(mapxy_path)
+        self.undistort = Undistortion(Undistortion_model_path)
         self.background_th = background_th
 
         self.video = cv2.VideoCapture(str(self.video_path))
@@ -294,7 +294,7 @@ def multiprocessing(seg_params, cpus=45):
 
 def run(cf, mode, just_save_one_frame=True):
     args = ['video_path', 'h_num', 'w_num', 'duration_time', 'seg_th', 'background_th',
-            'area_th', 'minR_maxR_minD', 'dish_exclude', 'mapxy_path']
+            'area_th', 'minR_maxR_minD', 'dish_exclude', 'Undistortion_model_path']
     seg_params = {arg: cf[arg] for arg in args}
     seg_params_play = {
         **seg_params,

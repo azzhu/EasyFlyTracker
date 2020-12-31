@@ -133,6 +133,10 @@ def __get_params():
     if vp is None or not Path(vp).exists():
         print('The [video_path] is not existing, please check it!')
         exit()
+    # 把字符串none转变为真正的None
+    for key in params:
+        if isinstance(params[key], str) and params[key].lower() in ['none', 'null']:
+            params[key] = None
     return params
 
 
@@ -171,12 +175,5 @@ def gen_reqs():
 
 
 if __name__ == '__main__':
-    def fn(k):
-        return 100 / k
-
-
-    try:
-        res = fn(0)
-    except:
-        res = fn(0)
-    print(res)
+    x = 'NoNe'
+    print(x.lower())

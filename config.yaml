@@ -21,3 +21,5 @@ area_th: 0.5
 ana_time_duration: 0.5
 #
 dish_radius_mm: 10
+# 去畸变参数路径
+Undistortion_model_path: None
