@@ -81,7 +81,12 @@ class GUI_CFG():
         elif event == cv2.EVENT_LBUTTONUP:  # 左键松开
             self.lbutton_down = False
         elif self.lbutton_down and event == cv2.EVENT_MOUSEMOVE:  # 左键按下并且鼠标移动【移动感兴趣圆环】
-            self.res[self.roi_id][:2] = [x, y]
+            # 先看一下点击的点离roi_id的距离
+            x0, y0 = self.res[self.roi_id][:2]
+            dist = math.sqrt(pow(x - x0, 2) + pow(y - y0, 2))
+            # 根据距离判断点击的点是否在圈内
+            if dist <= self.res[self.roi_id][2]:
+                self.res[self.roi_id][:2] = [x, y]
         elif event == cv2.EVENT_LBUTTONDBLCLK:  # 左键双击【在双击的地方添加新的圆环】
             self._res_add(x, y)
         elif event == cv2.EVENT_RBUTTONDBLCLK:  # 右键双击【删除圆环】
