@@ -128,6 +128,9 @@ class GUI_CFG():
 
     def CFG_circle(self, direct_get_res=False):
         if direct_get_res:
+            # 直接退出之前还是得保存config.bmp给用户看
+            self._draw_img_from_res()
+            cv2_ext.imwrite(str(self.res_pkl)[:-3] + 'bmp', self.drawed_img)
             return self.res
 
         # 键盘右边上下左右键waitKeyEx返回值
