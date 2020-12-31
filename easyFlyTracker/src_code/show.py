@@ -196,6 +196,9 @@ def merge_result(params):
         plt.legend(loc='upper left')
         plt.savefig(str(Path(dst_dir, f'{pre}_merge.png')))
         np.save(str(Path(dir, f'{pre}_merge.npy')), das)
+        ...  # 顺便保存个merge的excel
+        df = pd.DataFrame(np.array(das).T, columns=suffixs)
+        df.to_excel(Path(params['output_dir'], f'{pre}_merge.xlsx'))
 
 
 def one_step_run(params):

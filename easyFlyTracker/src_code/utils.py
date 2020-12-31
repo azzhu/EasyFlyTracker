@@ -133,6 +133,15 @@ def __get_params():
     if vp is None or not Path(vp).exists():
         print('The [video_path] is not existing, please check it!')
         exit()
+
+    # 判断并创建output_dir目录
+    try:
+        Path(params['output_dir']).mkdir(exist_ok=True)
+        print(f"Create the output_dir: {params['output_dir']}  Done!")
+    except:
+        print('Please set a valid [output_dir]!')
+        exit()
+
     # 把字符串none转变为真正的None
     for key in params:
         if isinstance(params[key], str) and params[key].lower() in ['none', 'null']:
