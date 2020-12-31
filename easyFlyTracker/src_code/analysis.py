@@ -59,7 +59,6 @@ class Analysis():
         self.sleep_time_th = sleep_time_th
         self.region_radius = int(round(math.sqrt(area_th) * self.dish_radius))
 
-
         cap = cv2.VideoCapture(str(video_path))
         self.fps = round(cap.get(cv2.CAP_PROP_FPS))
         self.video_frames_num = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))

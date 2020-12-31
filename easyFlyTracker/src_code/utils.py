@@ -97,7 +97,9 @@ class Pbar():
         print(f'\r{pbar}', end='')
         self.time = time.time()
 
-    def close(self):
+    def close(self, reset_done=True):
+        if reset_done:  # 把状态条重置为完成
+            self.update(set=True, set_value=self.total)
         print()  # 把光标移到下一行
 
 
@@ -184,5 +186,8 @@ def gen_reqs():
 
 
 if __name__ == '__main__':
-    x = 'NoNe'
-    print(x.lower())
+    pbar = Pbar(total=100)
+    for i in range(50):
+        pbar.update(1)
+        time.sleep(0.1)
+    pbar.close(reset_done=True)
