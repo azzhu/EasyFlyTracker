@@ -8,7 +8,7 @@
 '''
 import sys, os
 import numpy as np
-import threading
+from multiprocessing import Process
 import time, yaml
 import inspect
 import ctypes
@@ -103,6 +103,38 @@ class Pbar():
         print()  # 把光标移到下一行
 
 
+class Wait():
+    '''
+    等待模块。
+    跟Pbar类似，Pbar需要更新，需要知道当前进度，这个不需要，只展示了一个等待的动画。
+    需要处理的代码块放到with里面即可，注意，该代码块里面最好就不要再有任何print了。
+
+    usage:
+    with Wait():
+        time.sleep(10)
+    '''
+
+    def __init__(self, info=None):
+        if info:
+            print(info)
+
+    def __enter__(self):
+        self.p = Process(target=self.print_fn, args=())
+        self.p.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.p.kill()
+        print('\r...Done')
+
+    def print_fn(self):
+        while True:
+            time.sleep(0.3)
+            print('\r...\\', end='')
+            time.sleep(0.3)
+            print('\r.../', end='')
+
+
 HELP = \
     '''
 Usage: 
@@ -186,8 +218,7 @@ def gen_reqs():
 
 
 if __name__ == '__main__':
-    pbar = Pbar(total=100)
-    for i in range(50):
-        pbar.update(1)
-        time.sleep(0.1)
-    pbar.close(reset_done=True)
+    with Wait():
+        time.sleep(10)
+    with Wait('开始计算背景'):
+        time.sleep(5)

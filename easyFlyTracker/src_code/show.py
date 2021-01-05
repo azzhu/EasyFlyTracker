@@ -15,7 +15,7 @@ import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from easyFlyTracker.src_code.analysis import Analysis
-from easyFlyTracker.src_code.utils import args_filter
+from easyFlyTracker.src_code.utils import args_filter, Wait
 
 
 class Show():
@@ -223,9 +223,9 @@ def one_step_run(params):
         print('-' * 50)
         print(f'Group name: {flag}')
         print(f'Group ids: \t{ids}')
-        s = Show(**show_params)
-        s.show_all()
-        print('Done.')
+        with Wait():
+            s = Show(**show_params)
+            s.show_all()
 
     if len(rois) > 1:
         merge_result(params)

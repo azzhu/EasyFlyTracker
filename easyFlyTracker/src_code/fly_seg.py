@@ -12,7 +12,7 @@ from pathlib import Path
 from scipy import stats
 from multiprocessing import Pool
 from threading import Thread
-from easyFlyTracker.src_code.utils import Pbar
+from easyFlyTracker.src_code.utils import Pbar, Wait
 from easyFlyTracker.src_code.Camera_Calibration import Undistortion
 from easyFlyTracker.src_code.utils import stop_thread
 from easyFlyTracker.src_code.gui_config import GUI_CFG
@@ -117,7 +117,7 @@ class FlySeg():
         if self.bg_img_path.exists():
             bg = cv2.imread(str(self.bg_img_path))
         else:
-            print('Calculate the background image...')
+            print('Collect frames...')
             tim = time.time()
             inds = list(range(self.video_frames_num))
             random.shuffle(inds)
@@ -133,10 +133,11 @@ class FlySeg():
                 frames.append(frame)
             frames = np.array(frames)
             # print(frames.shape)
-            sx = stats.mode(frames)
-            bg = sx[0][0]
-            bg = cv2.medianBlur(bg, 3)
-            cv2.imwrite(str(self.bg_img_path), bg)
+            with Wait('Calculate the background image...'):
+                sx = stats.mode(frames)
+                bg = sx[0][0]
+                bg = cv2.medianBlur(bg, 3)
+                cv2.imwrite(str(self.bg_img_path), bg)
             print(f'Finished, time consuming:{time.time() - tim}s')
             self.video.set(cv2.CAP_PROP_POS_FRAMES, 0)
         self.bg = bg

@@ -13,7 +13,7 @@ from pathlib import Path
 import pandas as pd
 import pickle
 # from easyFlyTracker.src_code.fly_seg import FlySeg
-from easyFlyTracker.src_code.utils import Pbar
+from easyFlyTracker.src_code.utils import Pbar, Wait
 from easyFlyTracker.src_code.utils import NumpyArrayHasNanValuesExceptin
 
 
