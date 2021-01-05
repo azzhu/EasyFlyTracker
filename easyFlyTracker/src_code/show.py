@@ -84,7 +84,7 @@ class Show():
         datas *= self.sacle
         plt.close()
         plt.rcParams['figure.figsize'] = (15.0, 8.0)
-        plt.grid(linewidth=1)
+        # plt.grid(linewidth=1)
         plt.xlabel('time')
         plt.ylabel('distances (mm)')
         plt.title('Average distances of flies in every duration at different time')
@@ -217,10 +217,12 @@ def one_step_run(params):
         show_params['roi_flys_ids'] = ids
         show_params['suffix'] = flag
         show_params['ana_params'] = ana_params
-        print(f'---------- {flag} ----------')
-        print(ids)
+        print('-' * 50)
+        print(f'Group name: {flag}')
+        print(f'Group ids: \t{ids}')
         s = Show(**show_params)
         s.show_all()
+        print('Done.')
 
     if len(rois) > 1:
         merge_result(params)
