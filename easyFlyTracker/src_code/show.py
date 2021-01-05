@@ -87,7 +87,7 @@ class Show():
         datas *= self.sacle
         plt.close()
         plt.rcParams['figure.figsize'] = (15.0, 8.0)
-        # plt.grid(linewidth=1)
+        plt.grid(linewidth=1)
         plt.xlabel('time')
         plt.ylabel('distances (mm)')
         plt.title('Average distances of flies in every duration at different time')
@@ -189,7 +189,7 @@ def merge_result(params):
     for pre in prefixs:
         plt.close()
         plt.rcParams['figure.figsize'] = (15.0, 8.0)
-        # plt.grid(linewidth=1)
+        plt.grid(linewidth=1)
         # 目前只有一个指标，所以默认这个，如果后续有多个，这个地方要改
         plt.title('Average distances of flies in every duration at different time')
         das = [np.load(Path(dir, f'{pre}_{suf}.npy')) for suf in suffixs]
