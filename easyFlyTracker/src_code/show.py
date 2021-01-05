@@ -10,6 +10,9 @@ import numpy as np
 import cv2, pickle
 import pandas as pd
 from pathlib import Path
+import matplotlib
+
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from easyFlyTracker.src_code.analysis import Analysis
 from easyFlyTracker.src_code.utils import args_filter
