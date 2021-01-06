@@ -116,7 +116,9 @@ class Wait():
 
     def __init__(self, info=None):
         if info:
-            print(info)
+            print(f'{info}.../', end='')
+        else:
+            print('.../', end='')
 
     def __enter__(self):
         self.p = Process(target=self.print_fn, args=())
@@ -125,14 +127,14 @@ class Wait():
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.p.kill()
-        print('\r...Done')
+        print('\bDone')
 
     def print_fn(self):
         while True:
             time.sleep(0.3)
-            print('\r...\\', end='')
+            print('\b\\', end='')
             time.sleep(0.3)
-            print('\r.../', end='')
+            print('\b/', end='')
 
 
 HELP = \

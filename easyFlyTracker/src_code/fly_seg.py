@@ -117,7 +117,7 @@ class FlySeg():
         if self.bg_img_path.exists():
             bg = cv2.imread(str(self.bg_img_path))
         else:
-            with Wait('Collect frames...'):
+            with Wait('Collect frames'):
                 tim = time.time()
                 inds = list(range(self.video_frames_num))
                 random.shuffle(inds)
@@ -133,7 +133,7 @@ class FlySeg():
                     frames.append(frame)
                 frames = np.array(frames)
             # print(frames.shape)
-            with Wait('Calculate the background image...'):
+            with Wait('Calculate the background image'):
                 sx = stats.mode(frames)
                 bg = sx[0][0]
                 bg = cv2.medianBlur(bg, 3)
