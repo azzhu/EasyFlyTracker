@@ -117,21 +117,21 @@ class FlySeg():
         if self.bg_img_path.exists():
             bg = cv2.imread(str(self.bg_img_path))
         else:
-            print('Collect frames...')
-            tim = time.time()
-            inds = list(range(self.video_frames_num))
-            random.shuffle(inds)
-            inds = inds[:frames_num_used]
-            frames = []
-            for i in inds:
-                # print(f'{i}')
-                self.video.set(cv2.CAP_PROP_POS_FRAMES, i)
-                ret, frame = self.video.read()
-                frame = self.undistort.do(frame)
-                if ret == False:
-                    break
-                frames.append(frame)
-            frames = np.array(frames)
+            with Wait('Collect frames...'):
+                tim = time.time()
+                inds = list(range(self.video_frames_num))
+                random.shuffle(inds)
+                inds = inds[:frames_num_used]
+                frames = []
+                for i in inds:
+                    # print(f'{i}')
+                    self.video.set(cv2.CAP_PROP_POS_FRAMES, i)
+                    ret, frame = self.video.read()
+                    frame = self.undistort.do(frame)
+                    if ret == False:
+                        break
+                    frames.append(frame)
+                frames = np.array(frames)
             # print(frames.shape)
             with Wait('Calculate the background image...'):
                 sx = stats.mode(frames)
