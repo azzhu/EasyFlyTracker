@@ -23,3 +23,17 @@ ana_time_duration: 0.5
 dish_radius_mm: 10
 # 去畸变参数路径，设为None则不使用去畸变功能，否则就设置正确的模型路径
 Undistortion_model_path: None
+
+
+
+################ Camera Calibration #################
+# 已拍摄的标记图像所在文件夹
+calibration_images_files_dir: D:\Pycharm_Projects\qu_holmes_su_release\imgs\camera_calibration\traindatas
+
+# 标记模型保存结果
+calibration_model_saved_dir: D:\Pycharm_Projects\qu_holmes_su_release\imgs\camera_calibration\model
+
+# 棋盘大小
+chess_size: [6, 9]
+
+################ Camera Calibration #################

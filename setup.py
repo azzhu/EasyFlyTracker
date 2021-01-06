@@ -42,7 +42,7 @@ setuptools.setup(
         'console_scripts': [
             'easyFlyTracker=easyFlyTracker.cli:easyFlyTracker_',
             'easyFlyTracker_analysis=easyFlyTracker.cli:easyFlyTracker_analysis',
-            # 'easyFlyTracker_plot=easyFlyTracker.cli:easyFlyTracker_plot',
+            'easyFlyTracker_cam_calibration=easyFlyTracker.cli:easyFlyTracker_cam_calibration',
         ]
     },
     classifiers=[
