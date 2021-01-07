@@ -116,8 +116,9 @@ class Wait():
 
     def __init__(self, info=None):
         if info:
-            print(f'{info}')
-        print('.../', end='', flush=True)
+            print(f'{info}../', end='', flush=True)
+        else:
+            print('.../', end='', flush=True)
 
     def __enter__(self):
         self.p = Process(target=self.print_fn, args=())
@@ -220,6 +221,6 @@ def gen_reqs():
 
 if __name__ == '__main__':
     with Wait():
-        time.sleep(10)
+        time.sleep(5)
     with Wait('开始计算背景'):
         time.sleep(5)
