@@ -116,7 +116,7 @@ class Wait():
 
     def __init__(self, info=None):
         if info:
-            print(f'{info}../', end='', flush=True)
+            print(f'{info}.../', end='', flush=True)
         else:
             print('.../', end='', flush=True)
 

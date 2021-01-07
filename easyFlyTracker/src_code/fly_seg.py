@@ -63,6 +63,15 @@ class FlySeg():
 
         # gui config
         _, temp_frame = self.video.read()
+
+        # 在这判断训练畸变矫正模型所使用的图像分辨率是否跟当前视频一致
+        map_sp = self.undistort.mapxy.shape[-2:]
+        frame_sp = temp_frame.shape[:2]
+        if map_sp != frame_sp:
+            print('The resolution of training calibration_model images is not same as the resolution of video!')
+            exit()
+
+        temp_frame = self.undistort.do(temp_frame)
         g = GUI_CFG(temp_frame, [], str(self.output_dir))
         res = g.CFG_circle(direct_get_res=skip_config)
         if len(res) == 0: raise ValueError
