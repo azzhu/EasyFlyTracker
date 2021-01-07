@@ -17,6 +17,7 @@ import pandas as pd
 import platform
 
 
+
 def stop_thread(thread):
     """raises the exception, performs cleanup if needed"""
     tid, exctype = thread.ident, SystemExit
@@ -126,7 +127,7 @@ class Wait():
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.p.kill()
+        self.p.terminate()
         print('\bDone')
 
     def print_fn(self):
@@ -221,6 +222,6 @@ def gen_reqs():
 
 if __name__ == '__main__':
     with Wait():
-        time.sleep(5)
+        time.sleep(3)
     with Wait('开始计算背景'):
-        time.sleep(5)
+        time.sleep(3)
