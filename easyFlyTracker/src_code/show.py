@@ -222,7 +222,7 @@ def one_step_run(params):
         show_params['ana_params'] = ana_params
         print('-' * 50)
         print(f'Group name: {flag}')
-        print(f'Group ids: \t{ids}')
+        print(f'Group ids : {ids}')
         with Wait():
             s = Show(**show_params)
             s.show_all()
