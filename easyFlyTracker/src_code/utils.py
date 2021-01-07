@@ -131,9 +131,9 @@ class Wait():
     def print_fn(self):
         while True:
             time.sleep(0.3)
-            print('\b\\', end='')
+            print('\b\\', end='', flush=True)
             time.sleep(0.3)
-            print('\b/', end='')
+            print('\b/', end='', flush=True)
 
 
 HELP = \
