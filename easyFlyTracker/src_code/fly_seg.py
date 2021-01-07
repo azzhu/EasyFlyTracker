@@ -64,12 +64,13 @@ class FlySeg():
         # gui config
         _, temp_frame = self.video.read()
 
-        # 在这判断训练畸变矫正模型所使用的图像分辨率是否跟当前视频一致
-        map_sp = self.undistort.mapxy.shape[-2:]
-        frame_sp = temp_frame.shape[:2]
-        if map_sp != frame_sp:
-            print('The resolution of training calibration_model images is not same as the resolution of video!')
-            exit()
+        # 在这判断训练畸变矫正模型所使用的图像分辨率是否跟当前视频一致，前提是加畸变矫正
+        if Undistortion_model_path:
+            map_sp = self.undistort.mapxy.shape[-2:]
+            frame_sp = temp_frame.shape[:2]
+            if map_sp != frame_sp:
+                print('The resolution of training calibration_model images is not same as the resolution of video!')
+                exit()
         # 如果跳过config，那么必须有config.pkl文件
         if skip_config and not Path(self.output_dir, 'config.pkl').exists():
             print("'config.pkl' file is not exists!")
