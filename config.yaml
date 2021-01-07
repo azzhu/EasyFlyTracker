@@ -22,7 +22,7 @@ ana_time_duration: 0.5
 #
 dish_radius_mm: 10
 # 去畸变参数路径，设为None则不使用去畸变功能，否则就设置正确的模型路径
-Undistortion_model_path: None
+Undistortion_model_path: D:\tempp\ceshi_easyflytracker\model.npy
 
 
 

@@ -107,7 +107,10 @@ class Undistortion():
 
     def do(self, img, sc=31 / 46):
         if self.notdo: return img
+        # cv2.imshow('0', img)
         img = cv2.remap(img, *self.mapxy, cv2.INTER_LINEAR)
+        # cv2.imshow('1', img)
+        # cv2.waitKey()
         return img
 
 
