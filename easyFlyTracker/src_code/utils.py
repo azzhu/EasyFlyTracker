@@ -117,7 +117,7 @@ class Wait():
     def __init__(self, info=None):
         if info:
             print(f'{info}')
-        print('.../', end='')
+        print('.../', end='', flush=True)
 
     def __enter__(self):
         self.p = Process(target=self.print_fn, args=())
