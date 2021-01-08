@@ -76,9 +76,10 @@ class FlySeg():
                 print('The resolution of training calibration_model images is not same as the resolution of video!')
                 exit()
         # 如果跳过config，那么必须有config.pkl文件
-        if skip_config and not Path(self.output_dir, 'config.pkl').exists():
-            print("'config.pkl' file is not exists!")
-            exit()
+        if skip_config:
+            if not Path(self.output_dir, 'config.pkl').exists():
+                print("'config.pkl' file is not exists!")
+                exit()
         temp_frame = self.undistort.do(temp_frame)
         g = GUI_CFG(temp_frame, [], str(self.output_dir))
         res = g.CFG_circle(direct_get_res=skip_config)
