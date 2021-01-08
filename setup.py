@@ -10,7 +10,7 @@ import setuptools
 import easyFlyTracker
 
 '''
-国内源找不到该包，一定要使用官方源安装：
+国内源找不到该包(或者说更新不及时)，一定要使用官方源安装：
 pip install -i https://pypi.org/simple/ easyFlyTracker
 pip install --upgrade -i https://pypi.org/simple/ easyFlyTracker
 '''

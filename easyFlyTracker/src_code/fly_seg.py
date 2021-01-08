@@ -47,7 +47,11 @@ class FlySeg():
         self.video_path = Path(video_path)
         self.output_dir = Path(output_dir)
         self.saved_dir = Path(self.output_dir, '.cache')  # 中间结果文件夹
-        self.bg_img_path = Path(self.saved_dir, 'background_image.bmp')
+        # 因为加畸变矫正跟不加畸变矫正背景图像不一样，所以用两个文件名来区分
+        if Undistortion_model_path:
+            self.bg_img_path = Path(self.saved_dir, 'background_image_undistort.bmp')
+        else:
+            self.bg_img_path = Path(self.saved_dir, 'background_image.bmp')
         self.res_txt_path = Path(self.output_dir, save_txt_name)  # txt结果给用户看，所以保存到用户文件夹
         self.res_npy_path = Path(self.saved_dir, f'{save_txt_name[:-3]}npy')
         self.saved_dir.mkdir(exist_ok=True)
