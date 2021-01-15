@@ -138,12 +138,14 @@ class GUI_CFG():
             cv2_ext.imwrite(str(self.res_pkl)[:-3] + 'bmp', self.drawed_img)
             return self.res
 
-        # 键盘右边上下左右键waitKeyEx返回值
-        key_up, key_down, key_left, key_right = (
-            2490368,
-            2621440,
-            2424832,
-            2555904)
+        # 键盘右边上下左右键waitKeyEx返回值，有多个值可能是以下原因：需要多个键都能触发、windows和mac键值不一样
+        key_up = (119, 2490368, 126)  # wasd以及右边方向键，同时适配了mac本的方向键
+        key_down = (115, 2621440, 125)
+        key_left = (97, 2424832, 123)
+        key_right = (100, 2555904, 124)
+        delete = (3014656, 8)
+        enlarge = (122, 61)  # 'z' '='
+        shrink = (120, 45)  # 'x' '-'
 
         while True:
             # cv2.imshow('img', self.img)
@@ -152,13 +154,13 @@ class GUI_CFG():
             k = cv2.waitKeyEx(30)
 
             # 正常移动
-            if k == 119 or k == key_up:  # w，向上移动
+            if k in key_up:  # w，向上移动
                 self.res[self.roi_id][1] -= 1
-            elif k == 115 or k == key_down:  # s，向下
+            elif k in key_down:  # s，向下
                 self.res[self.roi_id][1] += 1
-            elif k == 97 or k == key_left:  # a，向左
+            elif k in key_left:  # a，向左
                 self.res[self.roi_id][0] -= 1
-            elif k == 100 or k == key_right:  # d，向右
+            elif k in key_right:  # d，向右
                 self.res[self.roi_id][0] += 1
             # 按住shift再按相应按键【整体移动】
             elif k == 87:  # w，整体向上移动
@@ -170,10 +172,14 @@ class GUI_CFG():
             elif k == 68:  # d，整体向右
                 for i in range(len(self.res)): self.res[i][0] += 1
 
-            elif k == 122:  # z，增加半径
+            elif k in enlarge:  # z，增加半径
                 self.res[self.roi_id][2] += 1
-            elif k == 120:  # x，减少半径
+            elif k in shrink:  # x，减少半径
                 self.res[self.roi_id][2] -= 1
+
+            elif k in delete:  # 删除圆环
+                if len(self.res) > 0: del self.res[self.roi_id]
+
             elif k == 13:  # enter，退出循环
                 cv2.destroyWindow(self.winname)
                 break
