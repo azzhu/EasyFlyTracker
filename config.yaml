@@ -5,9 +5,9 @@ video_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\qudashen.mp4
 # 输出文件夹
 output_dir: D:\Pycharm_Projects\qu_holmes_su_release\tests\output
 # begin calculate time point, (minute)
-begin_time: 0
+begin_time: 0.9
 # how long time to calculate, (minute)，可以设为None或者0，到视频结束停止
-duration_time: 2
+duration_time: None
 # show track result, True or False
 show_track_result: False
 #, True or False
@@ -22,7 +22,7 @@ ana_time_duration: 0.5
 #
 dish_radius_mm: 10
 # 去畸变参数路径，设为None则不使用去畸变功能，否则就设置正确的模型路径
-Undistortion_model_path: D:\tempp\ceshi_easyflytracker\model.npy
+Undistortion_model_path: None
 
 
 

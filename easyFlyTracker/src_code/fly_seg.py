@@ -204,7 +204,9 @@ class FlySeg():
         pbar = Pbar(total=self.duration_frames)
         while True:
             ret, frame = self.video.read()
-            if not ret: break
+            if not ret:
+                pbar.close()
+                break
             frame = self.undistort.do(frame)
             for cp, tp in zip(self.cps, res[i]):
                 cv2.circle(frame, cp, self.dish_radius, (255, 0, 0), 1)
@@ -225,15 +227,17 @@ class FlySeg():
             if i >= self.duration_frames:
                 pbar.close()
                 break
+        # pbar.close()
 
-    def run(self, use_pbar=True):
+    def run(self):
         self.fly_centroids = []
-        if use_pbar:    pbar = Pbar(total=self.duration_frames)
+        pbar = Pbar(total=self.duration_frames)
         i = 0
         print('tracking...')
         while True:
             ret, frame = self.video.read()
-            if not ret: break
+            if not ret:
+                break
             frame = self.undistort.do(frame)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             foreground_mask = np.abs(frame.astype(np.int16) - self.gray_bg_int16) > self.background_th
@@ -253,9 +257,10 @@ class FlySeg():
                 oneframe_centroids.append(cent)
             self.fly_centroids.append(oneframe_centroids)
             i += 1
-            if use_pbar: pbar.update()
-            if i >= self.duration_frames: break
-        if use_pbar: pbar.close()
+            pbar.update()
+            if i >= self.duration_frames:
+                break
+        pbar.close()
         self._save()
         self.video.set(cv2.CAP_PROP_POS_FRAMES, self.begin_frame)
 

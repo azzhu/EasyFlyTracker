@@ -193,10 +193,6 @@ class GUI_CFG():
 
 
 if __name__ == '__main__':
-    p_ = r'D:\Pycharm_Projects\qu_holmes_su_release\tests\qudashen.mp4'
-    cap = cv2.VideoCapture(p_)
-    _, frame = cap.read()
-
-    g = GUI_CFG(frame, [], r'D:\Pycharm_Projects\qu_holmes_su_release\tests')
-    res = g.CFG_circle()
-    exit()
+    frame = np.zeros([500, 500, 3], np.uint8)
+    g = GUI_CFG(frame, [], 'tests')
+    g.CFG_circle()

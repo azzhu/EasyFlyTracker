@@ -15,7 +15,7 @@ import ctypes
 from pathlib import Path
 import pandas as pd
 import platform
-
+from easyFlyTracker import __version__ as version
 
 
 def stop_thread(thread):
@@ -73,6 +73,7 @@ class Pbar():
         self.now = 0
         self.time = time.time()
         self.start_time = time.time()
+        self.close_flag = False
 
     def update(self, nb=1, set=False, set_value=None):
         if set:
@@ -99,9 +100,11 @@ class Pbar():
         self.time = time.time()
 
     def close(self, reset_done=True):
+        if self.close_flag: return  # 防止多次执行close时会打印多行
         if reset_done:  # 把状态条重置为完成
             self.update(set=True, set_value=self.total)
         print()  # 把光标移到下一行
+        self.close_flag = True
 
 
 class Wait():
@@ -139,7 +142,10 @@ class Wait():
 
 
 HELP = \
-    '''
+    f'''
+Version: 
+    {version}
+
 Usage: 
     easyFlyTracker [config file path]
     and:
@@ -221,7 +227,14 @@ def gen_reqs():
 
 
 if __name__ == '__main__':
-    with Wait():
-        time.sleep(3)
-    with Wait('开始计算背景'):
-        time.sleep(3)
+    print(HELP)
+    exit()
+
+    pbar = Pbar(total=50)
+    for i in range(100):
+        time.sleep(0.1)
+        pbar.update()
+    pbar.close()
+    pbar.close()
+    pbar.close()
+    pbar.close()

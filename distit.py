@@ -10,6 +10,12 @@ import os
 import time
 import shutil
 
+'''
+注意：需要安装两个库：
+pip install wheel
+pip install twine
+'''
+
 # delete cache files
 shutil.rmtree('dist', ignore_errors=True)
 shutil.rmtree('build', ignore_errors=True)
