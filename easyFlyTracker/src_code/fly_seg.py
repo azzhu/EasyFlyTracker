@@ -106,6 +106,10 @@ class FlySeg():
         else:
             self.duration_frames = duration_time * 60 * self.video_fps
 
+        # 如果用户配置不合理，设置的时间点超出了视频时长，则按照真实视频时长来截取
+        if self.duration_frames > self.video_frames_num:
+            self.duration_frames = self.video_frames_num
+
     def _get_rois(self):
         r = self.dish_radius
         # (h_start, h_end, w_start, w_end)
