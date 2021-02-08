@@ -259,7 +259,7 @@ class Analysis():
             return str(region_status_npy)
 
         cps = self.cps
-        all_datas = self.all_datas.astype(np.float16)
+        all_datas = self.all_datas.astype(np.float64)
         all_region_status = []
         print('get_region_status:')
         pbar = Pbar(total=len(cps))

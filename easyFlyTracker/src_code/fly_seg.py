@@ -275,7 +275,7 @@ class FlySeg():
             f.write(f'{self.begin_frame}\n')
             for line in self.fly_centroids:
                 f.write(f'{line}\n')
-        np.save(self.res_npy_path, np.array(self.fly_centroids, dtype=np.float16))
+        np.save(self.res_npy_path, np.array(self.fly_centroids, dtype=np.float64))
 
 
 def pbarFilenubs(dir, total, fmt='*.npy'):

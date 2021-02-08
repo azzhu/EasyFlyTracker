@@ -226,6 +226,10 @@ def gen_reqs():
 
 
 if __name__ == '__main__':
+    x = ('ok', 'bu ok')[3 < 4]
+    print(x)
+    exit()
+
     import cv2
 
     track_n = np.load(r'Z:\dataset\qususu\0923\easyflytracker_test\output_same_bg\.cache\track.npy')
