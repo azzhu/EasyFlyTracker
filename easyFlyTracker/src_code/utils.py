@@ -14,7 +14,6 @@ import inspect
 import ctypes
 from pathlib import Path
 import pandas as pd
-import platform
 from easyFlyTracker import __version__ as version
 
 
@@ -227,14 +226,9 @@ def gen_reqs():
 
 
 if __name__ == '__main__':
-    print(HELP)
-    exit()
+    import cv2
 
-    pbar = Pbar(total=50)
-    for i in range(100):
-        time.sleep(0.1)
-        pbar.update()
-    pbar.close()
-    pbar.close()
-    pbar.close()
-    pbar.close()
+    track_n = np.load(r'Z:\dataset\qususu\0923\easyflytracker_test\output_same_bg\.cache\track.npy')
+    track_o = np.load(r'Z:\dataset\qususu\0923\easyflytracker_test\result_old\202009231045\total.npy')
+    track_o = np.transpose(track_o, [1, 0, 2])
+    ...
