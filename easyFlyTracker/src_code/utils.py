@@ -226,13 +226,9 @@ def gen_reqs():
 
 
 if __name__ == '__main__':
-    x = ('ok', 'bu ok')[3 < 4]
-    print(x)
-    exit()
-
     import cv2
 
-    track_n = np.load(r'Z:\dataset\qususu\0923\easyflytracker_test\output_same_bg\.cache\track.npy')
-    track_o = np.load(r'Z:\dataset\qususu\0923\easyflytracker_test\result_old\202009231045\total.npy')
-    track_o = np.transpose(track_o, [1, 0, 2])
+    cap = cv2.VideoCapture(r'Z:\dataset\qususu\0923\easyflytracker_test\202009231045.avi')
+    frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+    print(frames)
     ...

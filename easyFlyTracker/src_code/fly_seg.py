@@ -237,10 +237,12 @@ class FlySeg():
         self.fly_centroids = []
         pbar = Pbar(total=self.duration_frames)
         i = 0
+        print(f'begin_frame:{self.begin_frame} duration_frames:{self.duration_frames}')
         print('tracking...')
         while True:
             ret, frame = self.video.read()
             if not ret:
+                print('\nret break\n')
                 break
             frame = self.undistort.do(frame)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -263,8 +265,9 @@ class FlySeg():
             i += 1
             pbar.update()
             if i >= self.duration_frames:
+                print('\n>= break\n')
                 break
-        pbar.close()
+        pbar.close(reset_done=False)
         self._save()
         self.video.set(cv2.CAP_PROP_POS_FRAMES, self.begin_frame)
 
@@ -278,68 +281,68 @@ class FlySeg():
         np.save(self.res_npy_path, np.array(self.fly_centroids, dtype=np.float64))
 
 
-def pbarFilenubs(dir, total, fmt='*.npy'):
-    pbar = Pbar(total=total)
-    d = Path(dir)
-    while True:
-        if d.exists():
-            filenub = len(list(d.rglob(fmt)))
-        else:
-            filenub = 0
-        pbar.update(set=True, set_value=filenub)
-        time.sleep(0.2)
-
-
-def fn(params):
-    s = FlySeg(**params)
-    s.run()
-
-
-def multiprocessing(seg_params, cpus=45):
-    cap = cv2.VideoCapture(seg_params['video_path'])
-    frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
-    fps = round(cap.get(cv2.CAP_PROP_FPS))
-    time = frames / fps / 60
-
-    params = []
-    for t in range(0, round(time), seg_params['duration_time']):
-        params.append({**seg_params, 'begin_time': t, 'save_txt_name': f'{t:0>4d}.txt'})
-    FlySeg(**params[0])  # 先初始化一下，计算一下背景图和中心点，后面多进程的时候就不用每个都计算了
-
-    print(f'total length: {len(params)}')
-    kwargs = {
-        'dir': Path(Path(seg_params['video_path']).parent, Path(seg_params['video_path']).stem),
-        'total': len(params),
-        'fmt': '*.npy'
-    }
-    thr = Thread(target=pbarFilenubs, kwargs=kwargs)
-    thr.start()
-    pool = Pool(cpus)
-    pool.map(fn, params)
-    stop_thread(thr)
-    print('done')
-
-
-def run(cf, mode, just_save_one_frame=True):
-    args = ['video_path', 'h_num', 'w_num', 'duration_time', 'seg_th', 'background_th',
-            'area_th', 'minR_maxR_minD', 'dish_exclude', 'Undistortion_model_path']
-    seg_params = {arg: cf[arg] for arg in args}
-    seg_params_play = {
-        **seg_params,
-        'save_txt_name': '0.txt',
-        'begin_time': 150,
-    }
-    if mode == 1:
-        s = FlySeg(**seg_params_play)
-        s.play(just_save_one_frame=just_save_one_frame)
-        # s.run()
-    elif mode == 2:
-        t1 = time.time()
-        multiprocessing(seg_params, cpus=cf['cpus'])
-        print(f'time_used: {(time.time() - t1) / 60} minutes')
-    elif mode == 3:
-        s = FlySeg(**seg_params_play)
-        s.play_and_show_trackingpoints(just_save_one_frame=just_save_one_frame)
+# def pbarFilenubs(dir, total, fmt='*.npy'):
+#     pbar = Pbar(total=total)
+#     d = Path(dir)
+#     while True:
+#         if d.exists():
+#             filenub = len(list(d.rglob(fmt)))
+#         else:
+#             filenub = 0
+#         pbar.update(set=True, set_value=filenub)
+#         time.sleep(0.2)
+#
+#
+# def fn(params):
+#     s = FlySeg(**params)
+#     s.run()
+#
+#
+# def multiprocessing(seg_params, cpus=45):
+#     cap = cv2.VideoCapture(seg_params['video_path'])
+#     frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+#     fps = round(cap.get(cv2.CAP_PROP_FPS))
+#     time = frames / fps / 60
+#
+#     params = []
+#     for t in range(0, round(time), seg_params['duration_time']):
+#         params.append({**seg_params, 'begin_time': t, 'save_txt_name': f'{t:0>4d}.txt'})
+#     FlySeg(**params[0])  # 先初始化一下，计算一下背景图和中心点，后面多进程的时候就不用每个都计算了
+#
+#     print(f'total length: {len(params)}')
+#     kwargs = {
+#         'dir': Path(Path(seg_params['video_path']).parent, Path(seg_params['video_path']).stem),
+#         'total': len(params),
+#         'fmt': '*.npy'
+#     }
+#     thr = Thread(target=pbarFilenubs, kwargs=kwargs)
+#     thr.start()
+#     pool = Pool(cpus)
+#     pool.map(fn, params)
+#     stop_thread(thr)
+#     print('done')
+#
+#
+# def run(cf, mode, just_save_one_frame=True):
+#     args = ['video_path', 'h_num', 'w_num', 'duration_time', 'seg_th', 'background_th',
+#             'area_th', 'minR_maxR_minD', 'dish_exclude', 'Undistortion_model_path']
+#     seg_params = {arg: cf[arg] for arg in args}
+#     seg_params_play = {
+#         **seg_params,
+#         'save_txt_name': '0.txt',
+#         'begin_time': 150,
+#     }
+#     if mode == 1:
+#         s = FlySeg(**seg_params_play)
+#         s.play(just_save_one_frame=just_save_one_frame)
+#         # s.run()
+#     elif mode == 2:
+#         t1 = time.time()
+#         multiprocessing(seg_params, cpus=cf['cpus'])
+#         print(f'time_used: {(time.time() - t1) / 60} minutes')
+#     elif mode == 3:
+#         s = FlySeg(**seg_params_play)
+#         s.play_and_show_trackingpoints(just_save_one_frame=just_save_one_frame)
 
 
 if __name__ == '__main__':
