@@ -1,10 +1,10 @@
 ############## config file ###################
 
 # video path
-video_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\qudashen.mp4
-#video_path: Z:\dataset\qususu\0923\easyflytracker_test\202009231045.avi
+#video_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\qudashen.mp4
+video_path: Z:\dataset\qususu\0923\easyflytracker_test\202009231045.avi
 # 输出文件夹
-output_dir: D:\Pycharm_Projects\qu_holmes_su_release\tests\output
+output_dir: Z:\dataset\qususu\0923\easyflytracker_test\output
 # begin calculate time point, (minute)
 begin_time: 0
 # how long time to calculate, (minute)，可以设为None或者0，到视频结束停止

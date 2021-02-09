@@ -237,12 +237,14 @@ class FlySeg():
         self.fly_centroids = []
         pbar = Pbar(total=self.duration_frames)
         i = 0
-        print(f'begin_frame:{self.begin_frame} duration_frames:{self.duration_frames}')
+        # print(f'begin_frame:{self.begin_frame} duration_frames:{self.duration_frames}')
+        # self.video.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        # print(f'all_frames_nub:{self.video.get(cv2.CAP_PROP_FRAME_COUNT)}')
         print('tracking...')
         while True:
             ret, frame = self.video.read()
             if not ret:
-                print('\nret break\n')
+                # print('\nret break\n')
                 break
             frame = self.undistort.do(frame)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -265,9 +267,9 @@ class FlySeg():
             i += 1
             pbar.update()
             if i >= self.duration_frames:
-                print('\n>= break\n')
+                # print('\n>= break\n')
                 break
-        pbar.close(reset_done=False)
+        pbar.close()
         self._save()
         self.video.set(cv2.CAP_PROP_POS_FRAMES, self.begin_frame)
 
@@ -346,12 +348,21 @@ class FlySeg():
 
 
 if __name__ == '__main__':
-    f = FlySeg(
-        video_path=r'D:\Pycharm_Projects\qu_holmes_su_release\tests\demo.mp4',
-        save_txt_name='0000.txt',
-        begin_time=0,
-        duration_time=1,
-        # config_it=False,
-    )
-    f.run()
-    f.play_and_show_trackingpoints()
+    # f = FlySeg(
+    #     video_path=r'D:\Pycharm_Projects\qu_holmes_su_release\tests\demo.mp4',
+    #     save_txt_name='0000.txt',
+    #     begin_time=0,
+    #     duration_time=1,
+    #     # config_it=False,
+    # )
+    # f.run()
+    # f.play_and_show_trackingpoints()
+    cap = cv2.VideoCapture(r'Z:\dataset\qususu\0923\easyflytracker_test\202009231045.avi')
+    print(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    i = 0
+    while True:
+        ret, frame = cap.read()
+        if not ret: break
+        i += 1
+
+    print(i)
