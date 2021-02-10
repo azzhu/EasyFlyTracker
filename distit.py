@@ -28,3 +28,10 @@ os.system('python setup.py sdist bdist_wheel')
 time.sleep(0.5)
 # 2，Uploading the distribution archives
 os.system('twine upload --repository pypi dist/*')
+
+print(
+    '''
+Update:
+pip install --upgrade -i https://pypi.org/simple/ easyFlyTracker
+    '''
+)

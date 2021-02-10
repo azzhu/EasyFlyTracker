@@ -52,10 +52,3 @@ setuptools.setup(
     ],
     python_requires='>=3',
 )
-
-print(
-    '''
-Update:
-pip install --upgrade -i https://pypi.org/simple/ easyFlyTracker
-    '''
-)
