@@ -287,6 +287,8 @@ class FlySeg():
 已被证实：【opencv直接获取的总帧数跟逐帧读实际获取的不一致】
 而且多进程处理时，set到指定的时间点分片段读可能会有问题。
 set到不同时间点读取的总帧数最后相加等于opencv直接获取的，直接逐帧读是不一致的，这就比较奇怪。
+
+
 '''
 
 # def pbarFilenubs(dir, total, fmt='*.npy'):

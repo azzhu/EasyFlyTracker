@@ -33,6 +33,9 @@ class GUI_CFG():
     __doc__ = '''
     通过鼠标和键盘来便捷配置一些参数；
     【注意】：返回的结果并没有排序。
+    
+    21.02.19
+    修改所有圆环统一半径
     '''
 
     def __init__(self, img_path, init_res, saved_dir=None):
@@ -54,7 +57,7 @@ class GUI_CFG():
         self.srcimg = img.copy()
         self.img = img
         self.drawed_img = img
-        self.init_res = init_res
+        self.init_res = init_res  # 没有config.pkl时用，有了就用不到它了
         self.winname = 'gui config'
         self.lbutton_down = False
 
@@ -94,9 +97,11 @@ class GUI_CFG():
             if len(self.res) > 0: del self.res[self.roi_id]
         elif event == cv2.EVENT_MOUSEWHEEL:  # 上下滚轮【控制直径大小】
             if flags > 0:  # 上滚
-                self.res[self.roi_id][2] += 1
+                # self.res[self.roi_id][2] += 1
+                self.r += 1
             else:  # 下滚
-                self.res[self.roi_id][2] -= 1
+                # self.res[self.roi_id][2] -= 1
+                self.r -= 1
 
     def _init_res_2_res(self):
         if Path(self.res_pkl).exists():
@@ -104,6 +109,8 @@ class GUI_CFG():
             print(f'config params load from: {self.res_pkl}')
         else:
             self.res = self.init_res
+        # 统一的半径
+        self.r = int(round(np.mean(np.array(self.res)[:, -1])))
 
     def _res_add(self, x, y):
         r1 = self.res[self.roi_id][-1] if len(self.res) > 0 else 50
@@ -112,6 +119,10 @@ class GUI_CFG():
 
     def _draw_img_from_res(self):
         img = self.img.copy()
+
+        # 修改所有圆环半径，保持一致
+        for i in range(len(self.res)):
+            self.res[i][2] = self.r
 
         # 画圆
         for i, (x, y, r) in enumerate(self.res):
@@ -194,5 +205,5 @@ class GUI_CFG():
 
 if __name__ == '__main__':
     frame = np.zeros([500, 500, 3], np.uint8)
-    g = GUI_CFG(frame, [], 'tests')
+    g = GUI_CFG(frame, [], r'D:\Pycharm_Projects\qu_holmes_su_release\tests')
     g.CFG_circle()
