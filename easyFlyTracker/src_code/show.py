@@ -71,9 +71,9 @@ class Show():
         config_pk = np.array(config_pk)
         # self.cps = config_pk[:, :2]
         self.dish_radius = int(round(float(np.mean(config_pk[:, -1]))))
-        self.sacle = dish_radius_mm / self.dish_radius
+        # self.sacle = dish_radius_mm / self.dish_radius
+        self.sacle = 1.
         print(f'sacle: {self.sacle}')
-        # self.sacle = 1.
 
         # 获取视频对应的Analysis实例
         self.ana = Analysis(**ana_params)
