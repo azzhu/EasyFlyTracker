@@ -225,29 +225,29 @@ def gen_reqs():
     os.system('pipreqs ./ --encoding utf-8')
 
 
-# if __name__ == '__main__':
-import os
-import sys
-import numpy as np
+if __name__ == '__main__':
+    import os
+    import sys
+    import numpy as np
 
-if len(sys.argv) != 2:
-    print('param error!')
-    exit()
-npyfilename = sys.argv[1]
-if '/' in npyfilename:
-    npyfilename = npyfilename
-else:
-    curdir = os.path.abspath(os.path.curdir)
-    npyfilename = os.path.join(curdir, npyfilename)
-if not os.path.exists(npyfilename):
-    print('the file is not exist!')
-    exit()
+    if len(sys.argv) != 2:
+        print('param error!')
+        exit()
+    npyfilename = sys.argv[1]
+    if '/' in npyfilename:
+        npyfilename = npyfilename
+    else:
+        curdir = os.path.abspath(os.path.curdir)
+        npyfilename = os.path.join(curdir, npyfilename)
+    if not os.path.exists(npyfilename):
+        print('the file is not exist!')
+        exit()
 
-da = np.load(npyfilename)
-print(f'''
-path:\t{npyfilename}
-shape:\t{da.shape}
-dtype:\t{da.dtype}
-min:\t{da.min()}
-max:\t{da.max()}
-''')
+    da = np.load(npyfilename)
+    print(f'''
+    path:\t{npyfilename}
+    shape:\t{da.shape}
+    dtype:\t{da.dtype}
+    min:\t{da.min()}
+    max:\t{da.max()}
+    ''')

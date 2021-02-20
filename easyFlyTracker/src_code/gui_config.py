@@ -184,9 +184,11 @@ class GUI_CFG():
                 for i in range(len(self.res)): self.res[i][0] += 1
 
             elif k in enlarge:  # z，增加半径
-                self.res[self.roi_id][2] += 1
+                # self.res[self.roi_id][2] += 1
+                self.r += 1
             elif k in shrink:  # x，减少半径
-                self.res[self.roi_id][2] -= 1
+                # self.res[self.roi_id][2] -= 1
+                self.r -= 1
 
             elif k in delete:  # 删除圆环
                 if len(self.res) > 0: del self.res[self.roi_id]
