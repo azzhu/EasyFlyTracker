@@ -72,8 +72,12 @@ class Show():
         # self.cps = config_pk[:, :2]
         self.dish_radius = int(round(float(np.mean(config_pk[:, -1]))))
         # self.sacle = dish_radius_mm / self.dish_radius
-        self.sacle = 1.
-        print(f'sacle: {self.sacle}')
+        print('请输入所选两点之间的实际距离，单位毫米：')
+        dist_mm = float(input())
+        print('请输入所选两点之间的像素距离，单位像素：')
+        dist_piexl = float(input())
+        self.sacle = dist_mm / dist_piexl
+        print(f'scale: {self.sacle}')
 
         # 获取视频对应的Analysis实例
         self.ana = Analysis(**ana_params)
