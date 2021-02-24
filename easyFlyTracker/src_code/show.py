@@ -71,12 +71,12 @@ class Show():
         config_pk = np.array(config_pk)
         # self.cps = config_pk[:, :2]
         self.dish_radius = int(round(float(np.mean(config_pk[:, -1]))))
-        # self.sacle = dish_radius_mm / self.dish_radius
-        print('请输入所选两点之间的实际距离，单位毫米：')
-        dist_mm = float(input())
-        print('请输入所选两点之间的像素距离，单位像素：')
-        dist_piexl = float(input())
-        self.sacle = dist_mm / dist_piexl
+        self.sacle = dish_radius_mm / self.dish_radius
+        # print('请输入所选两点之间的实际距离，单位毫米：')
+        # dist_mm = float(input())
+        # print('请输入所选两点之间的像素距离，单位像素：')
+        # dist_piexl = float(input())
+        # self.sacle = dist_mm / dist_piexl
         print(f'scale: {self.sacle}')
 
         # 获取视频对应的Analysis实例
@@ -228,9 +228,9 @@ def one_step_run(params):
         print('-' * 50)
         print(f'Group name: {flag}')
         print(f'Group ids : {ids}')
-        # with Wait():
-        s = Show(**show_params)
-        s.show_all()
+        with Wait():
+            s = Show(**show_params)
+            s.show_all()
 
     if len(rois) > 1:
         merge_result(params)
