@@ -82,7 +82,7 @@ class FlySeg():
                 exit()
         temp_frame = self.undistort.do(temp_frame)
         g = GUI_CFG(temp_frame, [], str(self.output_dir))
-        res = g.CFG_circle(direct_get_res=skip_config)
+        res, AB_dist = g.CFG_circle(direct_get_res=skip_config)
         if len(res) == 0: raise ValueError
         rs = [re[-1] for re in res]
         self.dish_radius = int(round(float(np.mean(np.array(rs)))))
@@ -281,6 +281,7 @@ class FlySeg():
             for line in self.fly_centroids:
                 f.write(f'{line}\n')
         np.save(self.res_npy_path, np.array(self.fly_centroids, dtype=np.float64))
+
 
 '''
 潜在坑：

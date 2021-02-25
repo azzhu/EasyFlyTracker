@@ -35,7 +35,8 @@ class Show():
             video_path,
             output_dir,  # 输出文件夹
             ana_params,  # 获取analysis实例的时候需要的参数
-            dish_radius_mm,
+            AB_dist_mm,
+            # scale,  # 比例尺，毫米/像素
             suffix='all',  # 保存的图片结果后缀
             roi_flys_ids=None,
     ):
@@ -67,11 +68,13 @@ class Show():
         self.roi_flys_id = [i for i, r in enumerate(self.roi_flys_list) if r]
 
         # 计算比例尺
-        config_pk = pickle.load(open(Path(self.output_dir, 'config.pkl'), 'rb'))
-        config_pk = np.array(config_pk)
-        # self.cps = config_pk[:, :2]
-        self.dish_radius = int(round(float(np.mean(config_pk[:, -1]))))
-        self.sacle = dish_radius_mm / self.dish_radius
+        # config_pk = pickle.load(open(Path(self.output_dir, 'config.pkl'), 'rb'))
+        # config_pk = np.array(config_pk)
+        # # self.cps = config_pk[:, :2]
+        # self.dish_radius = int(round(float(np.mean(config_pk[:, -1]))))
+        pklf = Path(output_dir, 'config.pkl')
+        _, AB_dist = pickle.load(open(pklf, 'rb'))
+        self.sacle = AB_dist_mm / AB_dist
         # print('请输入所选两点之间的实际距离，单位毫米：')
         # dist_mm = float(input())
         # print('请输入所选两点之间的像素距离，单位像素：')

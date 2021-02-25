@@ -49,7 +49,7 @@ class Analysis():
         self.saved_dir.mkdir(exist_ok=True)
 
         # load cps and radius
-        config_pk = np.array(pickle.load(open(config_pkl_path, 'rb')))
+        config_pk = np.array(pickle.load(open(config_pkl_path, 'rb'))[0])
         self.cps = config_pk[:, :2]
         self.dish_radius = int(round(float(np.mean(config_pk[:, -1]))))
 

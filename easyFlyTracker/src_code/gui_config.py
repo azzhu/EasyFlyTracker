@@ -105,7 +105,7 @@ class GUI_CFG():
 
     def _init_res_2_res(self):
         if Path(self.res_pkl).exists():
-            self.res = pickle.load(open(self.res_pkl, 'rb'))
+            self.res, self.AB_dist = pickle.load(open(self.res_pkl, 'rb'))
             print(f'config params load from: {self.res_pkl}')
         else:
             self.res = self.init_res
@@ -142,12 +142,74 @@ class GUI_CFG():
         self.drawed_img = img
         return img
 
+    def CFG_sacle(self):
+        '''
+        第一步，配置比例尺
+        :return:
+        '''
+
+        def draw_img():
+            img = self.img.copy()
+            for i, p in enumerate(ps):
+                cv2.circle(img, p, 3, (0, 0, 255), -1)
+                cv2.putText(img, ab[i], (p[0] + 5, p[1] - 5), 0, 0.7, (255, 255, 0), 2)
+            if len(ps) == 2:
+                cv2.line(img, *ps, (0, 0, 255), 1)
+            return img
+
+        def mouse_callback(event, x, y, flags, param):
+            if event == cv2.EVENT_LBUTTONUP:  # 左键松开
+                if len(ps) < 2:
+                    ps.append((x, y))
+
+        key_up = (119, 2490368, 126)  # wasd以及右边方向键，同时适配了mac本的方向键
+        key_down = (115, 2621440, 125)
+        key_left = (97, 2424832, 123)
+        key_right = (100, 2555904, 124)
+        delete = (3014656, 8)
+        h, w = self.img.shape[:2]
+        ps = []
+        ab = ['A', 'B']
+        while True:
+            cv2.imshow(self.winname, draw_img())
+            cv2.setMouseCallback(self.winname, mouse_callback)
+            k = cv2.waitKeyEx(30)
+            if len(ps) > 0:
+                if k in key_up:
+                    x, y = ps[-1]
+                    ps[-1] = (x, y - 1 if y - 1 >= 0 else y)
+                elif k in key_down:
+                    x, y = ps[-1]
+                    ps[-1] = (x, y + 1 if y + 1 < h else y)
+                elif k in key_left:
+                    x, y = ps[-1]
+                    ps[-1] = (x - 1 if x - 1 >= 0 else x, y)
+                elif k in key_right:
+                    x, y = ps[-1]
+                    ps[-1] = (x + 1 if x + 1 < w else x, y)
+                elif k in delete:
+                    del ps[-1]
+                elif k == 13:  # enter，退出循环
+                    if len(ps) != 2:
+                        print(f'Please set two points (A and B)!')
+                    else:
+                        # cv2.destroyWindow(self.winname)
+                        break
+        # 根据勾股定理计算AB之间的距离
+        a, b = ps[0], ps[1]
+        return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5
+
     def CFG_circle(self, direct_get_res=False):
         if direct_get_res:
             # 直接退出之前还是得保存config.bmp给用户看
             self._draw_img_from_res()
             cv2_ext.imwrite(str(self.res_pkl)[:-3] + 'bmp', self.drawed_img)
-            return self.res
+            return self.res, self.AB_dist
+
+        # 先进行第一步：配置比例尺，配置AB两点
+        AB_dist = self.CFG_sacle()
+
+        # 后面再进行第二步，配置圆环
 
         # 键盘右边上下左右键waitKeyEx返回值，有多个值可能是以下原因：需要多个键都能触发、windows和mac键值不一样
         key_up = (119, 2490368, 126)  # wasd以及右边方向键，同时适配了mac本的方向键
@@ -198,11 +260,12 @@ class GUI_CFG():
                 break
 
         # save and return
+        res = (self.res, AB_dist)
         with open(self.res_pkl, 'wb') as f:
-            pickle.dump(self.res, f)
+            pickle.dump(res, f)
             print(f'saved config params to: {self.res_pkl}')
         cv2_ext.imwrite(str(self.res_pkl)[:-3] + 'bmp', self.drawed_img)
-        return self.res
+        return res
 
 
 if __name__ == '__main__':

@@ -1,10 +1,11 @@
 ############## config file ###################
 
 # video path
-#video_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\qudashen.mp4
-video_path: Z:\dataset\qususu\0923\easyflytracker_test\202009231045.avi
+video_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\qudashen.mp4
+#video_path: Z:\dataset\qususu\0923\easyflytracker_test\202009231045.avi
 # 输出文件夹
-output_dir: Z:\dataset\qususu\0923\easyflytracker_test\output
+#output_dir: Z:\dataset\qususu\0923\easyflytracker_test\output
+output_dir: D:\Pycharm_Projects\qu_holmes_su_release\tests\output
 # begin calculate time point, (minute)
 begin_time: 0
 # how long time to calculate, (minute)，可以设为None或者0，到视频结束停止
@@ -21,7 +22,9 @@ area_th: 0.5
 #
 ana_time_duration: 0.5
 #
-dish_radius_mm: 10
+#dish_radius_mm: 10
+# AB两点的距离，单位毫米
+AB_dist_mm: 120
 # 去畸变参数路径，设为None则不使用去畸变功能，否则就设置正确的模型路径
 Undistortion_model_path: None
 

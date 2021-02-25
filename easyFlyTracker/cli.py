@@ -59,6 +59,6 @@ def easyFlyTracker_cam_calibration():
 
 
 if __name__ == '__main__':
-    easyFlyTracker_()
-    # easyFlyTracker_analysis()
+    # easyFlyTracker_()
+    easyFlyTracker_analysis()
     # easyFlyTracker_cam_calibration()
