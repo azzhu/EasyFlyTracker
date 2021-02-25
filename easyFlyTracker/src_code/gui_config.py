@@ -147,6 +147,7 @@ class GUI_CFG():
         第一步，配置比例尺
         :return:
         '''
+        print('Please set the two points (A and B).')
 
         def draw_img():
             img = self.img.copy()
