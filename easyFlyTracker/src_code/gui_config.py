@@ -133,9 +133,9 @@ class GUI_CFG():
         # 画AB两条线
         ab = ['A', 'B']
         for i, p in enumerate(self.AB_ps):
-            cv2.circle(img, p, 3, (0, 0, 127), -1)
-            cv2.putText(img, ab[i], (p[0] + 5, p[1] - 5), 0, 0.7, (127, 127, 0), 2)
-        cv2.line(img, *self.AB_ps, (0, 0, 127), 1)
+            cv2.circle(img, p, 3, (0, 0, 220), -1)
+            cv2.putText(img, ab[i], (p[0] + 5, p[1] - 5), 0, 0.7, (220, 220, 0), 2)
+        cv2.line(img, *self.AB_ps, (0, 0, 220), 1)
 
         # 越界判断
         if self.roi_id < 0: self.roi_id = 0
