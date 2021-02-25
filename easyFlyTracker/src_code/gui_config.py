@@ -68,6 +68,7 @@ class GUI_CFG():
         # result
         self.res = []
         self._init_res_2_res()
+        self.AB_ps = []
 
     def _get_point_in_which_circle(self, x, y):
         get_dist = lambda m, n: math.sqrt(pow(m - x, 2) + pow(n - y, 2))
@@ -129,6 +130,13 @@ class GUI_CFG():
             cv2.circle(img, (x, y), r, self.col, 1)
             cv2.putText(img, f'{i}', (x - 5, y + 5), 1, 1, self.col)
 
+        # 画AB两条线
+        ab = ['A', 'B']
+        for i, p in enumerate(self.AB_ps):
+            cv2.circle(img, p, 3, (0, 0, 127), -1)
+            cv2.putText(img, ab[i], (p[0] + 5, p[1] - 5), 0, 0.7, (127, 127, 0), 2)
+        cv2.line(img, *self.AB_ps, (0, 0, 127), 1)
+
         # 越界判断
         if self.roi_id < 0: self.roi_id = 0
         if self.roi_id >= len(self.res): self.roi_id = len(self.res) - 1
@@ -151,17 +159,17 @@ class GUI_CFG():
 
         def draw_img():
             img = self.img.copy()
-            for i, p in enumerate(ps):
+            for i, p in enumerate(self.AB_ps):
                 cv2.circle(img, p, 3, (0, 0, 255), -1)
                 cv2.putText(img, ab[i], (p[0] + 5, p[1] - 5), 0, 0.7, (255, 255, 0), 2)
-            if len(ps) == 2:
-                cv2.line(img, *ps, (0, 0, 255), 1)
+            if len(self.AB_ps) == 2:
+                cv2.line(img, *self.AB_ps, (0, 0, 255), 1)
             return img
 
         def mouse_callback(event, x, y, flags, param):
             if event == cv2.EVENT_LBUTTONUP:  # 左键松开
-                if len(ps) < 2:
-                    ps.append((x, y))
+                if len(self.AB_ps) < 2:
+                    self.AB_ps.append((x, y))
 
         key_up = (119, 2490368, 126)  # wasd以及右边方向键，同时适配了mac本的方向键
         key_down = (115, 2621440, 125)
@@ -169,35 +177,34 @@ class GUI_CFG():
         key_right = (100, 2555904, 124)
         delete = (3014656, 8)
         h, w = self.img.shape[:2]
-        ps = []
         ab = ['A', 'B']
         while True:
             cv2.imshow(self.winname, draw_img())
             cv2.setMouseCallback(self.winname, mouse_callback)
             k = cv2.waitKeyEx(30)
-            if len(ps) > 0:
+            if len(self.AB_ps) > 0:
                 if k in key_up:
-                    x, y = ps[-1]
-                    ps[-1] = (x, y - 1 if y - 1 >= 0 else y)
+                    x, y = self.AB_ps[-1]
+                    self.AB_ps[-1] = (x, y - 1 if y - 1 >= 0 else y)
                 elif k in key_down:
-                    x, y = ps[-1]
-                    ps[-1] = (x, y + 1 if y + 1 < h else y)
+                    x, y = self.AB_ps[-1]
+                    self.AB_ps[-1] = (x, y + 1 if y + 1 < h else y)
                 elif k in key_left:
-                    x, y = ps[-1]
-                    ps[-1] = (x - 1 if x - 1 >= 0 else x, y)
+                    x, y = self.AB_ps[-1]
+                    self.AB_ps[-1] = (x - 1 if x - 1 >= 0 else x, y)
                 elif k in key_right:
-                    x, y = ps[-1]
-                    ps[-1] = (x + 1 if x + 1 < w else x, y)
+                    x, y = self.AB_ps[-1]
+                    self.AB_ps[-1] = (x + 1 if x + 1 < w else x, y)
                 elif k in delete:
-                    del ps[-1]
+                    del self.AB_ps[-1]
                 elif k == 13:  # enter，退出循环
-                    if len(ps) != 2:
+                    if len(self.AB_ps) != 2:
                         print(f'Please set two points (A and B)!')
                     else:
                         # cv2.destroyWindow(self.winname)
                         break
         # 根据勾股定理计算AB之间的距离
-        a, b = ps[0], ps[1]
+        a, b = self.AB_ps[0], self.AB_ps[1]
         return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5
 
     def CFG_circle(self, direct_get_res=False):
