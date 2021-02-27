@@ -244,13 +244,13 @@ class GUI_CFG():
             elif k in key_right:  # d，向右
                 self.res[self.roi_id][0] += 1
             # 按住shift再按相应按键【整体移动】
-            elif k == 87:  # w，整体向上移动
+            elif k == key_up:  # w，整体向上移动
                 for i in range(len(self.res)): self.res[i][1] -= 1
-            elif k == 83:  # s，整体向下
+            elif k == key_down:  # s，整体向下
                 for i in range(len(self.res)): self.res[i][1] += 1
-            elif k == 65:  # a，整体向左
+            elif k == key_left:  # a，整体向左
                 for i in range(len(self.res)): self.res[i][0] -= 1
-            elif k == 68:  # d，整体向右
+            elif k == key_right:  # d，整体向右
                 for i in range(len(self.res)): self.res[i][0] += 1
 
             elif k in enlarge:  # z，增加半径
