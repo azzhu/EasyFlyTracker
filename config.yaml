@@ -15,18 +15,22 @@ show_track_result: False
 #, True or False
 skip_config: False
 
+
+############### analysis ########################
 # config roi path, search in the video_path directory if None
 group_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\output\grop.xlsx
-#
+# 内圈面积阈值
 area_th: 0.5
-#
+# 分析移动距离的时候每个值需要统计的时间跨度（单位：分钟）
 ana_time_duration: 0.5
-#
+# 统计睡眠信息的时候每个值需要统计的时间跨度（单位：分钟）
+sleep_time_duration: 1
 #dish_radius_mm: 10
 # AB两点的距离，单位毫米
 AB_dist_mm: 120
 # 去畸变参数路径，设为None则不使用去畸变功能，否则就设置正确的模型路径
 Undistortion_model_path: None
+############### analysis ########################
 
 
 

@@ -31,7 +31,8 @@ class Analysis():
             roi_flys_flag,
             area_th,  # 内圈面积占比
             roi_flys_ids=None,
-            ana_time_duration=10.,
+            ana_time_duration=10.,  # 分析移动距离的时候每个值需要统计的时间跨度
+            sleep_time_duration=10.,  # 统计睡眠信息的时候每个值需要统计的时间跨度
             sleep_dist_th_per_second=5,
             sleep_time_th=300,  # 每秒睡眠状态持续多久算是真正的睡眠
     ):
@@ -55,6 +56,7 @@ class Analysis():
 
         self.roi_flys_flag = roi_flys_flag
         self.ana_time_duration = ana_time_duration
+        self.sleep_time_duration = sleep_time_duration
         self.sleep_dist_th_per_second = sleep_dist_th_per_second
         self.sleep_time_th = sleep_time_th
         self.region_radius = int(round(math.sqrt(area_th) * self.dish_radius))
@@ -76,6 +78,9 @@ class Analysis():
         # 初始化加载某些数据
         self._get_all_res()
         self._get_speed_perframe_dist_perframe()
+
+        # flag
+        # self.flag_get_all_sleep_status = False
 
     def _get_all_res(self):
         if self.npy_file_path_cor.exists():
@@ -162,8 +167,8 @@ class Analysis():
         time_duration_stat_displacement：10分钟总位移/果蝇个数
         :return: 返回npy路径
         '''
-        speed_npy = Path(self.saved_dir, f'time_duration_stat_speed_{self.roi_flys_flag}.npy')
-        disp_npy = Path(self.saved_dir, f'time_duration_stat_displacement_{self.roi_flys_flag}.npy')
+        speed_npy = Path(self.saved_dir, f'speed_per_duration_{self.roi_flys_flag}.npy')
+        disp_npy = Path(self.saved_dir, f'displacement_per_duration_{self.roi_flys_flag}.npy')
         if speed_npy.exists() and disp_npy.exists() and not redo:
             return speed_npy, disp_npy
         duration_frames = int(round(self.ana_time_duration * 60 * self.fps))
@@ -204,48 +209,70 @@ class Analysis():
 
     def PARAM_sleep_status(self, redo=False):
         '''
-        计算每一秒的睡眠状态，返回保存的npy路径
+        首先计算每一秒的睡眠状态，然后计算统计时间段（sleep_time_duration）内果蝇的总睡眠时长，计算方式为：
+        所有果蝇该时间段的总睡眠时长/果蝇数量
+        返回保存的npy路径
         :param redo:
         :return:
         '''
-        npy_path = Path(self.saved_dir, f'sleep_status_per_second.npy')
+        npy_path = Path(self.saved_dir, f'sleep_time_per_duration_{self.roi_flys_flag}.npy')
         if npy_path.exists() and not redo:
             return str(npy_path)
-        self._get_speed_perframe_dist_perframe()
-        fps = self.fps
-        all_dist_per_s = []
-        for i in range(self.all_fly_dist_per_frame.shape[0]):
-            dist_per_s = []
-            for j in range(0, self.all_fly_dist_per_frame.shape[1], fps):
-                dist_per_s.append(np.sum(self.all_fly_dist_per_frame[i, j:j + fps]))
-            all_dist_per_s.append(dist_per_s)
+        cache_all_sleep_status_path = Path(self.cache_dir, 'all_sleep_status.npy')
 
-        # sp = self.all_fly_dist_per_frame.shape
-        # all_fly_dist_per_frame_cut = self.all_fly_dist_per_frame[:, :sp[1] - divmod(sp[1], int(fps))[1]]
-        # all_dist_per_s = all_fly_dist_per_frame_cut.reshape([sp[0], -1, int(fps)])
-        # all_dist_per_s = np.sum(all_dist_per_s, axis=-1)
+        def get_all_sleep_status(self):
+            if cache_all_sleep_status_path.exists():
+                return np.load(cache_all_sleep_status_path)
+            self._get_speed_perframe_dist_perframe()
+            fps = self.fps
+            all_dist_per_s = []
+            for i in range(self.all_fly_dist_per_frame.shape[0]):
+                dist_per_s = []
+                for j in range(0, self.all_fly_dist_per_frame.shape[1], fps):
+                    dist_per_s.append(np.sum(self.all_fly_dist_per_frame[i, j:j + fps]))
+                all_dist_per_s.append(dist_per_s)
 
-        sleep_dist_th = self.sleep_dist_th_per_second
-        all_sleep_status_per_s = np.array(all_dist_per_s) < sleep_dist_th
-        self.all_sleep_status_per_s = all_sleep_status_per_s
-        # all_sleep_status_per_s = np.delete(all_sleep_status_per_s, exclude_ids, axis=0)
-        sleep_time_th = self.sleep_time_th
-        all_sleep_status = []
-        for k, sleep_status_per_s in enumerate(all_sleep_status_per_s):
-            sleep_time = 0  # 用于保存截止当前秒已经睡了多久（单位秒）
-            sleep_status_per_s = np.concatenate(
-                [sleep_status_per_s, np.array([False])])  # 在末尾加一个false，防止末尾是True时遍历结束时无法判断睡眠
-            sleep_status = np.zeros([len(sleep_status_per_s) - 1, ], np.bool)  # 新创建的list，用于保存睡眠状态
-            for i, ss in enumerate(sleep_status_per_s):
-                if ss:
-                    sleep_time += 1
-                else:
-                    # 到没睡的时候都判断一下，上一刻截止是不是满足睡眠条件
-                    if sleep_time >= sleep_time_th:
-                        sleep_status[i - sleep_time:i] = True
-                    sleep_time = 0
-            all_sleep_status.append(sleep_status)
-        np.save(str(npy_path), np.array(all_sleep_status))
+            sleep_dist_th = self.sleep_dist_th_per_second
+            all_sleep_status_per_s = np.array(all_dist_per_s) < sleep_dist_th
+            self.all_sleep_status_per_s = all_sleep_status_per_s
+            # all_sleep_status_per_s = np.delete(all_sleep_status_per_s, exclude_ids, axis=0)
+            sleep_time_th = self.sleep_time_th
+            all_sleep_status = []
+            for k, sleep_status_per_s in enumerate(all_sleep_status_per_s):
+                sleep_time = 0  # 用于保存截止当前秒已经睡了多久（单位秒）
+                sleep_status_per_s = np.concatenate(
+                    [sleep_status_per_s, np.array([False])])  # 在末尾加一个false，防止末尾是True时遍历结束时无法判断睡眠
+                sleep_status = np.zeros([len(sleep_status_per_s) - 1, ], np.bool)  # 新创建的list，用于保存睡眠状态
+                for i, ss in enumerate(sleep_status_per_s):
+                    if ss:
+                        sleep_time += 1
+                    else:
+                        # 到没睡的时候都判断一下，上一刻截止是不是满足睡眠条件
+                        if sleep_time >= sleep_time_th:
+                            sleep_status[i - sleep_time:i] = True
+                        sleep_time = 0
+                all_sleep_status.append(sleep_status)
+            # 每个果蝇每秒钟的睡眠状态
+            all_sleep_status = np.array(all_sleep_status)
+            np.save(cache_all_sleep_status_path, all_sleep_status)
+            return all_sleep_status
+
+        all_sleep_status = get_all_sleep_status(self)
+        all_sleep_status = all_sleep_status * np.tile(self.roi_flys_list[:, None],
+                                                      (1, all_sleep_status.shape[1]))
+        dt = int(round(self.sleep_time_duration * 60))  # 多少秒
+        start_ind = list(range(0, all_sleep_status.shape[1], dt))
+        # 因为最后一个时间段可能不足设定的时间段，所以这里一块返回两者
+        values_durations = []
+        flys_num = self.roi_flys_nubs
+        for i in range(len(start_ind) - 1):
+            value = all_sleep_status[:, start_ind[i]:start_ind[i + 1]].sum() / flys_num
+            values_durations.append([value, dt])
+        last_da = all_sleep_status[:, start_ind[-1]:]
+        value = last_da.sum() / flys_num
+        values_durations.append([value, last_da.shape[1]])
+        values_durations = np.array(values_durations)
+        np.save(str(npy_path), values_durations)
         return str(npy_path)
 
     def PARAM_region_status(self):

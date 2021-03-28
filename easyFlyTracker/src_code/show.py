@@ -151,37 +151,32 @@ class Show():
 
     def SHOW_sleep_time_per_h(self):
         '''
-        每小时的睡眠总时间/有效果蝇数
+        每个时间段睡眠总时间/有效果蝇数
         单位：分钟
         :return:
         '''
-        datas_path = self.ana.PARAM_sleep_status()
+        datas_path = self.ana.PARAM_sleep_status(redo=True)
         da = np.load(datas_path)
-        da = da * \
-             np.tile(self.roi_flys_list[:, np.newaxis], (1, da.shape[1]))
-        duration_second = 60 * 60
-        sleep_time_per_h = []
-        for i in range(0, da.shape[1], duration_second):
-            sleep_time_per_h.append(np.sum(da[:, i:i + duration_second]) / self.ana.roi_flys_nubs / 60)
+        da, duration_times = da[:, 0], da[:, 1] # duration_times是对应时段持续时间，最后一个不一定跟前面相等
         plt.close()
         plt.rcParams['figure.figsize'] = (15.0, 8.0)
         plt.grid(linewidth=1)
-        plt.xlabel('time (h)')
-        plt.ylabel('sleep time (minute)')
-        plt.title('Sleep time of per flies per hour')
-        plt.plot(sleep_time_per_h, label=self.video_stem)
+        plt.xlabel('time')
+        plt.ylabel('sleep time (s)')
+        plt.title('Sleep time of per flies per duration')
+        plt.plot(da, label=self.video_stem)
         plt.legend(loc='upper left')
         # plt.show()
-        plt.savefig(str(Path(self.saved_dir, f'sleep_time_per_h_{self.saved_suffix}.png')))
-        np.save(str(Path(self.saved_dir_npys, f'sleep_time_per_h_{self.saved_suffix}.npy')), sleep_time_per_h)
-        df = pd.DataFrame(data=sleep_time_per_h)
-        df.to_excel(Path(self.output_dir, f'sleep_time_per_h_{self.saved_suffix}.xlsx'))
+        plt.savefig(str(Path(self.saved_dir, f'sleep_time_per_duration_{self.saved_suffix}.png')))
+        np.save(str(Path(self.saved_dir_npys, f'sleep_time_per_duration_{self.saved_suffix}.npy')), da)
+        df = pd.DataFrame(data=da)
+        df.to_excel(Path(self.output_dir, f'sleep_time_per_duration_{self.saved_suffix}.xlsx'))
 
     def show_all(self):
         self.SHOW_avg_dist_per10min()
         # self.SHOW_dist_change_per_h()
         # self.SHOW_in_centre_prob_per_h()
-        # self.SHOW_sleep_time_per_h()
+        self.SHOW_sleep_time_per_h()
 
 
 def merge_result(params):
