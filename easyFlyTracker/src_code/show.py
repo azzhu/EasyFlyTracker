@@ -185,7 +185,7 @@ def merge_result(params):
         'avg_dist_per_x_min',
         # 'dist_change_per_h',
         # 'in_centre_prob_per_h',
-        # 'sleep_time_per_h',
+        'sleep_time_per_duration',
     ]
     dir = Path(params['output_dir'], 'plot_images', '.npys')
     dst_dir = Path(params['output_dir'], 'plot_images')
