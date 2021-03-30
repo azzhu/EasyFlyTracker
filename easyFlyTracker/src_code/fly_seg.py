@@ -54,6 +54,7 @@ class FlySeg():
             self.bg_img_path = Path(self.saved_dir, 'background_image.bmp')
         self.res_txt_path = Path(self.output_dir, save_txt_name)  # txt结果给用户看，所以保存到用户文件夹
         self.res_npy_path = Path(self.saved_dir, f'{save_txt_name[:-3]}npy')
+        self.heatmap_path = Path(self.saved_dir, f'heatmap.npy')
         self.saved_dir.mkdir(exist_ok=True)
 
         self.video_stem = str(Path(video_path).stem)
@@ -67,6 +68,9 @@ class FlySeg():
 
         # gui config
         _, temp_frame = self.video.read()
+
+        # 热力图累计值。累计的不是坐标值，二十整个二值化区域，累计一帧加一而不是255
+        self.heatmap = np.zeros(temp_frame.shape[:2], np.int)
 
         # 在这判断训练畸变矫正模型所使用的图像分辨率是否跟当前视频一致，前提是加畸变矫正
         if Undistortion_model_path:
@@ -131,6 +135,11 @@ class FlySeg():
             mask_all += img.astype(np.bool)
         # mask_all = mask_all.astype(np.uint8) * 255
         self.mask_all = mask_all
+
+        # save
+        np.save(Path(self.saved_dir, 'mask_imgs.npy'), self.mask_imgs)
+        # np.save(Path(self.saved_dir, 'cps.npy'), self.cps)
+        # np.save(Path(self.saved_dir, 'dish_radius.npy'), self.dish_radius)
 
     def comp_bg(self):
         # params
@@ -252,6 +261,7 @@ class FlySeg():
             frame = frame < self.seg_th
             frame *= self.mask_all
             frame = frame.astype(np.uint8) * 255 * foreground_mask
+            self.heatmap += frame.astype(np.bool).astype(np.int)
             oneframe_centroids = []
             for roi in self.rois:
                 img = frame[roi[0]:roi[1], roi[2]:roi[3]]
@@ -281,6 +291,7 @@ class FlySeg():
             for line in self.fly_centroids:
                 f.write(f'{line}\n')
         np.save(self.res_npy_path, np.array(self.fly_centroids, dtype=np.float64))
+        np.save(self.heatmap_path, self.heatmap)
 
 
 '''

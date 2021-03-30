@@ -80,7 +80,7 @@ class Show():
         # print('请输入所选两点之间的像素距离，单位像素：')
         # dist_piexl = float(input())
         # self.sacle = dist_mm / dist_piexl
-        print(f'scale: {self.sacle}')
+        # print(f'scale: {self.sacle}')
 
         # 获取视频对应的Analysis实例
         self.ana = Analysis(**ana_params)
@@ -157,7 +157,7 @@ class Show():
         '''
         datas_path = self.ana.PARAM_sleep_status(redo=True)
         da = np.load(datas_path)
-        da, duration_times = da[:, 0], da[:, 1] # duration_times是对应时段持续时间，最后一个不一定跟前面相等
+        da, duration_times = da[:, 0], da[:, 1]  # duration_times是对应时段持续时间，最后一个不一定跟前面相等
         plt.close()
         plt.rcParams['figure.figsize'] = (15.0, 8.0)
         plt.grid(linewidth=1)
@@ -172,11 +172,21 @@ class Show():
         df = pd.DataFrame(data=da)
         df.to_excel(Path(self.output_dir, f'sleep_time_per_duration_{self.saved_suffix}.xlsx'))
 
+    def SHOW_heatmap(self):
+        '''
+        heatmap只有一张，针对不同的roi算不同的heatmap没有意义，所以只算一次总的。
+        :return:
+        '''
+        p = Path(self.saved_dir, f'heatmap.png')
+        if not p.exists():  # 若已存在不再重复计算
+            self.ana.PARAM_heatmap(p)
+
     def show_all(self):
         self.SHOW_avg_dist_per10min()
         # self.SHOW_dist_change_per_h()
         # self.SHOW_in_centre_prob_per_h()
         self.SHOW_sleep_time_per_h()
+        self.SHOW_heatmap()
 
 
 def merge_result(params):

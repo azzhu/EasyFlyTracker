@@ -53,6 +53,8 @@ class Analysis():
         config_pk = np.array(pickle.load(open(config_pkl_path, 'rb'))[0])
         self.cps = config_pk[:, :2]
         self.dish_radius = int(round(float(np.mean(config_pk[:, -1]))))
+        self.mask_imgs = np.load(Path(self.cache_dir, 'mask_imgs.npy'))
+        self.mask_imgs = self.mask_imgs.astype(np.bool)
 
         self.roi_flys_flag = roi_flys_flag
         self.ana_time_duration = ana_time_duration
@@ -71,7 +73,7 @@ class Analysis():
             self.roi_flys_list = np.array([True] * len(self.cps))
         else:
             self.roi_flys_list = np.array([False] * len(self.cps))
-            self.roi_flys_list[roi_flys_ids] = True
+        self.roi_flys_list[roi_flys_ids] = True
         self.roi_flys_id = [i for i, r in enumerate(self.roi_flys_list) if r]
         self.roi_flys_nubs = self.roi_flys_list.sum()
 
@@ -299,6 +301,39 @@ class Analysis():
         self.all_region_status = np.array(all_region_status)
         np.save(region_status_npy, self.all_region_status)
         return str(region_status_npy)
+
+    def PARAM_heatmap(self, p):
+        '''
+        跟roi没有关系，算的是所有果蝇的热图。
+        :param p:
+        :return:
+        '''
+
+        def heatmap_to_pcolor(heat, clip_th=0.8):
+            '''
+            转伪彩图，最大值的clip_th作为最大值clip阈值
+            :param clip_th:
+            :return:
+            '''
+            heat = heat.astype(np.float)
+            max_v = heat.max() * clip_th
+            heat = heat / max_v * 255
+            heat = np.clip(heat, 0, 255)
+            heat = np.round(heat).astype(np.uint8)
+            heat = cv2.applyColorMap(heat, cv2.COLORMAP_JET)
+            return heat
+
+        heatmap_path = Path(self.cache_dir, 'heatmap.npy')
+        heatmap = np.load(heatmap_path)
+        heatmaps = []
+        for mask, cp in zip(self.mask_imgs, self.cps):
+            hm = heatmap * mask
+            pcolor = heatmap_to_pcolor(hm, clip_th=0.8)
+            # cv2.circle(pcolor, (cp[0], cp[1]), self.dish_radius, (255, 255, 255), 1)
+            pcolor *= np.tile(mask[:, :, None], (1, 1, 3))
+            heatmaps.append(pcolor)
+        heatmap_img = np.array(heatmaps).sum(axis=0).astype(np.uint8)
+        cv2.imwrite(str(p), heatmap_img)
 
 
 if __name__ == '__main__':
