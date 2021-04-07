@@ -13,7 +13,7 @@ from pathlib import Path
 import pandas as pd
 import pickle
 # from easyFlyTracker.src_code.fly_seg import FlySeg
-from easyFlyTracker.src_code.utils import Pbar, Wait
+from easyFlyTracker.src_code.utils import Pbar, Wait, equalizeHist_use_mask
 from easyFlyTracker.src_code.utils import NumpyArrayHasNanValuesExceptin
 
 
@@ -309,7 +309,7 @@ class Analysis():
         :return:
         '''
 
-        def heatmap_to_pcolor(heat, clip_th=0.8):
+        def heatmap_to_pcolor(heat, mask, clip_th=1.0):
             '''
             转伪彩图，最大值的clip_th作为最大值clip阈值
             :param clip_th:
@@ -320,6 +320,7 @@ class Analysis():
             heat = heat / max_v * 255
             heat = np.clip(heat, 0, 255)
             heat = np.round(heat).astype(np.uint8)
+            heat = equalizeHist_use_mask(heat, mask)
             heat = cv2.applyColorMap(heat, cv2.COLORMAP_JET)
             return heat
 
@@ -328,7 +329,7 @@ class Analysis():
         heatmaps = []
         for mask, cp in zip(self.mask_imgs, self.cps):
             hm = heatmap * mask
-            pcolor = heatmap_to_pcolor(hm, clip_th=0.8)
+            pcolor = heatmap_to_pcolor(hm, mask)
             # cv2.circle(pcolor, (cp[0], cp[1]), self.dish_radius, (255, 255, 255), 1)
             pcolor *= np.tile(mask[:, :, None], (1, 1, 3))
             heatmaps.append(pcolor)

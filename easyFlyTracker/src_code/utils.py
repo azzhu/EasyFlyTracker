@@ -9,6 +9,7 @@
 import sys, os
 import numpy as np
 from multiprocessing import Process
+from collections import Counter
 import time, yaml
 import inspect
 import ctypes
@@ -31,6 +32,30 @@ def stop_thread(thread):
         # and you should call it again with exc=NULL to revert the effect"""
         ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
         raise SystemError("PyThreadState_SetAsyncExc failed")
+
+
+def equalizeHist_use_mask(gray, mask):
+    h, w = gray.shape
+    mask = mask != 0
+    roi_num = mask.sum()  # roi区域像素个数
+    bg_num = h * w - roi_num  # 背景区域像素个数
+    gray *= mask
+    dc = Counter(gray.flatten())
+    count = np.array([dc.get(i, 0) for i in range(256)], np.float)
+    count[0] -= bg_num  # 减去背景像素个数
+    count = count / roi_num  # 得到概率
+    # 计算累计概率
+    for i in range(1, 256):
+        count[i] += count[i - 1]
+    # 映射
+    map1 = count * 255
+    ret = map1[gray]
+    # 映射之后最小值不是零，所以再做一次归一化，变为0-255
+    min_v = map1.min()
+    max_v = map1.max()
+    ret = (ret - min_v) / (max_v - min_v) * 255
+    ret = (np.round(ret) * mask).astype(np.uint8)
+    return ret
 
 
 def args_filter(kwargs, fn):
