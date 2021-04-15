@@ -352,9 +352,9 @@ class Analysis():
         mask = mask != 0
         pcolor = self.heatmap_to_pcolor(heatmap_sum, mask)
         pcolor *= np.tile(mask[:, :, None], (1, 1, 3))
-        pcolor = cv2.resize(pcolor, dsize=None, fx=4, fy=4, interpolation=cv2.INTER_NEAREST)
+        # pcolor = cv2.resize(pcolor, dsize=None, fx=4, fy=4, interpolation=cv2.INTER_NEAREST)
+        pcolor = cv2.resize(pcolor, dsize=None, fx=4, fy=4, interpolation=cv2.INTER_LINEAR)
         cv2.imwrite(str(p), pcolor)
-        # pcolor = cv2.resize(pcolor, dsize=None, fx=4, fy=4, interpolation=cv2.INTER_LINEAR)
         # pcolor = cv2.GaussianBlur(pcolor, (5, 5), 0)
         # cv2.imshow('', pcolor)
         # cv2.waitKeyEx()
