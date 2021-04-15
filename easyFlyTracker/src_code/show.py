@@ -181,12 +181,21 @@ class Show():
         if not p.exists():  # 若已存在不再重复计算
             self.ana.PARAM_heatmap(p)
 
+    def SHOW_heatmap_of_roi(self):
+        '''
+        每批的roi组只算一个热图，并且放大处理。
+        :return:
+        '''
+        p = Path(self.saved_dir, f'heatmap_{self.saved_suffix}.png')
+        self.ana.PARAM_heatmap_of_roi(p)
+
     def show_all(self):
         self.SHOW_avg_dist_per10min()
         # self.SHOW_dist_change_per_h()
         # self.SHOW_in_centre_prob_per_h()
         self.SHOW_sleep_time_per_h()
         self.SHOW_heatmap()
+        self.SHOW_heatmap_of_roi()
 
 
 def merge_result(params):

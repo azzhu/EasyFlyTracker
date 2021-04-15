@@ -81,8 +81,9 @@ class Analysis():
         self._get_all_res()
         self._get_speed_perframe_dist_perframe()
 
-        # flag
-        # self.flag_get_all_sleep_status = False
+        # load heatmap
+        heatmap_path = Path(self.cache_dir, 'heatmap.npy')
+        self.heatmap = np.load(heatmap_path)
 
     def _get_all_res(self):
         if self.npy_file_path_cor.exists():
@@ -302,39 +303,63 @@ class Analysis():
         np.save(region_status_npy, self.all_region_status)
         return str(region_status_npy)
 
+    def heatmap_to_pcolor(self, heat, mask, clip_th=1.0):
+        '''
+        转伪彩图，最大值的clip_th作为最大值clip阈值
+        :param clip_th:
+        :return:
+        '''
+        heat = heat.astype(np.float)
+        max_v = heat.max() * clip_th
+        heat = heat / max_v * 255
+        heat = np.clip(heat, 0, 255)
+        heat = np.round(heat).astype(np.uint8)
+        heat = equalizeHist_use_mask(heat, mask)
+        heat = cv2.applyColorMap(heat, cv2.COLORMAP_JET)
+        return heat
+
     def PARAM_heatmap(self, p):
         '''
         跟roi没有关系，算的是所有果蝇的热图。
         :param p:
         :return:
         '''
-
-        def heatmap_to_pcolor(heat, mask, clip_th=1.0):
-            '''
-            转伪彩图，最大值的clip_th作为最大值clip阈值
-            :param clip_th:
-            :return:
-            '''
-            heat = heat.astype(np.float)
-            max_v = heat.max() * clip_th
-            heat = heat / max_v * 255
-            heat = np.clip(heat, 0, 255)
-            heat = np.round(heat).astype(np.uint8)
-            heat = equalizeHist_use_mask(heat, mask)
-            heat = cv2.applyColorMap(heat, cv2.COLORMAP_JET)
-            return heat
-
-        heatmap_path = Path(self.cache_dir, 'heatmap.npy')
-        heatmap = np.load(heatmap_path)
+        heatmap = self.heatmap.copy()
         heatmaps = []
         for mask, cp in zip(self.mask_imgs, self.cps):
             hm = heatmap * mask
-            pcolor = heatmap_to_pcolor(hm, mask)
+            pcolor = self.heatmap_to_pcolor(hm, mask)
             # cv2.circle(pcolor, (cp[0], cp[1]), self.dish_radius, (255, 255, 255), 1)
             pcolor *= np.tile(mask[:, :, None], (1, 1, 3))
             heatmaps.append(pcolor)
         heatmap_img = np.array(heatmaps).sum(axis=0).astype(np.uint8)
         cv2.imwrite(str(p), heatmap_img)
+
+    def PARAM_heatmap_of_roi(self, p):
+        '''
+        根据当前roi组来算热图，组内不管有多少个圆圈，只算一个平均的，并对热图放大显示。
+        :return:
+        '''
+        heatmap = self.heatmap.copy()
+        r = self.dish_radius
+        heatmap_sum = np.zeros([r * 2 + 1] * 2, dtype=heatmap.dtype)
+        for roi_id in self.roi_flys_id:
+            x, y = self.cps[roi_id]
+            a_hp = heatmap[y - r:y + r + 1, x - r:x + r + 1]
+            heatmap_sum += a_hp
+        mask = np.zeros(heatmap_sum.shape, np.uint8)
+        cv2.circle(mask, (r, r), r, 255, -1)
+        mask = mask != 0
+        pcolor = self.heatmap_to_pcolor(heatmap_sum, mask)
+        pcolor *= np.tile(mask[:, :, None], (1, 1, 3))
+        pcolor = cv2.resize(pcolor, dsize=None, fx=4, fy=4, interpolation=cv2.INTER_NEAREST)
+        cv2.imwrite(str(p), pcolor)
+        # pcolor = cv2.resize(pcolor, dsize=None, fx=4, fy=4, interpolation=cv2.INTER_LINEAR)
+        # pcolor = cv2.GaussianBlur(pcolor, (5, 5), 0)
+        # cv2.imshow('', pcolor)
+        # cv2.waitKeyEx()
+        # exit()
+        # ...
 
 
 if __name__ == '__main__':
