@@ -34,27 +34,32 @@ def stop_thread(thread):
         raise SystemError("PyThreadState_SetAsyncExc failed")
 
 
-def equalizeHist_use_mask(gray, mask):
+def equalizeHist_use_mask(gray, mask, notuint8=False):
+    if notuint8:
+        mv = gray.max()
+    else:
+        mv = 255
     h, w = gray.shape
     mask = mask != 0
     roi_num = mask.sum()  # roi区域像素个数
     bg_num = h * w - roi_num  # 背景区域像素个数
     gray *= mask
     dc = Counter(gray.flatten())
-    count = np.array([dc.get(i, 0) for i in range(256)], np.float)
+    count = np.array([dc.get(i, 0) for i in range(mv + 1)], np.float)
     count[0] -= bg_num  # 减去背景像素个数
     count = count / roi_num  # 得到概率
     # 计算累计概率
-    for i in range(1, 256):
+    for i in range(1, mv + 1):
         count[i] += count[i - 1]
     # 映射
-    map1 = count * 255
+    map1 = count * mv
     ret = map1[gray]
-    # 映射之后最小值不是零，所以再做一次归一化，变为0-255
+    # 映射之后最小值不是零，所以再做一次归一化，变为0-mv
     min_v = map1.min()
     max_v = map1.max()
-    ret = (ret - min_v) / (max_v - min_v) * 255
-    ret = (np.round(ret) * mask).astype(np.uint8)
+    ret = (ret - min_v) / (max_v - min_v) * mv
+    if not notuint8:
+        ret = np.round(ret).astype(np.uint8)
     return ret
 
 
@@ -251,28 +256,53 @@ def gen_reqs():
 
 
 if __name__ == '__main__':
-    import os
+    import os, cv2
     import sys
     import numpy as np
+    import pickle
+    from time import time
 
-    if len(sys.argv) != 2:
-        print('param error!')
-        exit()
-    npyfilename = sys.argv[1]
-    if '/' in npyfilename:
-        npyfilename = npyfilename
-    else:
-        curdir = os.path.abspath(os.path.curdir)
-        npyfilename = os.path.join(curdir, npyfilename)
-    if not os.path.exists(npyfilename):
-        print('the file is not exist!')
+
+    def heatmap_to_pcolor(heat, mask):
+        """
+        转伪彩图
+        :return:
+        """
+        # 尝试了生成16位的伪彩图，发现applyColorMap函数不支持
+        max_v, datatype = 255, np.uint8
+        heat = equalizeHist_use_mask(heat, mask, notuint8=True)
+        heat = heat / heat.max() * max_v
+        heat = np.round(heat).astype(datatype)
+        heat = cv2.applyColorMap(heat, cv2.COLORMAP_JET)
+        return heat
+
+
+    di = r'D:\tempp\output_36hole_0923_hm053/'
+    heatmap = np.load(f'{di}.cache/heatmap.npy')
+    mask_imgs = np.load(f'{di}.cache/mask_imgs.npy')
+    cps = pickle.load(open(f'{di}config.pkl', 'rb'))
+
+    heatmaps = []
+    for mask, cp in zip(mask_imgs, cps[0]):
+        mask = mask_imgs[24]
+        cp = cps[0][24]
+        mask = mask != 0
+        hm = heatmap * mask
+
+        x, y, r = cp
+        hm_roi = hm[y - r:y + r, x - r:x + r]
+        mask_roi = mask[y - r:y + r, x - r:x + r]
+
+        pcolor = heatmap_to_pcolor(hm_roi, mask_roi)
+        pcolor *= np.tile(mask_roi[:, :, None], [1, 1, 3])
+        cv2.imshow('', pcolor)
+        cv2.waitKeyEx()
         exit()
 
-    da = np.load(npyfilename)
-    print(f'''
-    path:\t{npyfilename}
-    shape:\t{da.shape}
-    dtype:\t{da.dtype}
-    min:\t{da.min()}
-    max:\t{da.max()}
-    ''')
+        pcolor *= np.tile(mask[:, :, None], (1, 1, 3))
+        heatmaps.append(pcolor)
+        break
+    heatmap_img = np.array(heatmaps).sum(axis=0).astype(np.uint8)
+    cv2.imshow('', heatmap_img)
+    cv2.waitKeyEx()
+    ...

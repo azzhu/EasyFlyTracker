@@ -303,18 +303,16 @@ class Analysis():
         np.save(region_status_npy, self.all_region_status)
         return str(region_status_npy)
 
-    def heatmap_to_pcolor(self, heat, mask, clip_th=1.0):
-        '''
-        转伪彩图，最大值的clip_th作为最大值clip阈值
-        :param clip_th:
+    def heatmap_to_pcolor(self, heat, mask):
+        """
+        转伪彩图
         :return:
-        '''
-        heat = heat.astype(np.float)
-        max_v = heat.max() * clip_th
-        heat = heat / max_v * 255
-        heat = np.clip(heat, 0, 255)
-        heat = np.round(heat).astype(np.uint8)
-        heat = equalizeHist_use_mask(heat, mask)
+        """
+        # 尝试了生成16位的伪彩图，发现applyColorMap函数不支持
+        max_v, datatype = 255, np.uint8
+        heat = equalizeHist_use_mask(heat, mask, notuint8=True)
+        heat = heat / heat.max() * max_v
+        heat = np.round(heat).astype(datatype)
         heat = cv2.applyColorMap(heat, cv2.COLORMAP_JET)
         return heat
 

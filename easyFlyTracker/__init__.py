@@ -7,7 +7,7 @@
 @Software: PyCharm
 '''
 
-__version__ = '0.5.2'
+__version__ = '0.5.4'
 
 __doc__ = \
     '''
