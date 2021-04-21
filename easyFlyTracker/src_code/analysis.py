@@ -327,10 +327,14 @@ class Analysis():
         for mask, cp in zip(self.mask_imgs, self.cps):
             hm = heatmap * mask
             pcolor = self.heatmap_to_pcolor(hm, mask)
-            # cv2.circle(pcolor, (cp[0], cp[1]), self.dish_radius, (255, 255, 255), 1)
-            pcolor *= np.tile(mask[:, :, None], (1, 1, 3))
+            pcolor *= np.tile(mask[:, :, None], (1, 1, 3))  # 只有在这mask一下，后面才能叠加
             heatmaps.append(pcolor)
-        heatmap_img = np.array(heatmaps).sum(axis=0).astype(np.uint8)
+        heatmap_img = np.array(heatmaps).sum(axis=0).astype(np.uint8)  # 叠加后的图像背景是黑的
+        mask_all = np.array(self.mask_imgs).sum(axis=0)
+        mask_all = (mask_all == 0).astype(np.uint8) * 128  # 背景蓝色 bgr(128,0,0)
+        heatmap_img[:, :, 0] += mask_all
+        # cv2.imshow('', heatmap_img)
+        # cv2.waitKeyEx()
         cv2.imwrite(str(p), heatmap_img)
 
     def PARAM_heatmap_of_roi(self, p):
@@ -349,7 +353,7 @@ class Analysis():
         cv2.circle(mask, (r, r), r, 255, -1)
         mask = mask != 0
         pcolor = self.heatmap_to_pcolor(heatmap_sum, mask)
-        pcolor *= np.tile(mask[:, :, None], (1, 1, 3))
+        # pcolor *= np.tile(mask[:, :, None], (1, 1, 3))
         # pcolor = cv2.resize(pcolor, dsize=None, fx=4, fy=4, interpolation=cv2.INTER_NEAREST)
         pcolor = cv2.resize(pcolor, dsize=None, fx=4, fy=4, interpolation=cv2.INTER_LINEAR)
         cv2.imwrite(str(p), pcolor)
