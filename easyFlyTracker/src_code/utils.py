@@ -258,5 +258,80 @@ def gen_reqs():
 if __name__ == '__main__':
     import os, cv2
     import sys
+    import numpy as np
+    import pickle
+    from time import time
+    from matplotlib import pyplot as plt
 
+
+    def show_hist(img, mask):
+        h, w = img.shape
+        mask = mask != 0
+        roi_num = mask.sum()  # roi区域像素个数
+        bg_num = h * w - roi_num  # 背景区域像素个数
+        dc = Counter(img.flatten())
+        xs = [dc.get(i, 0) for i in range(img.max() + 1)]
+        xs[0] -= bg_num
+        # xs = xs[1:]
+        plt.plot(xs)
+        plt.show()
+
+
+    def heatmap_to_pcolor(heat, mask):
+        # 尝试了生成16位的伪彩图，发现applyColorMap函数不支持
+        max_v, datatype = 255, np.uint8
+
+        # heat2 = heat / heat.max() * 255
+        # heat2 = np.round(heat2).astype(datatype)
+        show_hist(heat, mask)
+
+        heat = equalizeHist_use_mask(heat, mask, notuint8=True)
+        heat = heat / heat.max() * max_v
+        heat = np.round(heat).astype(datatype)
+        # show_hist(heat, mask)
+        heat = cv2.applyColorMap(heat, cv2.COLORMAP_JET)
+        return heat
+
+
+    def heatmap_to_pcolor_old(heat, mask):
+        # 尝试了生成16位的伪彩图，发现applyColorMap函数不支持
+        max_v, datatype = 255, np.uint8
+        heat = heat / heat.max() * max_v
+        heat = np.round(heat).astype(datatype)
+        show_hist(heat, mask)
+        heat = equalizeHist_use_mask(heat, mask)
+        # show_hist(heat, mask)
+        heat = cv2.applyColorMap(heat, cv2.COLORMAP_JET)
+        return heat
+
+
+    di = r'D:\tempp\output_72hole_1204_hm053/'
+    heatmap = np.load(f'{di}.cache/heatmap.npy')
+    mask_imgs = np.load(f'{di}.cache/mask_imgs.npy')
+    cps = pickle.load(open(f'{di}config.pkl', 'rb'))
+
+    heatmaps = []
+    for mask, cp in zip(mask_imgs, cps[0]):
+        mask = mask_imgs[24]
+        cp = cps[0][24]
+        mask = mask != 0
+        hm = heatmap * mask
+
+        x, y, r = cp
+        hm_roi = hm[y - r:y + r, x - r:x + r]
+        mask_roi = mask[y - r:y + r, x - r:x + r]
+
+        # pcolor = heatmap_to_pcolor_old(hm_roi, mask_roi)
+        pcolor = heatmap_to_pcolor(hm_roi, mask_roi)
+        pcolor *= np.tile(mask_roi[:, :, None], [1, 1, 3])
+        cv2.imshow('', pcolor)
+        cv2.waitKeyEx()
+        exit()
+
+        pcolor *= np.tile(mask[:, :, None], (1, 1, 3))
+        heatmaps.append(pcolor)
+        break
+    heatmap_img = np.array(heatmaps).sum(axis=0).astype(np.uint8)
+    cv2.imshow('', heatmap_img)
+    cv2.waitKeyEx()
     ...

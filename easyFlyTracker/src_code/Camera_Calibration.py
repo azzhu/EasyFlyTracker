@@ -105,7 +105,7 @@ class Undistortion():
         else:
             self.mapxy = np.load(mapxy_path)
 
-    def do(self, img, sc=31 / 46):
+    def do(self, img):
         if self.notdo: return img
         # cv2.imshow('0', img)
         img = cv2.remap(img, *self.mapxy, cv2.INTER_LINEAR)

@@ -189,6 +189,13 @@ class Show():
         p = Path(self.saved_dir, f'heatmap_{self.saved_suffix}.png')
         self.ana.PARAM_heatmap_of_roi(p)
 
+    def SHOW_heatmap_exclude_sleeptime(self):
+        '''
+        展示去除睡眠时间的果蝇活动区域热图
+        :return:
+        '''
+        self.ana.PARAM_heatmap_exclude_sleeptime()
+
     def show_all(self):
         self.SHOW_avg_dist_per10min()
         # self.SHOW_dist_change_per_h()
@@ -196,6 +203,7 @@ class Show():
         self.SHOW_sleep_time_per_h()
         self.SHOW_heatmap()
         self.SHOW_heatmap_of_roi()
+        self.SHOW_heatmap_exclude_sleeptime()
 
 
 def merge_result(params):

@@ -15,6 +15,7 @@ import pickle
 # from easyFlyTracker.src_code.fly_seg import FlySeg
 from easyFlyTracker.src_code.utils import Pbar, Wait, equalizeHist_use_mask
 from easyFlyTracker.src_code.utils import NumpyArrayHasNanValuesExceptin
+from easyFlyTracker.src_code.Camera_Calibration import Undistortion
 
 
 class Analysis():
@@ -35,6 +36,7 @@ class Analysis():
             sleep_time_duration=10.,  # 统计睡眠信息的时候每个值需要统计的时间跨度
             sleep_dist_th_per_second=5,
             sleep_time_th=300,  # 每秒睡眠状态持续多久算是真正的睡眠
+            Undistortion_model_path=None,  # 畸变矫正参数路径
     ):
         # 初始化各种文件夹及路径
         self.video_path = Path(video_path)
@@ -48,6 +50,7 @@ class Analysis():
         config_pkl_path = Path(self.res_dir, 'config.pkl')
         self.cache_dir.mkdir(exist_ok=True)
         self.saved_dir.mkdir(exist_ok=True)
+        self.Undistortion_model_path = Undistortion_model_path
 
         # load cps and radius
         config_pk = np.array(pickle.load(open(config_pkl_path, 'rb'))[0])
@@ -324,11 +327,13 @@ class Analysis():
         '''
         heatmap = self.heatmap.copy()
         heatmaps = []
+
         for mask, cp in zip(self.mask_imgs, self.cps):
             hm = heatmap * mask
             pcolor = self.heatmap_to_pcolor(hm, mask)
             pcolor *= np.tile(mask[:, :, None], (1, 1, 3))  # 只有在这mask一下，后面才能叠加
             heatmaps.append(pcolor)
+
         heatmap_img = np.array(heatmaps).sum(axis=0).astype(np.uint8)  # 叠加后的图像背景是黑的
         mask_all = np.array(self.mask_imgs).sum(axis=0)
         mask_all = (mask_all == 0).astype(np.uint8) * 128  # 背景蓝色 bgr(128,0,0)
@@ -362,6 +367,76 @@ class Analysis():
         # cv2.waitKeyEx()
         # exit()
         # ...
+
+    def PARAM_heatmap_exclude_sleeptime(self):
+        '''
+        排除睡眠时间，然后重新算一遍热图
+        :return:
+        '''
+        sleeptime_heatmap = self.get_sleeptime_heatmap()
+
+    def get_sleeptime_heatmap(self):
+        '''
+        计算睡眠时间段果蝇活动区域的heatmap，
+        :param self:
+        :return:
+        '''
+        sleeptime_heatmap_path = Path(self.cache_dir, 'sleeptime_heatmap.npy')
+        if sleeptime_heatmap_path.exists():
+            return np.load(sleeptime_heatmap_path)
+
+        cap = cv2.VideoCapture(str(self.video_path))
+        h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        sleeptime_heatmap = np.zeros((h, w), np.int)
+
+        # 先计算哪些时间段是睡眠时间（有果蝇在睡觉）
+        # sleep_status = np.load(Path(self.cache_dir, 'all_sleep_status.npy'))
+        sleep_status = np.load(r'C:\Users\33041\Desktop\all_sleep_status.npy')
+        timeline = sleep_status.sum(0).astype(np.bool)
+        if timeline.sum() == 0:  # 说明没有果蝇在睡觉，所以这里直接返回零矩阵，后面就不用折腾了
+            np.save(sleeptime_heatmap_path, sleeptime_heatmap)
+            return sleeptime_heatmap
+        timeline = np.concatenate([np.array([False]), timeline, np.array([False])], 0)  # 先在两头加上False
+        start_t, end_t = [], []
+        for i in range(1, len(timeline)):
+            pt, t = timeline[i - 1], timeline[i]
+            if pt == False and t == True:
+                start_t.append(i - 1)
+            elif pt == True and t == False:
+                end_t.append(i - 1)
+        sleep_durations = list(zip(start_t, end_t))  # [起始秒，终止秒)
+        sleep_durations = np.array(sleep_durations) * fps  # [起始帧，终止帧)
+
+        # 逐时间段计算睡觉果蝇热图
+        seg_th = 120,  # 分割阈值。注意，这俩值要跟前面分割时保持一致
+        background_th = 70,  # 跟背景差的阈值。注意，这俩值要跟前面分割时保持一致
+        if self.Undistortion_model_path:
+            bg_img_path = Path(self.cache_dir, 'background_image_undistort.bmp')
+        else:
+            bg_img_path = Path(self.cache_dir, 'background_image.bmp')
+        bg = cv2.imread(str(bg_img_path))
+        gray_bg_int16 = cv2.cvtColor(bg, cv2.COLOR_BGR2GRAY).astype(np.int16)
+        undistort = Undistortion(self.Undistortion_model_path)
+        mask_imgs = np.load(Path(self.cache_dir, 'mask_imgs.npy')).astype(np.bool)
+        mask_all = mask_imgs.sum(0).astype(np.bool)
+        for st, ed in sleep_durations:
+            sta = sleep_status[:, st:ed]
+            cap.set(cv2.CAP_PROP_POS_FRAMES, st)
+            while True:
+                ret, frame = cap.read()
+                if not ret:
+                    break
+                frame = undistort.do(frame)
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                foreground_mask = np.abs(frame.astype(np.int16) - gray_bg_int16) > background_th
+                frame = frame < seg_th
+                frame *= mask_all
+                frame = frame.astype(np.uint8) * 255 * foreground_mask
+                for roi in self.rois:
+                    img = frame[roi[0]:roi[1], roi[2]:roi[3]]
+        ...
 
 
 if __name__ == '__main__':
