@@ -194,7 +194,9 @@ class Show():
         展示去除睡眠时间的果蝇活动区域热图
         :return:
         '''
-        self.ana.PARAM_heatmap_exclude_sleeptime()
+        p1 = Path(self.saved_dir, f'heatmap_exclude_sleeptime.png')
+        p2 = Path(self.saved_dir, f'heatmap_exclude_sleeptime_{self.saved_suffix}.png')
+        self.ana.PARAM_heatmap_exclude_sleeptime(p1, p2)
 
     def show_all(self):
         self.SHOW_avg_dist_per10min()

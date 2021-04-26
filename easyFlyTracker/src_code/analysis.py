@@ -368,20 +368,32 @@ class Analysis():
         # exit()
         # ...
 
-    def PARAM_heatmap_exclude_sleeptime(self):
+    def PARAM_heatmap_exclude_sleeptime(self, p1, p2):
         '''
         排除睡眠时间，然后重新算一遍热图
+        实现逻辑：
+            改变self.heatmap的值，然后重新运行计算heatmap的函数
         :return:
         '''
-        sleeptime_heatmap = self.get_sleeptime_heatmap()
+        # 因为下面操作要改变self.heatmap的值，所以这个做个备份，等操作完成再还原回来
+        heatmap_bak = self.heatmap.copy()
 
-    def get_sleeptime_heatmap(self):
+        sleeptime_heatmap = self._get_sleeptime_heatmap()
+        heatmap_exclude_sleeptime = self.heatmap - sleeptime_heatmap
+        self.heatmap = heatmap_exclude_sleeptime
+        if not p1.exists():
+            self.PARAM_heatmap(p1)
+        self.PARAM_heatmap_of_roi(p2)
+
+        self.heatmap = heatmap_bak  # 还原回来
+
+    def _get_sleeptime_heatmap(self):
         '''
         计算睡眠时间段果蝇活动区域的heatmap，
         :param self:
         :return:
         '''
-        sleeptime_heatmap_path = Path(self.cache_dir, 'sleeptime_heatmap.npy')
+        sleeptime_heatmap_path = Path(self.cache_dir, 'heatmap_sleeptime.npy')
         if sleeptime_heatmap_path.exists():
             return np.load(sleeptime_heatmap_path)
 
@@ -389,11 +401,10 @@ class Analysis():
         h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         fps = int(cap.get(cv2.CAP_PROP_FPS))
-        sleeptime_heatmap = np.zeros((h, w), np.int)
+        sleeptime_heatmap = np.zeros((h, w), np.int)  # 初始化返回值
 
         # 先计算哪些时间段是睡眠时间（有果蝇在睡觉）
-        # sleep_status = np.load(Path(self.cache_dir, 'all_sleep_status.npy'))
-        sleep_status = np.load(r'C:\Users\33041\Desktop\all_sleep_status.npy')
+        sleep_status = np.load(Path(self.cache_dir, 'all_sleep_status.npy'))
         timeline = sleep_status.sum(0).astype(np.bool)
         if timeline.sum() == 0:  # 说明没有果蝇在睡觉，所以这里直接返回零矩阵，后面就不用折腾了
             np.save(sleeptime_heatmap_path, sleeptime_heatmap)
@@ -422,21 +433,29 @@ class Analysis():
         mask_imgs = np.load(Path(self.cache_dir, 'mask_imgs.npy')).astype(np.bool)
         mask_all = mask_imgs.sum(0).astype(np.bool)
         for st, ed in sleep_durations:
-            sta = sleep_status[:, st:ed]
+            status = sleep_status[:, st:ed]
             cap.set(cv2.CAP_PROP_POS_FRAMES, st)
+            nub = 0
             while True:
                 ret, frame = cap.read()
                 if not ret:
                     break
+                mask_sleep = mask_imgs * status[:, nub][:, None, None]
+                mask_sleep = mask_sleep.sum(0).astype(bool)  # 只mask睡眠的果蝇圆环
                 frame = undistort.do(frame)
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 foreground_mask = np.abs(frame.astype(np.int16) - gray_bg_int16) > background_th
                 frame = frame < seg_th
                 frame *= mask_all
-                frame = frame.astype(np.uint8) * 255 * foreground_mask
-                for roi in self.rois:
-                    img = frame[roi[0]:roi[1], roi[2]:roi[3]]
-        ...
+                frame = frame.astype(np.uint8) * 255 * foreground_mask  # 该值是原始heatmap累加分割区域图
+                frame *= mask_sleep  # 原始累加分割区域图跟睡眠果蝇区域mask相乘
+                sleeptime_heatmap += frame.astype(np.bool).astype(np.int)
+
+                nub += 1
+                if nub >= ed - st:
+                    break
+        np.save(sleeptime_heatmap_path, sleeptime_heatmap)
+        return sleeptime_heatmap
 
 
 if __name__ == '__main__':
