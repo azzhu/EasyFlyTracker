@@ -432,6 +432,7 @@ class Analysis():
         undistort = Undistortion(self.Undistortion_model_path)
         mask_imgs = np.load(Path(self.cache_dir, 'mask_imgs.npy')).astype(np.bool)
         mask_all = mask_imgs.sum(0).astype(np.bool)
+        sleep_status = np.repeat(sleep_status, fps, axis=-1)
         for st, ed in sleep_durations:
             status = sleep_status[:, st:ed]
             cap.set(cv2.CAP_PROP_POS_FRAMES, st)
@@ -459,8 +460,10 @@ class Analysis():
 
 
 if __name__ == '__main__':
-    a = Analysis(
-        video_path=r'D:\Pycharm_Projects\qu_holmes_su_release\tests\demo.mp4',
-        roi_flys_flag='1', area_th=0.5, ana_time_duration=0.5,
-    )
-    a.PARAM_speed_displacement()
+    sl = np.load(r'G:\output_36hole_0923_hm052\.cache\all_sleep_status.npy')
+    sl = sl.sum(1)
+    x = np.load(r'G:\output_36hole_0923_hm052\.cache\heatmap_sleeptime.npy')
+    img = x.astype(np.bool).astype(np.uint8) * 255
+    cv2.imshow('', img)
+    cv2.waitKeyEx()
+    ...
