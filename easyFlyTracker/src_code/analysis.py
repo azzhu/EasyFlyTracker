@@ -433,10 +433,12 @@ class Analysis():
         mask_imgs = np.load(Path(self.cache_dir, 'mask_imgs.npy')).astype(np.bool)
         mask_all = mask_imgs.sum(0).astype(np.bool)
         sleep_status = np.repeat(sleep_status, fps, axis=-1)
-        for st, ed in sleep_durations:
+        for du_i, (st, ed) in enumerate(sleep_durations):
+            print(f'\nsleep duration: {du_i + 1}/{len(sleep_durations)}')
             status = sleep_status[:, st:ed]
             cap.set(cv2.CAP_PROP_POS_FRAMES, st)
             nub = 0
+            pbar = Pbar(total=ed - st)
             while True:
                 ret, frame = cap.read()
                 if not ret:
@@ -455,6 +457,8 @@ class Analysis():
                 nub += 1
                 if nub >= ed - st:
                     break
+                pbar.update()
+            pbar.close()
         np.save(sleeptime_heatmap_path, sleeptime_heatmap)
         return sleeptime_heatmap
 

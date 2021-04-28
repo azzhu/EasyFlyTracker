@@ -109,7 +109,7 @@ class Pbar():
             self.now = set_value
         else:
             self.now += nb
-        percent = round(self.now / self.total * 100)  # 百分比数值
+        percent = int(round(self.now / self.total * 100))  # 百分比数值
         pbar_now = round(self.pbar_len * percent / 100)  # 进度条当前长度
         if pbar_now > self.pbar_len: pbar_now = self.pbar_len  # 允许now>total，但是不允许pbar_now>pbar_len
         blank_len = self.pbar_len - pbar_now
