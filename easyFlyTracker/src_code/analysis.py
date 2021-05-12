@@ -443,16 +443,22 @@ class Analysis():
                 ret, frame = cap.read()
                 if not ret:
                     break
-                mask_sleep = mask_imgs * status[:, nub][:, None, None]
-                mask_sleep = mask_sleep.sum(0).astype(bool)  # 只mask睡眠的果蝇圆环
-                frame = undistort.do(frame)
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                foreground_mask = np.abs(frame.astype(np.int16) - gray_bg_int16) > background_th
-                frame = frame < seg_th
-                frame *= mask_all
-                frame = frame.astype(np.uint8) * 255 * foreground_mask  # 该值是原始heatmap累加分割区域图
-                frame *= mask_sleep  # 原始累加分割区域图跟睡眠果蝇区域mask相乘
-                sleeptime_heatmap += frame.astype(np.bool).astype(np.int)
+                sleep_fly_id = np.argwhere(status[:, nub] == True)
+                if len(sleep_fly_id) == 0:
+                    sleep_fly_id = []
+                else:
+                    sleep_fly_id = list(np.squeeze(sleep_fly_id, axis=1))
+                    mask_sleep = np.zeros_like(mask_all)
+                    for sl_id in sleep_fly_id:
+                        mask_sleep += mask_imgs[sl_id]  # 只mask睡眠的果蝇圆环
+                    frame = undistort.do(frame)
+                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                    foreground_mask = np.abs(frame.astype(np.int16) - gray_bg_int16) > background_th
+                    frame = frame < seg_th
+                    frame *= mask_all
+                    frame = frame.astype(np.uint8) * 255 * foreground_mask  # 该值是原始heatmap累加分割区域图
+                    frame *= mask_sleep  # 原始累加分割区域图跟睡眠果蝇区域mask相乘
+                    sleeptime_heatmap += frame.astype(np.bool).astype(np.int)
 
                 nub += 1
                 if nub >= ed - st:
@@ -464,10 +470,12 @@ class Analysis():
 
 
 if __name__ == '__main__':
-    sl = np.load(r'G:\output_36hole_0923_hm052\.cache\all_sleep_status.npy')
-    sl = sl.sum(1)
-    x = np.load(r'G:\output_36hole_0923_hm052\.cache\heatmap_sleeptime.npy')
-    img = x.astype(np.bool).astype(np.uint8) * 255
-    cv2.imshow('', img)
-    cv2.waitKeyEx()
+    da = np.array([[1, 1, 2, 3],
+                   [2, 1, 2, 3], ])
+    # da = da[:, 2]
+    print(da.shape)
+    res = np.argwhere(da[:, 2] == 2)
+    print(res.shape)
+    # print(list(np.squeeze(np.where(da[:, 2] == 2), axis=1)))
+    print(res)
     ...
