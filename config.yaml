@@ -23,6 +23,8 @@ group_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\output\grop.xlsx
 area_th: 0.5
 # 分析移动距离的时候每个值需要统计的时间跨度（单位：分钟）
 ana_time_duration: 0.5
+# 是否计算抠除睡眠后的heatmap
+heatmap_remove_sleep: True
 # 统计睡眠信息的时候每个值需要统计的时间跨度（单位：分钟）
 sleep_time_duration: 1
 #dish_radius_mm: 10

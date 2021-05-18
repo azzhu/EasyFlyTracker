@@ -39,6 +39,7 @@ class Show():
             # scale,  # 比例尺，毫米/像素
             suffix='all',  # 保存的图片结果后缀
             roi_flys_ids=None,
+            heatmap_remove_sleep=False,  # 是否计算抠除睡眠后的heatmap
     ):
         '''
 
@@ -66,6 +67,7 @@ class Show():
             self.roi_flys_list = np.array([False] * len(res))
             self.roi_flys_list[roi_flys_ids] = True
         self.roi_flys_id = [i for i, r in enumerate(self.roi_flys_list) if r]
+        self.heatmap_remove_sleep = heatmap_remove_sleep
 
         # 计算比例尺
         # config_pk = pickle.load(open(Path(self.output_dir, 'config.pkl'), 'rb'))
@@ -205,7 +207,8 @@ class Show():
         self.SHOW_sleep_time_per_h()
         self.SHOW_heatmap()
         self.SHOW_heatmap_of_roi()
-        self.SHOW_heatmap_exclude_sleeptime()
+        if self.heatmap_remove_sleep:
+            self.SHOW_heatmap_exclude_sleeptime()
 
 
 def merge_result(params):
