@@ -10,12 +10,13 @@ import numpy as np
 import cv2, time, random, math, cv2_ext
 from pathlib import Path
 from scipy import stats
-from multiprocessing import Pool
-from threading import Thread
+# from multiprocessing import Pool
+# from threading import Thread
 from easyFlyTracker.src_code.utils import Pbar, Wait
 from easyFlyTracker.src_code.Camera_Calibration import Undistortion
-from easyFlyTracker.src_code.utils import stop_thread
+# from easyFlyTracker.src_code.utils import stop_thread
 from easyFlyTracker.src_code.gui_config import GUI_CFG
+from easyFlyTracker.src_code.fly_angle import Fly_angle
 
 
 class FlySeg():
@@ -55,6 +56,7 @@ class FlySeg():
         self.res_txt_path = Path(self.output_dir, save_txt_name)  # txt结果给用户看，所以保存到用户文件夹
         self.res_npy_path = Path(self.saved_dir, f'{save_txt_name[:-3]}npy')
         self.heatmap_path = Path(self.saved_dir, f'heatmap.npy')
+        self.fly_angles_path = Path(self.saved_dir, f'fly_angles.npy')
         self.saved_dir.mkdir(exist_ok=True)
 
         self.video_stem = str(Path(video_path).stem)
@@ -99,6 +101,9 @@ class FlySeg():
 
         # 计算背景
         self.comp_bg()
+
+        # 初始化计算果蝇角度的实例
+        self.flyangle = Fly_angle()
 
         # set begin frame
         begin_frame = round(begin_time * 60 * self.video_fps)
@@ -244,6 +249,7 @@ class FlySeg():
 
     def run(self):
         self.fly_centroids = []
+        self.fly_angles = []
         pbar = Pbar(total=self.duration_frames)
         i = 0
         # print(f'begin_frame:{self.begin_frame} duration_frames:{self.duration_frames}')
@@ -263,17 +269,28 @@ class FlySeg():
             frame = frame.astype(np.uint8) * 255 * foreground_mask
             self.heatmap += frame.astype(np.bool).astype(np.int)
             oneframe_centroids = []
+            oneframe_angles = []
             for roi in self.rois:
                 img = frame[roi[0]:roi[1], roi[2]:roi[3]]
                 retval, labels, stats, centroids = cv2.connectedComponentsWithStats(img)
                 if retval < 2:
                     cent = (-1, -1)
+                    ang = self.flyangle.outlier
                 else:
-                    cent = centroids[np.argmax(stats[1:, -1]) + 1]
+                    max_area_id = np.argmax(stats[1:, -1]) + 1
+                    cent = centroids[max_area_id]
                     cent = (round(cent[0] + roi[2], 2),
                             round(cent[1] + roi[0], 2))
+                    r = stats[max_area_id]
+                    if r[-1] <= 4:  # 面积太小算角度没啥意义，直接返回异常值
+                        ang = self.flyangle.outlier
+                    else:
+                        small_bin_img = img[r[1]:r[1] + r[3], r[0]:r[0] + r[2]]
+                        ang = self.flyangle(small_bin_img)
                 oneframe_centroids.append(cent)
+                oneframe_angles.append(ang)
             self.fly_centroids.append(oneframe_centroids)
+            self.fly_angles.append(oneframe_angles)
             i += 1
             pbar.update()
             if i >= self.duration_frames:
@@ -291,6 +308,7 @@ class FlySeg():
             for line in self.fly_centroids:
                 f.write(f'{line}\n')
         np.save(self.res_npy_path, np.array(self.fly_centroids, dtype=np.float64))
+        np.save(self.fly_angles_path, np.array(self.fly_angles, dtype=np.float64))
         np.save(self.heatmap_path, self.heatmap)
 
 
@@ -299,7 +317,8 @@ class FlySeg():
 已被证实：【opencv直接获取的总帧数跟逐帧读实际获取的不一致】
 而且多进程处理时，set到指定的时间点分片段读可能会有问题。
 set到不同时间点读取的总帧数最后相加等于opencv直接获取的，直接逐帧读是不一致的，这就比较奇怪。
-
+github上也有人提出类似问题：
+https://github.com/opencv/opencv/issues/9053
 
 '''
 

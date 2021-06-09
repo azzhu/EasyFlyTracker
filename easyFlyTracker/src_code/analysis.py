@@ -45,8 +45,11 @@ class Analysis():
         self.saved_dir = Path(self.cache_dir, 'analysis_result')  # analysis计算出的结果
         self.npy_file_path = Path(self.cache_dir, f'track.npy')
         self.npy_file_path_cor = Path(self.cache_dir, f'track_cor.npy')
+        self.move_direction_pre_frame_path = Path(self.saved_dir, 'move_direction_pre_frame.npy')
+        self.fly_angles_cor_path = Path(self.saved_dir, 'fly_angles_cor.npy')
         self.speeds_npy = Path(self.saved_dir, 'all_fly_speeds_per_frame.npy')
         self.dist_npy = Path(self.saved_dir, 'all_fly_dist_per_frame.npy')
+        # self.angle_changes_path = Path(self.saved_dir, 'angle_changes.npy')
         config_pkl_path = Path(self.res_dir, 'config.pkl')
         self.cache_dir.mkdir(exist_ok=True)
         self.saved_dir.mkdir(exist_ok=True)
@@ -83,6 +86,21 @@ class Analysis():
         # 初始化加载某些数据
         self._get_all_res()
         self._get_speed_perframe_dist_perframe()
+
+        # theta = self._get_move_direction_pre_frame()
+        # cap = cv2.VideoCapture(video_path)
+        # i = 0
+        # while True:
+        #     ret, frame = cap.read()
+        #     if not ret: break
+        #     for k in range(36):
+        #         cp = (self.cps[k][0], self.cps[k][1])
+        #         tha = theta[k][i]
+        #         cv2.putText(frame, f'{int(tha)}', cp, 1, 1, 255)
+        #     cv2.imshow('', frame)
+        #     cv2.waitKeyEx(400)
+        #     i += 1
+        # exit()
 
         # load heatmap
         heatmap_path = Path(self.cache_dir, 'heatmap.npy')
@@ -342,6 +360,58 @@ class Analysis():
         # cv2.waitKeyEx()
         cv2.imwrite(str(p), heatmap_img)
 
+    def PARAM_heatmap_barycenter(self, p, p_heatmap):
+        '''
+        计算热图重心，并可视化
+        :return:
+        '''
+
+        def get_barycenter_of_mat(m):  # 求矩阵重心
+            def get_barycenter_of_line(l):  # 求直线重心
+                i = np.arange(len(l))
+                return np.sum(l * i) / np.sum(l)
+
+            lx = np.sum(m, axis=0)
+            ly = np.sum(m, axis=1)
+            return (get_barycenter_of_line(lx),
+                    get_barycenter_of_line(ly))
+
+        barycps = []
+        heatmap = self.heatmap
+        r = self.dish_radius
+        for cp in self.cps:
+            p0 = (cp[0] - r, cp[1] - r)
+            m = heatmap[
+                p0[1]:p0[1] + 2 * r + 1,
+                p0[0]:p0[0] + 2 * r + 1]
+            barycp = get_barycenter_of_mat(m)
+            barycps.append((barycp[0] + p0[0],
+                            barycp[1] + p0[1]))
+
+        self.barycps = barycps
+
+        img = cv2.imread(str(p_heatmap))
+        img = np.zeros_like(img)
+
+        def dist2p(p1, p2):
+            return ((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2) ** 0.5
+
+        for bp, cp in zip(barycps, self.cps):
+            dist = dist2p(bp, cp)
+            cv2.circle(img, tuple(cp), self.dish_radius, (200, 200, 200), 1, cv2.LINE_AA)
+            cv2.circle(img, tuple(cp), int(round(dist)), (255, 255, 0), -1, cv2.LINE_AA)
+            if dist == 0:  # 不画
+                continue
+            else:
+                x = (bp[0] - cp[0]) * self.dish_radius / dist + cp[0]
+                y = (bp[1] - cp[1]) * self.dish_radius / dist + cp[1]
+                x = int(round(x))
+                y = int(round(y))
+                cv2.line(img, tuple(cp), (x, y), (0, 0, 255), 1, cv2.LINE_AA)
+        # cv2.imshow('', img)
+        # cv2.waitKeyEx()
+        cv2.imwrite(str(p), img)
+
     def PARAM_heatmap_of_roi(self, p):
         '''
         根据当前roi组来算热图，组内不管有多少个圆圈，只算一个平均的，并对热图放大显示。
@@ -468,14 +538,72 @@ class Analysis():
         np.save(sleeptime_heatmap_path, sleeptime_heatmap)
         return sleeptime_heatmap
 
+    def _get_move_direction_pre_frame(self):
+        '''
+        算法：某一帧的运动方向由当前帧跟上一帧的坐标点来确定，第一帧因为没有上一帧，第一帧的运动方向设为跟下一帧相同.
+        算的是运动方向，不是果蝇身体朝向，注意区分。
+        :return:
+        '''
+        if self.move_direction_pre_frame_path.exists():
+            return np.load(self.move_direction_pre_frame_path)
+        else:
+            img_h, img_w = self.mask_imgs.shape[1:]
+            R = self.all_datas
+            R[:, :, 1] = img_h - R[:, :, 1]  # 转换坐标系，从左上转到左下
+            R1 = R[:, :-1]  # 要计算的上一帧
+            R2 = R[:, 1:]  # 要计算的当前帧，从1开始而不是0
+            Diff = R2 - R1  # 跟前一帧的差
+            Dx, Dy = Diff[:, :, 0], Diff[:, :, 1]  # 分解为横坐标以及纵坐标的差
+            Ds = (Dx ** 2 + Dy ** 2) ** 0.5  # 差组成的直角三角形的斜边边长
+            Theta = np.arccos(Dx / Ds)
+            Theta = np.where(np.isnan(Theta), 0, Theta)  # 去除因为除零造成的nan值
+            Theta = Theta * 180 / np.pi  # 转换成角度值，但是arccos的值域是0-180，咱的期望值域是0-360
+            Theta = np.where(Dy < 0, 360 - Theta, Theta)  # Dy小于0的地方角度应该是180-360，而不是0-180，需要拿360减去当前值来修正。
+            Theta = np.pad(Theta, ((0, 0), (1, 0)), 'edge')  # 第一帧的运动方向设置为跟下一帧相同
+            np.save(self.move_direction_pre_frame_path, Theta)
+            return Theta
+
+    def _get_fly_angle_cor(self):
+        '''
+        根据运动方向来修正果蝇头部朝向
+        :return:
+        '''
+        if self.fly_angles_cor_path.exists():
+            return np.load(self.fly_angles_cor_path)
+        else:
+            move_ang = self._get_move_direction_pre_frame()
+            move_ang = np.transpose(move_ang, [1, 0])
+            fly_ang = np.load(Path(self.cache_dir, 'fly_angles.npy'))
+            diff = np.abs(move_ang - fly_ang)
+            mask = (diff > 90) * (diff < 270)
+            fly_ang_cor = np.where(mask, fly_ang + 180, fly_ang)
+            np.save(self.fly_angles_cor_path, fly_ang_cor)
+            return fly_ang_cor
+
+    def PARAM_angle_changes(self):
+        # if self.angle_changes_path.exists():
+        #     return self.angle_changes_path
+        ang = self._get_fly_angle_cor()
+        ang_sec = ang[::self.fps, self.roi_flys_id]
+        as1 = ang_sec[:-1]
+        as2 = ang_sec[1:]
+        changes = np.abs(as2 - as1)
+        changes = np.where(changes > 180, 360 - changes, changes)  # 相比前一秒的变化角度（0-180）
+        ana_duration_secs = int(self.ana_time_duration * 60)
+        ana_times = int(len(changes) / ana_duration_secs) + 1
+        # 按照时间段来分出来
+        changes_es = [changes[i * ana_duration_secs:(i + 1) * ana_duration_secs] for i in range(ana_times)]
+        if len(changes_es[-1]) < len(changes_es[-2]) * 0.1:  # 最后一段太小的话就舍弃
+            changes_es = changes_es[:-1]
+        bins = 18  # 直方图横坐标维度
+        hists = []
+        for cha in changes_es:
+            hist = np.histogram(cha.flatten(), bins=bins, range=(0, 180))
+            hists.append(hist)
+        # np.save(self.angle_changes_path, hists)
+        return hists
+
 
 if __name__ == '__main__':
-    da = np.array([[1, 1, 2, 3],
-                   [2, 1, 2, 3], ])
-    # da = da[:, 2]
-    print(da.shape)
-    res = np.argwhere(da[:, 2] == 2)
-    print(res.shape)
-    # print(list(np.squeeze(np.where(da[:, 2] == 2), axis=1)))
-    print(res)
-    ...
+    da = np.array([1, 1, 2, 3, 9, 7, 4])
+    print(np.histogram(da, bins=5, range=(0, 20)))

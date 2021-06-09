@@ -11,6 +11,8 @@ import cv2, pickle
 import pandas as pd
 from pathlib import Path
 import matplotlib
+from matplotlib.font_manager import FontProperties
+import seaborn as sns
 
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
@@ -87,6 +89,10 @@ class Show():
         # 获取视频对应的Analysis实例
         self.ana = Analysis(**ana_params)
 
+        # 设置字体格式
+        self.font_times = FontProperties(fname=str(Path(Path(__file__).parent.parent, 'fonts/times.ttf')), size=12)
+        self.font_timesbd = FontProperties(fname=str(Path(Path(__file__).parent.parent, 'fonts/timesbd.ttf')), size=15)
+
     def SHOW_avg_dist_per10min(self):
         '''
         十分钟一个值，
@@ -95,14 +101,19 @@ class Show():
         datas_paths = self.ana.PARAM_speed_displacement(redo=True)  # 不调缓存，重新计算
         datas = np.load(datas_paths[1])
         datas *= self.sacle
+        xs = list(range(1, len(datas) + 1))
         plt.close()
         plt.rcParams['figure.figsize'] = (15.0, 8.0)
         plt.grid(linewidth=1)
-        plt.xlabel('time')
-        plt.ylabel('distances (mm)')
-        plt.title('Average distances of flies in every duration at different time')
-        plt.plot(datas, label=self.video_stem)
-        plt.legend(loc='upper left')
+        plt.xlabel(f'Time ({self.ana.ana_time_duration} mins)', fontproperties=self.font_timesbd)
+        plt.ylabel('Distances (mm)', fontproperties=self.font_timesbd)
+        plt.title('Average distances of flies in every duration at different time', fontproperties=self.font_timesbd)
+        plt.plot(xs, datas, label=self.video_stem)
+        plt.scatter(xs, datas)
+        plt.xticks(fontproperties=self.font_times)
+        plt.yticks(fontproperties=self.font_times)
+        plt.legend(prop={'family': 'Times New Roman', 'size': 12})
+        # sns.lineplot(x='x', y='y', data={'x': xs, 'y': datas})
         # plt.show()
         plt.savefig(str(Path(self.saved_dir, f'avg_dist_per_x_min_{self.saved_suffix}.png')))
         np.save(str(Path(self.saved_dir_npys, f'avg_dist_per_x_min_{self.saved_suffix}.npy')), datas)
@@ -160,14 +171,18 @@ class Show():
         datas_path = self.ana.PARAM_sleep_status(redo=True)
         da = np.load(datas_path)
         da, duration_times = da[:, 0], da[:, 1]  # duration_times是对应时段持续时间，最后一个不一定跟前面相等
+        xs = list(range(1, len(da) + 1))
         plt.close()
         plt.rcParams['figure.figsize'] = (15.0, 8.0)
         plt.grid(linewidth=1)
-        plt.xlabel('time')
-        plt.ylabel('sleep time (s)')
-        plt.title('Sleep time of per flies per duration')
-        plt.plot(da, label=self.video_stem)
-        plt.legend(loc='upper left')
+        plt.xlabel(f'Time ({self.ana.sleep_time_duration} mins)', fontproperties=self.font_timesbd)
+        plt.ylabel('Sleep time (sec)', fontproperties=self.font_timesbd)
+        plt.title('Sleep time of per flies per duration', fontproperties=self.font_timesbd)
+        plt.plot(xs, da, label=self.video_stem)
+        plt.scatter(xs, da)
+        plt.xticks(fontproperties=self.font_times)
+        plt.yticks(fontproperties=self.font_times)
+        plt.legend(prop={'family': 'Times New Roman', 'size': 12})
         # plt.show()
         plt.savefig(str(Path(self.saved_dir, f'sleep_time_per_duration_{self.saved_suffix}.png')))
         np.save(str(Path(self.saved_dir_npys, f'sleep_time_per_duration_{self.saved_suffix}.npy')), da)
@@ -191,6 +206,25 @@ class Show():
         p = Path(self.saved_dir, f'heatmap_{self.saved_suffix}.png')
         self.ana.PARAM_heatmap_of_roi(p)
 
+    def SHOW_heatmap_barycenter(self):
+        '''
+        根据heatmap计算重心，并画出来
+        :return:
+        '''
+        p_heatmap = Path(self.saved_dir, f'heatmap.png')
+        p = Path(self.saved_dir, f'heatmap_barycenter.png')
+        if not p.exists():  # 若已存在不再重复计算
+            self.ana.PARAM_heatmap_barycenter(p, p_heatmap)
+
+            # 保存excel
+            barycps, cps = self.ana.barycps, self.ana.cps
+            barycps = np.array(barycps)
+            data = np.concatenate([cps, barycps], axis=1)
+            df = pd.DataFrame(data=data, columns=[['centre', 'centre', 'barycenter', 'barycenter'],
+                                                  ['x', 'y', 'x', 'y']])
+            df.to_excel(Path(self.output_dir, f'barycenter.xlsx'))
+            ...
+
     def SHOW_heatmap_exclude_sleeptime(self):
         '''
         展示去除睡眠时间的果蝇活动区域热图
@@ -200,6 +234,31 @@ class Show():
         p2 = Path(self.saved_dir, f'heatmap_exclude_sleeptime_{self.saved_suffix}.png')
         self.ana.PARAM_heatmap_exclude_sleeptime(p1, p2)
 
+    def SHOW_angle_changes(self):
+        hists = self.ana.PARAM_angle_changes()
+        edge = hists[0][1]
+        hists = np.array([h[0] for h in hists])
+        xs = [f'{int(edge[i])}-{int(edge[i + 1])}' for i in range(len(edge) - 1)]
+
+        plt.close()
+        plt.rcParams['figure.figsize'] = (15.0, 8.0)
+        plt.grid(linewidth=1)
+        plt.xlabel('Angle region (degree)', fontproperties=self.font_timesbd)
+        plt.ylabel('Frequency (times)', fontproperties=self.font_timesbd)
+        plt.title('Histogram of angle change per duration', fontproperties=self.font_timesbd)
+        for i, hi in enumerate(hists):
+            plt.plot(xs, hi, label=str(i + 1))
+            plt.scatter(xs, hi)
+        plt.xticks(fontproperties=self.font_times)
+        plt.yticks(fontproperties=self.font_times)
+        plt.legend(prop={'family': 'Times New Roman', 'size': 12})
+        # plt.legend(loc='upper left')
+        plt.savefig(str(Path(self.saved_dir, f'angle_change_per_duration_{self.saved_suffix}.png')))
+        np.save(str(Path(self.saved_dir_npys, f'angle_change_per_duration_{self.saved_suffix}.npy')), hists)
+        df = pd.DataFrame(data=hists)
+        df.to_excel(Path(self.output_dir, f'angle_change_per_duration_{self.saved_suffix}.xlsx'))
+        ...
+
     def show_all(self):
         self.SHOW_avg_dist_per10min()
         # self.SHOW_dist_change_per_h()
@@ -207,31 +266,42 @@ class Show():
         self.SHOW_sleep_time_per_h()
         self.SHOW_heatmap()
         self.SHOW_heatmap_of_roi()
+        self.SHOW_heatmap_barycenter()
         if self.heatmap_remove_sleep:
             self.SHOW_heatmap_exclude_sleeptime()
+        self.SHOW_angle_changes()
 
 
 def merge_result(params):
     suffixs = [v[-1] for v in params['rois']]
-    prefixs = [
-        'avg_dist_per_x_min',
+    prefixs = [  # 前缀、x轴标签、y轴标签，title
+        ['avg_dist_per_x_min', f'Time ({params["ana_time_duration"]} mins)', 'Distances (mm)',
+         'Average distances of flies in every duration at different time'],
         # 'dist_change_per_h',
         # 'in_centre_prob_per_h',
-        'sleep_time_per_duration',
+        ['sleep_time_per_duration', f'Time ({params["sleep_time_duration"]} mins)', 'Sleep time (sec)',
+         'Sleep time of per flies per duration'],
     ]
+    font_times = FontProperties(fname=str(Path(Path(__file__).parent.parent, 'fonts/times.ttf')), size=12)
+    font_timesbd = FontProperties(fname=str(Path(Path(__file__).parent.parent, 'fonts/timesbd.ttf')), size=15)
     dir = Path(params['output_dir'], 'plot_images', '.npys')
     dst_dir = Path(params['output_dir'], 'plot_images')
-    for pre in prefixs:
+    for pre, xl, yl, title in prefixs:
         plt.close()
         plt.rcParams['figure.figsize'] = (15.0, 8.0)
         plt.grid(linewidth=1)
-        # 目前只有一个指标，所以默认这个，如果后续有多个，这个地方要改
-        plt.title('Average distances of flies in every duration at different time')
+        plt.xlabel(xl, fontproperties=font_timesbd)
+        plt.ylabel(yl, fontproperties=font_timesbd)
+        plt.title(title, fontproperties=font_timesbd)
         das = [np.load(Path(dir, f'{pre}_{suf}.npy')) for suf in suffixs]
         for da, lb in zip(das, suffixs):
             da = np.squeeze(da)
-            plt.plot(da, label=' ' + str(lb))
-        plt.legend(loc='upper left')
+            xs = list(range(1, len(da) + 1))
+            plt.plot(xs, da, label=' ' + str(lb))
+            plt.scatter(xs, da)
+        plt.xticks(fontproperties=font_times)
+        plt.yticks(fontproperties=font_times)
+        plt.legend(prop={'family': 'Times New Roman', 'size': 12})
         plt.savefig(str(Path(dst_dir, f'{pre}_merge.png')))
         np.save(str(Path(dir, f'{pre}_merge.npy')), das)
         ...  # 顺便保存个merge的excel
