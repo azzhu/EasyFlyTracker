@@ -37,6 +37,9 @@ setuptools.setup(
     install_requires=req,
     license='MIT',
     packages=setuptools.find_packages(),
+    package_data={
+        'easyFlyTracker': ['fonts/*.ttf'],
+    },
     project_urls={
         "Source Code": "https://github.com/azzhu/EasyFlyTracker",
         "Bug Tracker": "https://github.com/azzhu/EasyFlyTracker/issues",

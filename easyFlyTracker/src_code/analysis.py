@@ -407,7 +407,8 @@ class Analysis():
                 y = (bp[1] - cp[1]) * self.dish_radius / dist + cp[1]
                 x = int(round(x))
                 y = int(round(y))
-                cv2.line(img, tuple(cp), (x, y), (0, 0, 255), 1, cv2.LINE_AA)
+                # cv2.line(img, tuple(cp), (x, y), (0, 0, 255), 1, cv2.LINE_AA)
+                cv2.arrowedLine(img, tuple(cp), (x, y), (0, 0, 255), 1, cv2.LINE_AA)
         # cv2.imshow('', img)
         # cv2.waitKeyEx()
         cv2.imwrite(str(p), img)
