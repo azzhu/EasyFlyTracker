@@ -42,6 +42,8 @@ class Show():
             suffix='all',  # 保存的图片结果后缀
             roi_flys_ids=None,
             heatmap_remove_sleep=False,  # 是否计算抠除睡眠后的heatmap
+            isfirst=True,  # 通常不同roi组会计算多次，但是有的结果只需计算一次，为避免重复计算这里用来标识是否是第一次
+            ana_time_duration=None,  # 主要是为了生成的图片命名的时候用到
     ):
         '''
 
@@ -51,8 +53,10 @@ class Show():
         self.video_path = Path(video_path)
         self.output_dir = output_dir
         self.saved_dir = Path(output_dir, 'plot_images')
+        self.saved_dir_excels = Path(output_dir, 'plot_excels')
         self.saved_dir_npys = Path(self.saved_dir, '.npys')
         self.saved_dir.mkdir(exist_ok=True)
+        self.saved_dir_excels.mkdir(exist_ok=True)
         self.saved_dir_npys.mkdir(exist_ok=True)
 
         self.video_stem = Path(video_path).stem
@@ -60,6 +64,8 @@ class Show():
         self.fps = round(cap.get(cv2.CAP_PROP_FPS))  # 从opencv得到的帧率不太准，实际是30，opencv给的却是29.99，对后续计算有影响，所以取整
         cap.release()
         self.saved_suffix = suffix
+        self.isfirst = isfirst
+        self.ana_time_duration = ana_time_duration
 
         # roi_flys
         res = np.load(Path(self.output_dir, '.cache', 'track.npy'))
@@ -102,23 +108,28 @@ class Show():
         datas = np.load(datas_paths[1])
         datas *= self.sacle
         xs = list(range(1, len(datas) + 1))
+        xs = [str(_) for _ in xs]
         plt.close()
         plt.rcParams['figure.figsize'] = (15.0, 8.0)
         plt.grid(linewidth=1)
-        plt.xlabel(f'Time ({self.ana.ana_time_duration} mins)', fontproperties=self.font_timesbd)
+        plt.xlabel(f'Video Time (per {self.ana_time_duration} mins)', fontproperties=self.font_timesbd)
         plt.ylabel('Distances (mm)', fontproperties=self.font_timesbd)
-        plt.title('Average distances of flies in every duration at different time', fontproperties=self.font_timesbd)
+        plt.title('Average distances per duration at different time', fontproperties=self.font_timesbd)
         plt.plot(xs, datas, label=self.video_stem)
         plt.scatter(xs, datas)
         plt.xticks(fontproperties=self.font_times)
         plt.yticks(fontproperties=self.font_times)
         plt.legend(prop={'family': 'Times New Roman', 'size': 12})
-        # sns.lineplot(x='x', y='y', data={'x': xs, 'y': datas})
-        # plt.show()
-        plt.savefig(str(Path(self.saved_dir, f'avg_dist_per_x_min_{self.saved_suffix}.png')))
-        np.save(str(Path(self.saved_dir_npys, f'avg_dist_per_x_min_{self.saved_suffix}.npy')), datas)
+        # sns.lineplot(x='x', y='y', data={'x': xs, 'y': datas}) Video Time (per 10 mins)
+        # plt.show()  average_distances_per_flies_per_x_mins_merge.png
+        plt.savefig(str(Path(self.saved_dir,
+                             f'average_distances_per_flies_per_{self.ana_time_duration}_mins_[{self.saved_suffix}].png')))
+        np.save(str(Path(self.saved_dir_npys,
+                         f'average_distances_per_flies_per_{self.ana_time_duration}_mins_[{self.saved_suffix}].npy')),
+                datas)
         df = pd.DataFrame(data=datas, columns=[self.saved_suffix])
-        df.to_excel(Path(self.output_dir, f'avg_dist_per_x_min_{self.saved_suffix}.xlsx'))
+        df.to_excel(Path(self.saved_dir_excels,
+                         f'average_distances_per_flies_per_{self.ana_time_duration}_mins_[{self.saved_suffix}].xlsx'))
 
     def SHOW_dist_change_per_h(self):
         da = self.ana.PARAM_dist_per_h()
@@ -136,7 +147,7 @@ class Show():
         plt.savefig(str(Path(self.saved_dir, f'dist_change_per_h_{self.saved_suffix}.png')))
         np.save(str(Path(self.saved_dir_npys, f'dist_change_per_h_{self.saved_suffix}.npy')), vs)
         df = pd.DataFrame(data=vs)
-        df.to_excel(Path(self.output_dir, f'dist_change_per_h_{self.saved_suffix}.xlsx'))
+        df.to_excel(Path(self.saved_dir_excels, f'dist_change_per_h_{self.saved_suffix}.xlsx'))
 
     def SHOW_in_centre_prob_per_h(self):
         datas_path = self.ana.PARAM_region_status()
@@ -160,7 +171,7 @@ class Show():
         plt.savefig(str(Path(self.saved_dir, f'in_centre_prob_per_h_{self.saved_suffix}.png')))
         np.save(str(Path(self.saved_dir_npys, f'in_centre_prob_per_h_{self.saved_suffix}.npy')), in_centre_prob_per_h)
         df = pd.DataFrame(data=in_centre_prob_per_h)
-        df.to_excel(Path(self.output_dir, f'in_centre_prob_per_h_{self.saved_suffix}.xlsx'))
+        df.to_excel(Path(self.saved_dir_excels, f'in_centre_prob_per_h_{self.saved_suffix}.xlsx'))
 
     def SHOW_sleep_time_per_h(self):
         '''
@@ -172,30 +183,34 @@ class Show():
         da = np.load(datas_path)
         da, duration_times = da[:, 0], da[:, 1]  # duration_times是对应时段持续时间，最后一个不一定跟前面相等
         xs = list(range(1, len(da) + 1))
+        xs = [str(_) for _ in xs]
         plt.close()
         plt.rcParams['figure.figsize'] = (15.0, 8.0)
         plt.grid(linewidth=1)
-        plt.xlabel(f'Time ({self.ana.sleep_time_duration} mins)', fontproperties=self.font_timesbd)
-        plt.ylabel('Sleep time (sec)', fontproperties=self.font_timesbd)
-        plt.title('Sleep time of per flies per duration', fontproperties=self.font_timesbd)
+        plt.xlabel(f'Video Time (per {self.ana.sleep_time_duration} mins)', fontproperties=self.font_timesbd)
+        plt.ylabel('Sleep (min) ', fontproperties=self.font_timesbd)
+        plt.title('Average sleep time per flies per duration', fontproperties=self.font_timesbd)
         plt.plot(xs, da, label=self.video_stem)
         plt.scatter(xs, da)
         plt.xticks(fontproperties=self.font_times)
         plt.yticks(fontproperties=self.font_times)
         plt.legend(prop={'family': 'Times New Roman', 'size': 12})
         # plt.show()
-        plt.savefig(str(Path(self.saved_dir, f'sleep_time_per_duration_{self.saved_suffix}.png')))
-        np.save(str(Path(self.saved_dir_npys, f'sleep_time_per_duration_{self.saved_suffix}.npy')), da)
+        plt.savefig(str(Path(self.saved_dir,
+                             f'average_sleep_time_per_{self.ana.sleep_time_duration}_mins_[{self.saved_suffix}].png')))
+        np.save(str(Path(self.saved_dir_npys,
+                         f'average_sleep_time_per_{self.ana.sleep_time_duration}_mins_[{self.saved_suffix}].npy')), da)
         df = pd.DataFrame(data=da)
-        df.to_excel(Path(self.output_dir, f'sleep_time_per_duration_{self.saved_suffix}.xlsx'))
+        df.to_excel(Path(self.saved_dir_excels,
+                         f'average_sleep_time_per_{self.ana.sleep_time_duration}_mins_[{self.saved_suffix}].xlsx'))
 
     def SHOW_heatmap(self):
         '''
         heatmap只有一张，针对不同的roi算不同的heatmap没有意义，所以只算一次总的。
         :return:
         '''
-        p = Path(self.saved_dir, f'heatmap.png')
-        if not p.exists():  # 若已存在不再重复计算
+        p = Path(self.saved_dir, f'frequency_heatmap_per_flies.png')
+        if self.isfirst:  # 若已存在不再重复计算
             self.ana.PARAM_heatmap(p)
 
     def SHOW_heatmap_of_roi(self):
@@ -203,7 +218,7 @@ class Show():
         每批的roi组只算一个热图，并且放大处理。
         :return:
         '''
-        p = Path(self.saved_dir, f'heatmap_{self.saved_suffix}.png')
+        p = Path(self.saved_dir, f'frequency_heatmap_GroupAverage_[{self.saved_suffix}].png')
         self.ana.PARAM_heatmap_of_roi(p)
 
     def SHOW_heatmap_barycenter(self):
@@ -211,18 +226,18 @@ class Show():
         根据heatmap计算重心，并画出来
         :return:
         '''
-        p_heatmap = Path(self.saved_dir, f'heatmap.png')
-        p = Path(self.saved_dir, f'heatmap_barycenter.png')
-        if not p.exists():  # 若已存在不再重复计算
+        p_heatmap = Path(self.saved_dir, f'frequency_heatmap_per_flies.png')
+        p = Path(self.saved_dir, f'frequency_location_change_per_flies.png')
+        if self.isfirst:  # 若已存在不再重复计算
             self.ana.PARAM_heatmap_barycenter(p, p_heatmap)
 
             # 保存excel
             barycps, cps = self.ana.barycps, self.ana.cps
             barycps = np.array(barycps)
             data = np.concatenate([cps, barycps], axis=1)
-            df = pd.DataFrame(data=data, columns=[['centre', 'centre', 'barycenter', 'barycenter'],
-                                                  ['x', 'y', 'x', 'y']])
-            df.to_excel(Path(self.output_dir, f'barycenter.xlsx'))
+            df = pd.DataFrame(data=data, index=list(range(len(data))),
+                              columns=['centre-x', 'centre-y', 'barycenter-x', 'barycenter-y'])
+            df.to_excel(Path(self.saved_dir_excels, f'frequency_location_change_per_flies.xlsx'))
             ...
 
     def SHOW_heatmap_exclude_sleeptime(self):
@@ -231,7 +246,7 @@ class Show():
         :return:
         '''
         p1 = Path(self.saved_dir, f'heatmap_exclude_sleeptime.png')
-        p2 = Path(self.saved_dir, f'heatmap_exclude_sleeptime_{self.saved_suffix}.png')
+        p2 = Path(self.saved_dir, f'heatmap_exclude_sleeptime_[{self.saved_suffix}].png')
         self.ana.PARAM_heatmap_exclude_sleeptime(p1, p2)
 
     def SHOW_angle_changes(self):
@@ -253,10 +268,10 @@ class Show():
         plt.yticks(fontproperties=self.font_times)
         plt.legend(prop={'family': 'Times New Roman', 'size': 12})
         # plt.legend(loc='upper left')
-        plt.savefig(str(Path(self.saved_dir, f'angle_change_per_duration_{self.saved_suffix}.png')))
-        np.save(str(Path(self.saved_dir_npys, f'angle_change_per_duration_{self.saved_suffix}.npy')), hists)
+        plt.savefig(str(Path(self.saved_dir, f'angle_change_per_duration_[{self.saved_suffix}].png')))
+        np.save(str(Path(self.saved_dir_npys, f'angle_change_per_duration_[{self.saved_suffix}].npy')), hists)
         df = pd.DataFrame(data=hists)
-        df.to_excel(Path(self.output_dir, f'angle_change_per_duration_{self.saved_suffix}.xlsx'))
+        df.to_excel(Path(self.saved_dir_excels, f'angle_change_per_duration_[{self.saved_suffix}].xlsx'))
         ...
 
     def show_all(self):
@@ -274,13 +289,17 @@ class Show():
 
 def merge_result(params):
     suffixs = [v[-1] for v in params['rois']]
+    ana_time_duration = params['ana_time_duration']
+    sleep_time_duration = params['sleep_time_duration']
     prefixs = [  # 前缀、x轴标签、y轴标签，title
-        ['avg_dist_per_x_min', f'Time ({params["ana_time_duration"]} mins)', 'Distances (mm)',
-         'Average distances of flies in every duration at different time'],
-        # 'dist_change_per_h',
-        # 'in_centre_prob_per_h',
-        ['sleep_time_per_duration', f'Time ({params["sleep_time_duration"]} mins)', 'Sleep time (sec)',
-         'Sleep time of per flies per duration'],
+        [f'average_distances_per_flies_per_{ana_time_duration}_mins',
+         f'Video Time (per {ana_time_duration} mins)',
+         'Distances (mm)',
+         'Average distances per duration at different time'],
+        [f'average_sleep_time_per_{sleep_time_duration}_mins',
+         f'Video Time (per {sleep_time_duration} mins)',
+         'Sleep (min) ',
+         'Average sleep time per flies per duration'],
     ]
     font_times = FontProperties(fname=str(Path(Path(__file__).parent.parent, 'fonts/times.ttf')), size=12)
     font_timesbd = FontProperties(fname=str(Path(Path(__file__).parent.parent, 'fonts/timesbd.ttf')), size=15)
@@ -293,20 +312,21 @@ def merge_result(params):
         plt.xlabel(xl, fontproperties=font_timesbd)
         plt.ylabel(yl, fontproperties=font_timesbd)
         plt.title(title, fontproperties=font_timesbd)
-        das = [np.load(Path(dir, f'{pre}_{suf}.npy')) for suf in suffixs]
+        das = [np.load(Path(dir, f'{pre}_[{suf}].npy')) for suf in suffixs]
         for da, lb in zip(das, suffixs):
             da = np.squeeze(da)
             xs = list(range(1, len(da) + 1))
+            xs = [str(_) for _ in xs]
             plt.plot(xs, da, label=' ' + str(lb))
             plt.scatter(xs, da)
         plt.xticks(fontproperties=font_times)
         plt.yticks(fontproperties=font_times)
         plt.legend(prop={'family': 'Times New Roman', 'size': 12})
-        plt.savefig(str(Path(dst_dir, f'{pre}_merge.png')))
-        np.save(str(Path(dir, f'{pre}_merge.npy')), das)
+        plt.savefig(str(Path(dst_dir, f'{pre}_[merge].png')))
+        np.save(str(Path(dir, f'{pre}_[merge].npy')), das)
         ...  # 顺便保存个merge的excel
         df = pd.DataFrame(np.array(das).T, columns=suffixs)
-        df.to_excel(Path(params['output_dir'], f'{pre}_merge.xlsx'))
+        df.to_excel(Path(params['output_dir'], 'plot_excels', f'{pre}_[merge].xlsx'))
 
 
 def one_step_run(params):
@@ -317,7 +337,7 @@ def one_step_run(params):
     '''
     rois = params['rois']
 
-    for ids, flag in rois:
+    for notfirst, (ids, flag) in enumerate(rois):
         ana_params = args_filter(params, Analysis)
         ana_params['roi_flys_flag'] = flag
         ana_params['roi_flys_ids'] = ids
@@ -325,6 +345,7 @@ def one_step_run(params):
         show_params['roi_flys_ids'] = ids
         show_params['suffix'] = flag
         show_params['ana_params'] = ana_params
+        show_params['isfirst'] = not notfirst
         print('-' * 50)
         print(f'Group name: {flag}')
         print(f'Group ids : {ids}')

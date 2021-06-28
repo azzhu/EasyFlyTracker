@@ -12,10 +12,13 @@ from pathlib import Path
 # import scipy.signal
 import pandas as pd
 import pickle
+import warnings
 # from easyFlyTracker.src_code.fly_seg import FlySeg
 from easyFlyTracker.src_code.utils import Pbar, Wait, equalizeHist_use_mask
 from easyFlyTracker.src_code.utils import NumpyArrayHasNanValuesExceptin
 from easyFlyTracker.src_code.Camera_Calibration import Undistortion
+
+warnings.filterwarnings("ignore")
 
 
 class Analysis():
@@ -291,9 +294,11 @@ class Analysis():
         flys_num = self.roi_flys_nubs
         for i in range(len(start_ind) - 1):
             value = all_sleep_status[:, start_ind[i]:start_ind[i + 1]].sum() / flys_num
+            value = value / 60  # 转化为分钟
             values_durations.append([value, dt])
         last_da = all_sleep_status[:, start_ind[-1]:]
         value = last_da.sum() / flys_num
+        value = value / 60  # 转化为分钟
         values_durations.append([value, last_da.shape[1]])
         values_durations = np.array(values_durations)
         np.save(str(npy_path), values_durations)
