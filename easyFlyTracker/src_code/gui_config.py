@@ -277,6 +277,18 @@ class GUI_CFG():
 
 
 if __name__ == '__main__':
-    frame = np.zeros([500, 500, 3], np.uint8)
-    g = GUI_CFG(frame, [], r'D:\Pycharm_Projects\qu_holmes_su_release\tests')
+    frame = cv2.imread(r'Z:\dataset\qususu\0629_old\202106290910_bg.bmp')
+    g = GUI_CFG(frame, [], r'Z:\dataset\qususu\0629_old')
     g.CFG_circle()
+
+    # 这个配置的结果转为之前程序可以使用的
+    dir = Path(r'Z:\dataset\qususu\0629_old')
+    pkl_p = Path(dir, 'config.pkl')
+
+    with open(pkl_p, 'rb') as f:
+        res = pickle.load(f)
+
+    da = np.array(res[0])
+    np.save(Path(dir, 'all_centre_points.npy'), da)
+    with open(Path(dir, 'all_centre_points.pkl'), 'wb') as f:
+        pickle.dump(da, f)

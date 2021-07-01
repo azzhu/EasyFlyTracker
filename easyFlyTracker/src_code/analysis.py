@@ -37,6 +37,7 @@ class Analysis():
             roi_flys_ids=None,
             ana_time_duration=10.,  # 分析移动距离的时候每个值需要统计的时间跨度
             sleep_time_duration=10.,  # 统计睡眠信息的时候每个值需要统计的时间跨度
+            angle_time_duration=10,  # 统计角度变化信息的时候每个值需要统计的时间跨度
             sleep_dist_th_per_second=5,
             sleep_time_th=300,  # 每秒睡眠状态持续多久算是真正的睡眠
             Undistortion_model_path=None,  # 畸变矫正参数路径
@@ -68,6 +69,7 @@ class Analysis():
         self.roi_flys_flag = roi_flys_flag
         self.ana_time_duration = ana_time_duration
         self.sleep_time_duration = sleep_time_duration
+        self.angle_time_duration = angle_time_duration
         self.sleep_dist_th_per_second = sleep_dist_th_per_second
         self.sleep_time_th = sleep_time_th
         self.region_radius = int(round(math.sqrt(area_th) * self.dish_radius))
@@ -89,21 +91,6 @@ class Analysis():
         # 初始化加载某些数据
         self._get_all_res()
         self._get_speed_perframe_dist_perframe()
-
-        # theta = self._get_move_direction_pre_frame()
-        # cap = cv2.VideoCapture(video_path)
-        # i = 0
-        # while True:
-        #     ret, frame = cap.read()
-        #     if not ret: break
-        #     for k in range(36):
-        #         cp = (self.cps[k][0], self.cps[k][1])
-        #         tha = theta[k][i]
-        #         cv2.putText(frame, f'{int(tha)}', cp, 1, 1, 255)
-        #     cv2.imshow('', frame)
-        #     cv2.waitKeyEx(400)
-        #     i += 1
-        # exit()
 
         # load heatmap
         heatmap_path = Path(self.cache_dir, 'heatmap.npy')
@@ -595,7 +582,8 @@ class Analysis():
         as2 = ang_sec[1:]
         changes = np.abs(as2 - as1)
         changes = np.where(changes > 180, 360 - changes, changes)  # 相比前一秒的变化角度（0-180）
-        ana_duration_secs = int(self.ana_time_duration * 60)
+        # ana_duration_secs = int(self.ana_time_duration * 60)
+        ana_duration_secs = int(self.angle_time_duration * 60)
         ana_times = int(len(changes) / ana_duration_secs) + 1
         # 按照时间段来分出来
         changes_es = [changes[i * ana_duration_secs:(i + 1) * ana_duration_secs] for i in range(ana_times)]
@@ -603,13 +591,20 @@ class Analysis():
             changes_es = changes_es[:-1]
         bins = 18  # 直方图横坐标维度
         hists = []
+        '''
+        这里注意一下，求出来的直方图横坐标是0-10，10-20,20-30，。。。，170-180，更具体来说，应该是这样：
+        [0,10),[10,20),[20,30),...[170,180]，前闭后开，但是最后一个是全闭。加上0后变为：
+        0，(0,10),[10,20),[20,30),...[170,180]
+        '''
+        zeros_nums = []
         for cha in changes_es:
             hist = np.histogram(cha.flatten(), bins=bins, range=(0, 180))
             hists.append(hist)
+            zeros_nums.append(np.sum(cha == 0))
         # np.save(self.angle_changes_path, hists)
-        return hists
+        return hists, zeros_nums
 
 
 if __name__ == '__main__':
-    da = np.array([1, 1, 2, 3, 9, 7, 4])
+    da = np.array([1, 1, 2, 3, 9, 7, 4, 8, 19, 20])
     print(np.histogram(da, bins=5, range=(0, 20)))

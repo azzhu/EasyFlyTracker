@@ -250,10 +250,24 @@ class Show():
         self.ana.PARAM_heatmap_exclude_sleeptime(p1, p2)
 
     def SHOW_angle_changes(self):
-        hists = self.ana.PARAM_angle_changes()
+        hists, zeros_nums = self.ana.PARAM_angle_changes()
         edge = hists[0][1]
         hists = np.array([h[0] for h in hists])
         xs = [f'{int(edge[i])}-{int(edge[i + 1])}' for i in range(len(edge) - 1)]
+        columns = [f'[{int(edge[i])},{int(edge[i + 1])})' for i in range(len(edge) - 1)]
+        '''
+        这里注意一下，横坐标是0-10，10-20,20-30，。。。，170-180，更具体来说，应该是这样
+        [0,10),[10,20),[20,30),...[170,180]，前闭后开，但是最后一个是全闭.加上0后变为：
+        0，(0,10),[10,20),[20,30),...[170,180]
+        '''
+        # 把0元素个数加进去需要做的事，1，横坐标加个0；2，原来0-10的元素个数减去0的个数
+        xs = ['0'] + xs  # 把零加进去
+        columns = ['0'] + columns
+        columns[1] = '(' + columns[1][1:]
+        columns[-1] = columns[-1][:-1] + ']'
+        zeros_nums = np.array(zeros_nums)[:, None]
+        hists = np.concatenate((zeros_nums, hists), axis=1)
+        hists[:, 1] -= hists[:, 0]
 
         plt.close()
         plt.rcParams['figure.figsize'] = (15.0, 8.0)
@@ -262,15 +276,15 @@ class Show():
         plt.ylabel('Frequency (times)', fontproperties=self.font_timesbd)
         plt.title('Histogram of angle change per duration', fontproperties=self.font_timesbd)
         for i, hi in enumerate(hists):
-            plt.plot(xs, hi, label=str(i + 1))
+            plt.plot(xs, hi, label=f'Duration {i + 1}')
             plt.scatter(xs, hi)
         plt.xticks(fontproperties=self.font_times)
         plt.yticks(fontproperties=self.font_times)
         plt.legend(prop={'family': 'Times New Roman', 'size': 12})
-        # plt.legend(loc='upper left')
+        plt.legend(loc='upper right')
         plt.savefig(str(Path(self.saved_dir, f'angle_change_per_duration_[{self.saved_suffix}].png')))
         np.save(str(Path(self.saved_dir_npys, f'angle_change_per_duration_[{self.saved_suffix}].npy')), hists)
-        df = pd.DataFrame(data=hists)
+        df = pd.DataFrame(data=hists, columns=columns, index=[f'Duration {i + 1}' for i in range(len(hists))])
         df.to_excel(Path(self.saved_dir_excels, f'angle_change_per_duration_[{self.saved_suffix}].xlsx'))
         ...
 

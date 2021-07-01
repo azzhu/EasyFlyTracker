@@ -63,10 +63,6 @@ if __name__ == '__main__':
     easyFlyTracker_analysis()
     # easyFlyTracker_cam_calibration()
 
-    # import numpy as np
-    # import cv2
-    #
-    # img = np.ones((200, 200), np.uint8) * 255
-    # cv2.arrowedLine(img, (100, 50), (150, 120), 0, 1, cv2.LINE_AA)
-    # cv2.imshow('', img)
-    # cv2.waitKeyEx()
+    # x = '[0,10)'
+    # x = '(' + x[1:]
+    # print(x)

@@ -27,6 +27,8 @@ ana_time_duration: 0.5
 heatmap_remove_sleep: False
 # 统计睡眠信息的时候每个值需要统计的时间跨度（单位：分钟）
 sleep_time_duration: 1
+# 统计角度变化信息的时候每个值需要统计的时间跨度（单位：分钟）
+angle_time_duration: 0.5
 #dish_radius_mm: 10
 # AB两点的距离，单位毫米
 AB_dist_mm: 120
