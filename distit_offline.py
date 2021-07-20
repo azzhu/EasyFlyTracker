@@ -9,6 +9,7 @@
 import os
 import time
 import shutil
+import easyFlyTracker
 
 '''
 注意：需要安装两个库：
@@ -29,9 +30,10 @@ os.system('python setup.py sdist bdist_wheel')
 # # 2，Uploading the distribution archives
 # os.system('twine upload --repository pypi dist/*')
 
+ver = easyFlyTracker.__version__
 print(
-    '''
+    f'''
 Update:
-pip install easyFlyTracker-0.6.3-py3-none-any.whl
+pip install easyFlyTracker-{ver}-py3-none-any.whl
     '''
 )

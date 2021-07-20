@@ -272,21 +272,26 @@ class Analysis():
             return all_sleep_status
 
         all_sleep_status = get_all_sleep_status(self)
-        all_sleep_status = all_sleep_status * np.tile(self.roi_flys_list[:, None],
-                                                      (1, all_sleep_status.shape[1]))
+        all_sleep_status = all_sleep_status[self.roi_flys_id]
+
         dt = int(round(self.sleep_time_duration * 60))  # 多少秒
         start_ind = list(range(0, all_sleep_status.shape[1], dt))
         # 因为最后一个时间段可能不足设定的时间段，所以这里一块返回两者
         values_durations = []
         flys_num = self.roi_flys_nubs
         for i in range(len(start_ind) - 1):
-            value = all_sleep_status[:, start_ind[i]:start_ind[i + 1]].sum() / flys_num
+            all_sleep_status_duration = all_sleep_status[:, start_ind[i]:start_ind[i + 1]]
+            value = all_sleep_status_duration.sum() / flys_num
             value = value / 60  # 转化为分钟
-            values_durations.append([value, dt])
+            sleep_flys_nubs = np.sum(all_sleep_status_duration, axis=-1).astype(np.bool).sum()
+            proportion_of_sleep_flys = sleep_flys_nubs / flys_num  # 当前时间段睡觉的果蝇的比例
+            values_durations.append([value, dt, proportion_of_sleep_flys])
         last_da = all_sleep_status[:, start_ind[-1]:]
         value = last_da.sum() / flys_num
         value = value / 60  # 转化为分钟
-        values_durations.append([value, last_da.shape[1]])
+        sleep_flys_nubs = np.sum(last_da, axis=-1).astype(np.bool).sum()
+        proportion_of_sleep_flys = sleep_flys_nubs / flys_num  # 当前时间段睡觉的果蝇的比例
+        values_durations.append([value, last_da.shape[1], proportion_of_sleep_flys])
         values_durations = np.array(values_durations)
         np.save(str(npy_path), values_durations)
         return str(npy_path)

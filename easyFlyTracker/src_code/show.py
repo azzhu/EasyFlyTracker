@@ -181,28 +181,49 @@ class Show():
         '''
         datas_path = self.ana.PARAM_sleep_status(redo=True)
         da = np.load(datas_path)
-        da, duration_times = da[:, 0], da[:, 1]  # duration_times是对应时段持续时间，最后一个不一定跟前面相等
+        # duration_times是对应时段持续时间，最后一个不一定跟前面相等
+        da, duration_times, proportion_of_sleep_flys = da[:, 0], da[:, 1], da[:, 2]
         xs = list(range(1, len(da) + 1))
         xs = [str(_) for _ in xs]
+
         plt.close()
         plt.rcParams['figure.figsize'] = (15.0, 8.0)
         plt.grid(linewidth=1)
+
+        # 绘制折线图
         plt.xlabel(f'Video Time (per {self.ana.sleep_time_duration} mins)', fontproperties=self.font_timesbd)
         plt.ylabel('Sleep (min) ', fontproperties=self.font_timesbd)
-        plt.title('Average sleep time per flies per duration', fontproperties=self.font_timesbd)
-        plt.plot(xs, da, label=self.video_stem)
+        plt.title('Average sleep time per flies per duration & Proportion of sleep flies',
+                  fontproperties=self.font_timesbd)
+        plt.plot(xs, da, label=f'{self.video_stem}, Sleep')
         plt.scatter(xs, da)
+        plt.ylim([0, da.max() * 1.2])
         plt.xticks(fontproperties=self.font_times)
         plt.yticks(fontproperties=self.font_times)
-        plt.legend(prop={'family': 'Times New Roman', 'size': 12})
+        plt.legend(loc='upper left', frameon=True, prop={'family': 'Times New Roman', 'size': 12})
+
+        # 绘制柱状图
+        ax2 = plt.twinx()
+        ax2.bar(xs, proportion_of_sleep_flys, label=f'{self.video_stem}, Proportion of sleep flies',
+                width=0.3, alpha=0.2)
+        ax2.set_ylim([0, 1])
+        ax2.set_ylabel('Proportion of sleep flies', fontproperties=self.font_timesbd)
+        ax2.legend(loc='upper right', frameon=True, prop={'family': 'Times New Roman', 'size': 12})
+        plt.yticks(fontproperties=self.font_times)
+
         # plt.show()
         plt.savefig(str(Path(self.saved_dir,
-                             f'average_sleep_time_per_{self.ana.sleep_time_duration}_mins_[{self.saved_suffix}].png')))
+                             f'average_sleep_time_per_{self.ana.sleep_time_duration}_mins_&_proportion_of_sleep_flies_[{self.saved_suffix}].png')))
+        da = [da, proportion_of_sleep_flys]
         np.save(str(Path(self.saved_dir_npys,
-                         f'average_sleep_time_per_{self.ana.sleep_time_duration}_mins_[{self.saved_suffix}].npy')), da)
-        df = pd.DataFrame(data=da)
+                         f'average_sleep_time_per_{self.ana.sleep_time_duration}_mins_&_proportion_of_sleep_flies_[{self.saved_suffix}].npy')),
+                da)
+        df = pd.DataFrame(data=da,
+                          index=[f'average_sleep_time_per_{self.ana.sleep_time_duration}_mins',
+                                 'proportion_of_sleep_flies'],
+                          columns=[str(_ + 1) for _ in range(len(da[0]))])
         df.to_excel(Path(self.saved_dir_excels,
-                         f'average_sleep_time_per_{self.ana.sleep_time_duration}_mins_[{self.saved_suffix}].xlsx'))
+                         f'average_sleep_time_per_{self.ana.sleep_time_duration}_mins_&_proportion_of_sleep_flies_[{self.saved_suffix}].xlsx'))
 
     def SHOW_heatmap(self):
         '''
@@ -301,6 +322,64 @@ class Show():
         self.SHOW_angle_changes()
 
 
+def merge_sleep_time_result(params):
+    suffixs = [v[-1] for v in params['rois']]
+    sleep_time_duration = params['sleep_time_duration']
+    font_times = FontProperties(fname=str(Path(Path(__file__).parent.parent, 'fonts/times.ttf')), size=12)
+    font_timesbd = FontProperties(fname=str(Path(Path(__file__).parent.parent, 'fonts/timesbd.ttf')), size=15)
+    dir = Path(params['output_dir'], 'plot_images', '.npys')
+    dst_dir = Path(params['output_dir'], 'plot_images')
+    excel_dir = Path(params['output_dir'], 'plot_excels')
+    das = [np.load(Path(dir, f'average_sleep_time_per_30_mins_&_proportion_of_sleep_flies_[{s}].npy')) for s in suffixs]
+    xs = list(range(1, len(das[0][0]) + 1))
+    xs = [str(_) for _ in xs]
+
+    plt.close()
+    plt.rcParams['figure.figsize'] = (15.0, 8.0)
+    plt.grid(linewidth=1)
+
+    # 绘制折线图
+    plt.xlabel(f'Video Time (per {sleep_time_duration} mins)', fontproperties=font_timesbd)
+    plt.ylabel('Sleep (min) ', fontproperties=font_timesbd)
+    plt.title('Average sleep time per flies per duration & Proportion of sleep flies',
+              fontproperties=font_timesbd)
+    for da, suf in zip(das, suffixs):
+        plt.plot(xs, da[0], label=f'{suf}, Sleep')
+        plt.scatter(xs, da[0])
+    plt.ylim([0, max([da[0].max() for da in das]) * 1.2])
+    plt.xticks(fontproperties=font_times)
+    plt.yticks(fontproperties=font_times)
+    plt.legend(loc='upper left', frameon=True, prop={'family': 'Times New Roman', 'size': 12})
+
+    # 绘制柱状图
+    total_width = 0.5
+    n = len(das)
+    width = total_width / n
+    xs_ori = np.array(list(range(len(das[0][0])))) - (total_width - width) / 2
+    ax2 = plt.twinx()
+    for en, (da, suf) in enumerate(zip(das, suffixs)):
+        ax2.bar(xs_ori + width * en, da[1], label=f'{suf}, Proportion of sleep flies', width=width, alpha=0.2)
+    ax2.set_ylim([0, 1])
+    ax2.set_ylabel('Proportion of sleep flies', fontproperties=font_timesbd)
+    ax2.legend(loc='upper right', frameon=True, prop={'family': 'Times New Roman', 'size': 12})
+    plt.yticks(fontproperties=font_times)
+
+    # plt.show()
+    plt.savefig(str(
+        Path(dst_dir, f'average_sleep_time_per_{sleep_time_duration}_mins_&_proportion_of_sleep_flies_[merge].png')))
+    np.save(str(
+        Path(dir, f'average_sleep_time_per_{sleep_time_duration}_mins_&_proportion_of_sleep_flies_[merge].npy')),
+        das)
+    df = pd.DataFrame(data=np.array([da[0] for da in das]),
+                      index=suffixs,
+                      columns=[str(_ + 1) for _ in range(len(das[0][0]))])
+    df.to_excel(Path(excel_dir, f'average_sleep_time_per_{sleep_time_duration}_mins_[merge].xlsx'))
+    df = pd.DataFrame(data=np.array([da[1] for da in das]),
+                      index=suffixs,
+                      columns=[str(_ + 1) for _ in range(len(das[0][0]))])
+    df.to_excel(Path(excel_dir, f'proportion_of_sleep_flies_{sleep_time_duration}_mins_[merge].xlsx'))
+
+
 def merge_result(params):
     suffixs = [v[-1] for v in params['rois']]
     ana_time_duration = params['ana_time_duration']
@@ -320,6 +399,9 @@ def merge_result(params):
     dir = Path(params['output_dir'], 'plot_images', '.npys')
     dst_dir = Path(params['output_dir'], 'plot_images')
     for pre, xl, yl, title in prefixs:
+        if 'average_sleep_time_per' in pre:  # 这个单独处理
+            merge_sleep_time_result(params)
+            continue
         plt.close()
         plt.rcParams['figure.figsize'] = (15.0, 8.0)
         plt.grid(linewidth=1)
@@ -372,6 +454,10 @@ def one_step_run(params):
 
 
 if __name__ == '__main__':
+    from easyFlyTracker.src_code.utils import __get_params
+
+    params = __get_params()
+    merge_sleep_time_result(params)
     exit()
 
     rois = [

@@ -277,12 +277,13 @@ class GUI_CFG():
 
 
 if __name__ == '__main__':
-    frame = cv2.imread(r'Z:\dataset\qususu\0629_old\202106290910_bg.bmp')
-    g = GUI_CFG(frame, [], r'Z:\dataset\qususu\0629_old')
+    # 从左到右从上到下配置圆环
+    frame = cv2.imread(r'Z:\dataset\qususu\202107131210_15304.tif')
+    g = GUI_CFG(frame, [], r'Z:\dataset\qususu')
     g.CFG_circle()
 
     # 这个配置的结果转为之前程序可以使用的
-    dir = Path(r'Z:\dataset\qususu\0629_old')
+    dir = Path(r'Z:\dataset\qususu')
     pkl_p = Path(dir, 'config.pkl')
 
     with open(pkl_p, 'rb') as f:
