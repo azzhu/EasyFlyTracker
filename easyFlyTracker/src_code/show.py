@@ -435,21 +435,21 @@ def one_step_run(params):
     '''
     rois = params['rois']
 
-    # for notfirst, (ids, flag) in enumerate(rois):
-    #     ana_params = args_filter(params, Analysis)
-    #     ana_params['roi_flys_flag'] = flag
-    #     ana_params['roi_flys_ids'] = ids
-    #     show_params = args_filter(params, Show)
-    #     show_params['roi_flys_ids'] = ids
-    #     show_params['suffix'] = flag
-    #     show_params['ana_params'] = ana_params
-    #     show_params['isfirst'] = not notfirst
-    #     print('-' * 50)
-    #     print(f'Group name: {flag}')
-    #     print(f'Group ids : {ids}')
-    #     with Wait():
-    #         s = Show(**show_params)
-    #         s.show_all()
+    for notfirst, (ids, flag) in enumerate(rois):
+        ana_params = args_filter(params, Analysis)
+        ana_params['roi_flys_flag'] = flag
+        ana_params['roi_flys_ids'] = ids
+        show_params = args_filter(params, Show)
+        show_params['roi_flys_ids'] = ids
+        show_params['suffix'] = flag
+        show_params['ana_params'] = ana_params
+        show_params['isfirst'] = not notfirst
+        print('-' * 50)
+        print(f'Group name: {flag}')
+        print(f'Group ids : {ids}')
+        with Wait():
+            s = Show(**show_params)
+            s.show_all()
 
     if len(rois) > 1:
         merge_result(params)
