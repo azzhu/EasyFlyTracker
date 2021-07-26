@@ -218,6 +218,10 @@ def __get_params():
     for key in params:
         if isinstance(params[key], str) and params[key].lower() in ['none', 'null']:
             params[key] = None
+
+    # 这一版这个参数没有暴露给用户，为防止后续代码出问题，这里强制给它设置个默认值0.5
+    params['area_th'] = 0.5
+
     return params
 
 
@@ -256,7 +260,7 @@ def gen_reqs():
 
 
 if __name__ == '__main__':
-    print(pow(2,16))
+    print(pow(2, 16))
     exit()
     import os, cv2
     import sys

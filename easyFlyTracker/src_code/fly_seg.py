@@ -228,7 +228,7 @@ class FlySeg():
             frame = self.undistort.do(frame)
             for cp, tp in zip(self.cps, res[i]):
                 cv2.circle(frame, cp, self.dish_radius, (255, 0, 0), 1)
-                cv2.circle(frame, cp, self.region_radius, (0, 255, 0), 1)
+                # cv2.circle(frame, cp, self.region_radius, (0, 255, 0), 1)
                 tp = (int(round(tp[0])), int(round(tp[1])))
                 # cv2.circle(frame, tp, 3, (0, 0, 255), -1)
                 cv2.line(frame, (tp[0] - 10, tp[1]), (tp[0] + 10, tp[1]), (0, 0, 255), 1)

@@ -33,7 +33,7 @@ class Analysis():
             video_path,  # 视频路径
             output_dir,  # 输出文件夹
             roi_flys_flag,
-            area_th,  # 内圈面积占比
+            area_th=0.5,  # 内圈面积占比
             roi_flys_ids=None,
             ana_time_duration=10.,  # 分析移动距离的时候每个值需要统计的时间跨度
             sleep_time_duration=10.,  # 统计睡眠信息的时候每个值需要统计的时间跨度

@@ -118,7 +118,13 @@ class GUI_CFG():
         self.res.append([x, y, r1])
         self.roi_id = len(self.res) - 1
 
-    def _draw_img_from_res(self):
+    def _draw_img_from_res(self, skip_ABline=False):
+        '''
+        :param skip_ABline:
+            为什么要skip画AB线呢？因为config.pkl里面只有AB的长度信息，没有AB的坐标信息，
+            所以当跳过配置，只从config.pkl文件里面读的时候没有AB坐标信息，就画不了。
+        :return:
+        '''
         img = self.img.copy()
 
         # 修改所有圆环半径，保持一致
@@ -131,11 +137,12 @@ class GUI_CFG():
             cv2.putText(img, f'{i}', (x - 5, y + 5), 1, 1, self.col)
 
         # 画AB两条线
-        ab = ['A', 'B']
-        for i, p in enumerate(self.AB_ps):
-            cv2.circle(img, p, 3, (0, 0, 220), -1)
-            cv2.putText(img, ab[i], (p[0] + 5, p[1] - 5), 0, 0.7, (220, 220, 0), 2)
-        cv2.line(img, *self.AB_ps, (0, 0, 220), 1)
+        if not skip_ABline:
+            ab = ['A', 'B']
+            for i, p in enumerate(self.AB_ps):
+                cv2.circle(img, p, 3, (0, 0, 220), -1)
+                cv2.putText(img, ab[i], (p[0] + 5, p[1] - 5), 0, 0.7, (220, 220, 0), 2)
+            cv2.line(img, *self.AB_ps, (0, 0, 220), 1)
 
         # 越界判断
         if self.roi_id < 0: self.roi_id = 0
@@ -210,7 +217,7 @@ class GUI_CFG():
     def CFG_circle(self, direct_get_res=False):
         if direct_get_res:
             # 直接退出之前还是得保存config.bmp给用户看
-            self._draw_img_from_res()
+            self._draw_img_from_res(skip_ABline=True)
             cv2_ext.imwrite(str(self.res_pkl)[:-3] + 'bmp', self.drawed_img)
             return self.res, self.AB_dist
 
