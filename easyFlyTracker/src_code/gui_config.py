@@ -8,7 +8,7 @@
 '''
 import numpy as np
 import cv2, cv2_ext, pickle, random
-import math
+import math, time
 from pathlib import Path
 
 '''
@@ -65,6 +65,8 @@ class GUI_CFG():
             self.init_res = [[int(w / 2), int(h / 2), int(min(h, w) / 20)]]
         self.roi_id = 0  # 当前操作的圆环
 
+        self.tim = 0  # 时间
+
         # result
         self.res = []
         self._init_res_2_res()
@@ -96,6 +98,46 @@ class GUI_CFG():
         elif event == cv2.EVENT_RBUTTONDBLCLK:  # 右键双击【删除圆环】
             self._get_point_in_which_circle(x, y)
             if len(self.res) > 0: del self.res[self.roi_id]
+        elif event == cv2.EVENT_MOUSEWHEEL:  # 上下滚轮【控制直径大小】
+            if flags > 0:  # 上滚
+                # self.res[self.roi_id][2] += 1
+                self.r += 1
+            else:  # 下滚
+                # self.res[self.roi_id][2] -= 1
+                self.r -= 1
+
+    def _opencv_mouse_callback_new(self, event, x, y, flags, param):
+        '''
+        跟非new的区别：有时候mac系统很煞笔，识别不出左键和右键的双击动作，只能识别出单击，
+        那好，我就根据两次单击的时间差来判定是否是双击。
+        :return:
+        '''
+        if event == cv2.EVENT_LBUTTONDOWN:  # 左键按下【设置感兴趣圆环】
+            self.lbutton_down = True
+            self._get_point_in_which_circle(x, y)
+
+        elif event == cv2.EVENT_LBUTTONUP:  # 左键松开
+            self.lbutton_down = False
+            # 极短时间内两次松开，即判定为双击
+            if time.perf_counter() - self.tim < 0.3:  # # 左键双击【在双击的地方添加新的圆环】
+                self._res_add(x, y)
+            self.tim = time.perf_counter()
+
+        elif self.lbutton_down and event == cv2.EVENT_MOUSEMOVE:  # 左键按下并且鼠标移动【移动感兴趣圆环】
+            # 先看一下点击的点离roi_id的距离
+            x0, y0 = self.res[self.roi_id][:2]
+            dist = math.sqrt(pow(x - x0, 2) + pow(y - y0, 2))
+            # 根据距离判断点击的点是否在圈内
+            if dist <= self.res[self.roi_id][2]:
+                self.res[self.roi_id][:2] = [x, y]
+
+        elif event == cv2.EVENT_RBUTTONUP:  # 右键松开
+            # 极短时间内两次松开，即判定为双击
+            if time.perf_counter() - self.tim < 0.3:  # # 右键双击【删除圆环】
+                self._get_point_in_which_circle(x, y)
+                if len(self.res) > 0: del self.res[self.roi_id]
+            self.tim = time.perf_counter()
+
         elif event == cv2.EVENT_MOUSEWHEEL:  # 上下滚轮【控制直径大小】
             if flags > 0:  # 上滚
                 # self.res[self.roi_id][2] += 1
@@ -238,8 +280,8 @@ class GUI_CFG():
         while True:
             # cv2.imshow('img', self.img)
             cv2.imshow(self.winname, self._draw_img_from_res())
-            cv2.setMouseCallback(self.winname, self._opencv_mouse_callback)
-            k = cv2.waitKeyEx(30)
+            cv2.setMouseCallback(self.winname, self._opencv_mouse_callback_new)
+            k = cv2.waitKeyEx(5)
 
             # 正常移动
             if k in key_up:  # w，向上移动
@@ -285,9 +327,11 @@ class GUI_CFG():
 
 if __name__ == '__main__':
     # 从左到右从上到下配置圆环
-    frame = cv2.imread(r'Z:\dataset\qususu\202107131210_15304.tif')
+    # frame = cv2.imread(r'Z:\dataset\qususu\202107131210_15304.tif')
+    frame = np.ones([500, 700, 3], np.uint8) * 255
     g = GUI_CFG(frame, [], r'Z:\dataset\qususu')
     g.CFG_circle()
+    exit()
 
     # 这个配置的结果转为之前程序可以使用的
     dir = Path(r'Z:\dataset\qususu')
