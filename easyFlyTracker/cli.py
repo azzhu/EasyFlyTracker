@@ -16,6 +16,7 @@ from easyFlyTracker.src_code.utils import (
     args_filter,
     __get_params,
     __load_group,
+    _duration_params_validity_judgment,
 )
 
 
@@ -43,6 +44,7 @@ def easyFlyTracker_():
 # Command line 2
 def easyFlyTracker_analysis():
     params = __get_params()
+    _duration_params_validity_judgment(params)
     rois = __load_group(params)
     params.update({
         'rois': rois,

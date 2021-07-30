@@ -85,6 +85,7 @@ class Show():
         pklf = Path(output_dir, 'config.pkl')
         _, AB_dist = pickle.load(open(pklf, 'rb'))
         self.sacle = AB_dist_mm / AB_dist
+        # print(f'scale: {self.sacle}')
         # print('请输入所选两点之间的实际距离，单位毫米：')
         # dist_mm = float(input())
         # print('请输入所选两点之间的像素距离，单位像素：')

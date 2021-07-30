@@ -19,8 +19,6 @@ skip_config: False
 ############### analysis ########################
 # config roi path, search in the video_path directory if None
 group_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\output\grop.xlsx
-# 内圈面积阈值
-area_th: 0.5
 # 分析移动距离的时候每个值需要统计的时间跨度（单位：分钟）
 ana_time_duration: 0.5
 # 是否计算抠除睡眠后的heatmap
@@ -40,10 +38,10 @@ Undistortion_model_path: None
 
 ################ Camera Calibration #################
 # 已拍摄的标记图像所在文件夹
-calibration_images_files_dir: D:\Pycharm_Projects\qu_holmes_su_release\imgs\camera_calibration\traindatas
+calibration_images_files_dir: D:\tempp\che
 
 # 标记模型保存结果
-calibration_model_saved_dir: D:\Pycharm_Projects\qu_holmes_su_release\imgs\camera_calibration\model
+calibration_model_saved_dir: D:\tempp\che
 
 # 棋盘大小
 chess_size: [6, 9]

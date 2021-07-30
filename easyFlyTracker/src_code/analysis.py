@@ -194,6 +194,17 @@ class Analysis():
                                np.tile(self.roi_flys_list[:, np.newaxis],
                                        (1, self.all_fly_dist_per_frame.shape[1]))
 
+        # res = []
+        # for ind in frame_start_ind:
+        #     x = np.sum(self.all_fly_dist_per_frame[:, ind:ind + duration_frames], axis=1)
+        #     res.append(x)
+        # res = np.stack(res, axis=-1)
+        # res = res * 0.26876426270157516
+        # np.save(r'Z:\dataset\qususu\ceshishipin\v080\output_72hole_0330_v080\plot_images\qudashen.npy', res)
+        # df = pd.DataFrame(data=res)
+        # df.to_excel(r'Z:\dataset\qususu\ceshishipin\v080\output_72hole_0330_v080\plot_images\qudashen.xlsx')
+        # exit()
+
         time_duration_stat_speed = []  # 10分钟总速度/帧数/果蝇个数
         time_duration_stat_displacement = []  # 10分钟总位移/果蝇个数
         for ind in frame_start_ind:
@@ -393,8 +404,10 @@ class Analysis():
         def dist2p(p1, p2):
             return ((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2) ** 0.5
 
+        barycps_r = []
         for bp, cp in zip(barycps, self.cps):
             dist = dist2p(bp, cp)
+            barycps_r.append(dist)
             cv2.circle(img, tuple(cp), self.dish_radius, (200, 200, 200), 1, cv2.LINE_AA)
             cv2.circle(img, tuple(cp), int(round(dist)), (255, 255, 0), -1, cv2.LINE_AA)
             if dist == 0:  # 不画
@@ -406,6 +419,7 @@ class Analysis():
                 y = int(round(y))
                 # cv2.line(img, tuple(cp), (x, y), (0, 0, 255), 1, cv2.LINE_AA)
                 cv2.arrowedLine(img, tuple(cp), (x, y), (0, 0, 255), 1, cv2.LINE_AA)
+        # np.save(r'Z:\dataset\qususu\ceshishipin\v080\output_72hole_0330_v080\plot_images\barycps_r.npy', barycps_r)
         # cv2.imshow('', img)
         # cv2.waitKeyEx()
         cv2.imwrite(str(p), img)

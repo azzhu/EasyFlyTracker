@@ -187,6 +187,31 @@ You can find more detail information in this file: config.yaml
     '''
 
 
+def _duration_params_validity_judgment(params):
+    '''
+    duration time相关参数合法性判断。这些参数只在分析那一步会用到，所以追踪的时候不要去判断。
+    要求：必须<=视频时长的一半，且>0，要不然没意义。
+    :param params:
+    :return:
+    '''
+    import cv2
+    vp = params['video_path']
+    cap = cv2.VideoCapture(vp)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    frames_num = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+    total_time = frames_num / fps / 60
+    cap.release()
+
+    err_info = 'Params ERROR! the param [{}] should > 0 and <= half the length of the video!\n' \
+               'Please check your params in config.yaml: [{}]'
+    duration_params = ['ana_time_duration', 'sleep_time_duration', 'angle_time_duration']
+    for dp in duration_params:
+        v = params[dp]
+        if not (0 < v <= total_time / 2):
+            print(err_info.format(dp, dp))
+            exit()
+
+
 def __get_params():
     args = sys.argv
     if len(args) == 1:
@@ -208,8 +233,11 @@ def __get_params():
 
     # 判断并创建output_dir目录
     try:
-        Path(params['output_dir']).mkdir(exist_ok=True)
-        print(f"Create the output_dir: {params['output_dir']}  Done!")
+        if Path(params['output_dir']).exists():
+            pass
+        else:
+            Path(params['output_dir']).mkdir(exist_ok=True)
+            print(f"Create the output_dir: {params['output_dir']}  Done!")
     except:
         print('Please set a valid [output_dir]!')
         exit()
