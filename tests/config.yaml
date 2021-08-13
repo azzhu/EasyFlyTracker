@@ -1,47 +1,46 @@
-#--------------- config file -----------------#
+################### config file of EasyFlyTracker version 1.0 ###################
+# Go through the tutorials and give feedback on our website http://easyflytracker.cibr.ac.cn.
+# Chinese Institute for Brain Research, Beijing
+# 2021-08-13
+################### config file of EasyFlyTracker version 1.0 ###################
 
-# video path
-video_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\qudashen.mp4
-# output_dir
-output_dir: D:\Pycharm_Projects\qu_holmes_su_release\tests\o2
-# begin calculate time point, (minute)
-begin_time: 0
-# how long time to calculate, (minute)，None or 0
-duration_time: None
-# show track result, True or False
-show_track_result: False
-#, True or False
+##### 1. Must change parameters #####
+## [MUST CHANGE] Modify the video path, only support absolute path.
+video_path: YourLocalPath/video.mp4
+
+## [MUST CHANGE] Specify the path and name of the output, only support absolute path.
+output_dir: YourLocalPath/output_72flies_demo
+
+## [MUST CHANGE] Real distance (mm) from 'point A' to 'point B' of your chamber. Default is "252" mm of our diagonal line.
+AB_dist_mm: 252
+
+## [MUST CHANGE] Specify the group.file path, only support absolute path.
+group_path: YourLocalPath/group.xlsx
+
+
+##### 2. Optional change parameters #####
+
+## [Optional CHANGE, used in tracking] Skip the configuration of charmber circles because the '.pkl' file already exists and does not need to be reconfigured. Default is "False".
 skip_config: False
 
+## [Optional CHANGE, used in tracking] Specify the start time point (minute) of tracking, default is 0.
+begin_time: 0
 
-############### analysis ########################
-# config roi path, search in the video_path directory if None
-group_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\output\grop.xlsx
-# 分析移动距离的时候每个值需要统计的时间跨度（单位：分钟）
-ana_time_duration: 0.5
-# 是否计算抠除睡眠后的heatmap
+## [Optional CHANGE, used in tracking] Specify the duration time (minute) of tracking, default is None (means all video will be calculated).
+duration_time: None
+
+## [Optional CHANGE, used in tracking] Disaplay tracking results each second, default is "True". "False" to close.
+show_track_result: False
+
+## [Optional CHANGE, used in analyzing and statistics] Specify the time interval of statistics of the activity plots. Default is "10" mins.
+ana_time_duration: 2
+
+## [Optional CHANGE, used in analyzing and statistics] Specify the time interval of statistics of the sleep time plots. Default is "30" mins.
+sleep_time_duration: 5
+
+## [Optional CHANGE, used in analyzing and statistics] Specify the time interval of statistics of angle change plots. Default is "30" mins.
+angle_time_duration: 5
+
+## [Optional CHANGE, used in analyzing and statistics] If or not to calculate the heatmap after keying out sleep, the default is False.
 heatmap_remove_sleep: False
-# 统计睡眠信息的时候每个值需要统计的时间跨度（单位：分钟）
-sleep_time_duration: 1
-# 统计角度变化信息的时候每个值需要统计的时间跨度（单位：分钟）
-angle_time_duration: 0.5
-#dish_radius_mm: 10
-# AB两点的距离，单位毫米
-AB_dist_mm: 120
-# 去畸变参数路径，设为None则不使用去畸变功能，否则就设置正确的模型路径
-Undistortion_model_path: None
-############### analysis ########################
 
-
-
-################ Camera Calibration #################
-# 已拍摄的标记图像所在文件夹
-calibration_images_files_dir: D:\tempp\che
-
-# 标记模型保存结果
-calibration_model_saved_dir: D:\tempp\che
-
-# 棋盘大小
-chess_size: [6, 9]
-
-################ Camera Calibration #################
