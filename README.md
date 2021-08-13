@@ -133,7 +133,7 @@ More documentation see [here](http://easyflytracker.cibr.ac.cn/#/document)
 
 💜 EasyFlyTracker documentation: http://easyflytracker.cibr.ac.cn/#/document
 
-💜 EasyFlyTracker repository: https://github.com/azzhu/deeps
+💜 EasyFlyTracker repository: https://github.com/azzhu/EasyFlyTracker
 
 💜 CIBR homepage: http://www.cibr.ac.cn/
 
