@@ -4,8 +4,12 @@
 ![logo](imgs/logo.jpg)
 </div>
 
+<div align='center'>
 
-**An easy-to-use program for analyzing Drosophila Activity.**
+[easyFlyTracker.cibr.ac.cn](http://easyFlyTracker.cibr.ac.cn/)
+</div>
+
+***EasyFlyTracker is an easy-to-use Python 3-based package that can track and analyze Drosophila sleep and locomotor activity based on video shooting. It can be used for high-throughput simultaneous tracking and analysis of drug-treated individual adult fly. This software will accelerate basic research on drug effect studies with fruit flies.***
 
 <div align='center'>
 
@@ -16,15 +20,15 @@
 
 ## Features
 
-* 快速的果蝇跟踪
-
-* 支持同时追踪多个腔室的果蝇
-
-* 可自由选择特定的腔室
-
-* 支持分组对比
-
-* 可以选取视频中感兴趣的时间段来分析
+* EasyFlyTracker is open-source.
+* EasyFlyTracker is easy to use and fast.
+* EasyFlyTracker is easily expandable.
+* EasyFlyTracker supports simultaneous tracking of Drosophila with multiple Chambers and low-cost.
+* EasyFlyTracker supports the selection of specific flies.
+* EasyFlyTracker supports group tracking of Drosophila.
+* EasyFlyTracker supports different outputs.
+* Drug-treatment study example of EasyFlyTracker is provided.
+* All the products lists are provided for your information.
 
 ## Installation
 
@@ -40,6 +44,12 @@ or
 
 ```commandline
 pip install -i https://pypi.org/simple/ easyFlyTracker
+```
+
+or 
+
+```commandline
+conda install easyFlyTracker
 ```
 
 #### Or local installation
@@ -61,7 +71,7 @@ python setup.py install
 
 ## Usage
 
-程序包含两个命令：
+The program contains two commands:
 
 #### easyFlyTracker
 
@@ -74,9 +84,9 @@ easyFlyTracker --help
 
 * DESCRIPTION
 
-该命令主要用来跟踪果蝇，并保存跟踪的结果。
-接收一个命令行参数，当传递配置文件路径时，程序正常运行。有关配置文件中参数详细说明参见[config.yaml](https://github.com/azzhu/EasyFlyTracker/blob/master/config.yaml).
-如果想查看该命令的帮助信息，可以传递 ***-h*** 或者 ***--help*** 来查看。
+This command is used to track fruit flies and save the results.
+Receiving a command line argument, the program runs normally when passing the configuration file path.For details about the parameters in the configuration file, see[config.yaml](https://github.com/azzhu/EasyFlyTracker/blob/master/config.yaml).
+To view the help information about the command, run the command with *-h* or *--help* param.
 
 #### easyFlyTracker_analysis
 
@@ -89,25 +99,43 @@ easyFlyTracker_analysis --help
 
 * DESCRIPTION
 
-该命令主要用于分析跟踪的结果，并以图形的方式展示。
-接收一个命令行参数，当传递配置文件路径时，程序正常运行。有关配置文件中参数详细说明参见[config.yaml](https://github.com/azzhu/EasyFlyTracker/blob/master/config.yaml).
-如果想查看该命令的帮助信息，可以传递 ***-h*** 或者 ***--help*** 来查看。
+This command is used to analyze tracing results and display them graphically.
+Receiving a command line argument, the program runs normally when passing the configuration file path.For details about the parameters in the configuration file, see[config.yaml](https://github.com/azzhu/EasyFlyTracker/blob/master/config.yaml).
+To view the help information about the command, run the command with *-h* or *--help* param.
 
 ## Quick Start
 
-[tests](https://github.com/azzhu/EasyFlyTracker/tree/master/tests) 文件夹下有demo视频，您可以拿该数据来快速上手。
+There are demo videos in the [tests](https://github.com/azzhu/EasyFlyTracker/tree/master/tests) folder. You can use the data to get started quickly.
 
-1. 在config.yaml中设置正确的视频路径、输出文件夹路径以及其他关注的参数；
+1. Set the correct video path, output folder path, and other parameters of interest in config.yaml;
 
-2. 跟踪果蝇，运行命令：
+2. To track the flies, run the command:
     ```commandline
     easyFlyTracker [your config file path]
     ```
-3. 分析跟踪结果，运行命令：
+3. To analyze the trace results, run the command:
     ```commandline
     easyFlyTracker_analysis [config_file_path]
     ```
-    等待分析完成，结果保存在输出文件夹中。
+    Wait for the analysis to complete and the results are saved in the output folder.
+   
+## Documentation
+
+More documentation see [here](http://easyflytracker.cibr.ac.cn/#/document)
+
+## Forum
+
+[Here](http://easyflytracker.cibr.ac.cn/#/suggest)
+
+## Useful Links
+
+💜 EasyFlyTracker homepage: http://easyFlyTracker.cibr.ac.cn/
+
+💜 EasyFlyTracker documentation: http://easyflytracker.cibr.ac.cn/#/document
+
+💜 EasyFlyTracker repository: https://github.com/azzhu/deeps
+
+💜 CIBR homepage: http://www.cibr.ac.cn/
 
 ## License
 

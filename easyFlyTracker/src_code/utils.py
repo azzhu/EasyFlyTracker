@@ -288,7 +288,9 @@ def gen_reqs():
 
 
 if __name__ == '__main__':
-    print(pow(2, 16))
+    with open(r'Z:\dataset\qususu\0809_0\cfg.yaml', 'r', encoding='utf-8') as f:
+        params = yaml.safe_load(f)
+    res = __load_group(params)
     exit()
     import os, cv2
     import sys

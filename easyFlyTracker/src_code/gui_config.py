@@ -327,11 +327,11 @@ class GUI_CFG():
 
 if __name__ == '__main__':
     # 从左到右从上到下配置圆环
-    # frame = cv2.imread(r'Z:\dataset\qususu\202107131210_15304.tif')
-    frame = np.ones([500, 700, 3], np.uint8) * 255
+    frame = cv2.imread(r'Z:\dataset\qususu\202108100950_205771.tif')
+    # frame = np.ones([500, 700, 3], np.uint8) * 255
     g = GUI_CFG(frame, [], r'Z:\dataset\qususu')
     g.CFG_circle()
-    exit()
+    # exit()
 
     # 这个配置的结果转为之前程序可以使用的
     dir = Path(r'Z:\dataset\qususu')
