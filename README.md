@@ -85,7 +85,7 @@ easyFlyTracker --help
 * DESCRIPTION
 
 This command is used to track fruit flies and save the results.
-Receiving a command line argument, the program runs normally when passing the configuration file path.For details about the parameters in the configuration file, see [config.yaml](https://github.com/azzhu/EasyFlyTracker/blob/master/config.yaml).
+Receiving a command line argument, the program runs normally when passing the configuration file path.For details about the parameters in the configuration file, see [config.yaml](https://github.com/azzhu/EasyFlyTracker/blob/master/tests/config.yaml).
 To view the help information about the command, run the command with *-h* or *--help* param.
 
 #### easyFlyTracker_analysis
