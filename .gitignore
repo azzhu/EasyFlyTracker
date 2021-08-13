@@ -18,5 +18,7 @@ tests/output2
 tests/output*
 tests/o2
 zqj.py
+distit.py
+distit_offline.py
 
 utils
