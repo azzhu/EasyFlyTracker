@@ -6,7 +6,7 @@
 
 <div align='center'>
 
-💜 [easyFlyTracker.cibr.ac.cn](http://easyFlyTracker.cibr.ac.cn/)
+💜 [easyFlyTracker.cibr.ac.cn](http://easyFlyTracker.cibr.ac.cn/) 💜
 </div>
 
 ***EasyFlyTracker is an easy-to-use Python 3-based package that can track and analyze Drosophila sleep and locomotor activity based on video shooting. It can be used for high-throughput simultaneous tracking and analysis of drug-treated individual adult fly. This software will accelerate basic research on drug effect studies with fruit flies.***
