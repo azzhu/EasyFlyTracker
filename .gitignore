@@ -16,8 +16,7 @@ easyFlyTracker/__pycache__
 tests/*.zip
 tests/output2
 tests/output*
+tests/o2
 zqj.py
 
-distit.py
-distit_offline.py
-eval.py
+utils
