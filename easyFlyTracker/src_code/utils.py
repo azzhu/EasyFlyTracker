@@ -183,7 +183,7 @@ Usage:
 For example:
     easyFlyTracker D:/config.yaml
     
-You can find more detail information in this file: config.yaml
+You can find more detail information on our website: http://easyflytracker.cibr.ac.cn
     '''
 
 
