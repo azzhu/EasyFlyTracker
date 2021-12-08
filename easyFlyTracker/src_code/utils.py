@@ -8,13 +8,15 @@
 '''
 import ctypes
 import inspect
+import sys
 import time
-import yaml
 from collections import Counter
 from multiprocessing import Process
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
+import yaml
 
 from easyFlyTracker import __version__ as version
 
@@ -289,17 +291,18 @@ def gen_reqs():
 
 
 if __name__ == '__main__':
-    with open(r'Z:\dataset\qususu\0809_0\cfg.yaml', 'r', encoding='utf-8') as f:
-        params = yaml.safe_load(f)
-    res = __load_group(params)
-    exit()
-    import os, cv2
-    import sys
-    import numpy as np
-    from time import time
-
-    for i in range(2000, 2851):
-        print(f'{i}/2850')
-        p1 = f'Z:/temp/region/y/{i}_1y.tif'
-        p2 = f'Z:/temp/region/y/{i}.tif'
-        os.rename(p1, p2)
+    # with open(r'Z:\dataset\qususu\0809_0\cfg.yaml', 'r', encoding='utf-8') as f:
+    #     params = yaml.safe_load(f)
+    # res = __load_group(params)
+    # exit()
+    # import os, cv2
+    # import sys
+    # import numpy as np
+    # from time import time
+    #
+    # for i in range(2000, 2851):
+    #     print(f'{i}/2850')
+    #     p1 = f'Z:/temp/region/y/{i}_1y.tif'
+    #     p2 = f'Z:/temp/region/y/{i}.tif'
+    #     os.rename(p1, p2)
+    ...
