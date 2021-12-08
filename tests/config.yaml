@@ -6,22 +6,22 @@
 
 ##### 1. Must change parameters #####
 ## [MUST CHANGE] Modify the video path, only support absolute path.
-video_path: YourLocalPath/video.mp4
+video_path: Z:\dataset\qususu\year_2020\1204\202012041013.avi
 
 ## [MUST CHANGE] Specify the path and name of the output, only support absolute path.
-output_dir: YourLocalPath/output_72flies_demo
+output_dir: Z:\dataset\qususu\year_2020\1204\output_211207
 
 ## [MUST CHANGE] Real distance (mm) from 'point A' to 'point B' of your chamber. Default is "252" mm of our diagonal line.
 AB_dist_mm: 252
 
 ## [MUST CHANGE] Specify the group.file path, only support absolute path.
-group_path: YourLocalPath/group.xlsx
+group_path: Z:\dataset\qususu\year_2020\1204\grop.xlsx
 
 
 ##### 2. Optional change parameters #####
 
 ## [Optional CHANGE, used in tracking] Skip the configuration of charmber circles because the '.pkl' file already exists and does not need to be reconfigured. Default is "False".
-skip_config: False
+skip_config: True
 
 ## [Optional CHANGE, used in tracking] Specify the start time point (minute) of tracking, default is 0.
 begin_time: 0
@@ -33,13 +33,13 @@ duration_time: None
 show_track_result: False
 
 ## [Optional CHANGE, used in analyzing and statistics] Specify the time interval of statistics of the activity plots. Default is "10" mins.
-ana_time_duration: 2
+ana_time_duration: 10
 
 ## [Optional CHANGE, used in analyzing and statistics] Specify the time interval of statistics of the sleep time plots. Default is "30" mins.
-sleep_time_duration: 5
+sleep_time_duration: 10
 
 ## [Optional CHANGE, used in analyzing and statistics] Specify the time interval of statistics of angle change plots. Default is "30" mins.
-angle_time_duration: 5
+angle_time_duration: 10
 
 ## [Optional CHANGE, used in analyzing and statistics] If or not to calculate the heatmap after keying out sleep, the default is False.
 heatmap_remove_sleep: False

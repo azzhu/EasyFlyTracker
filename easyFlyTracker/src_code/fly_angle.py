@@ -3,9 +3,10 @@
 # @Author  : azzhu 
 # @FileName: fly_angle.py
 # @Software: PyCharm
-import numpy as np
 import cv2
 import math
+import cmath
+import numpy as np
 
 '''
 该模块主要用来计算果蝇的角度朝向，基于分割后的二值图像来计算。
@@ -28,7 +29,7 @@ class Fly_angle:
         :param small_bin_img:
         :return:
         '''
-        return self.algorithm2(small_bin_img)
+        return self.algorithm3(small_bin_img)
 
     def algorithm1(self, small_bin_img):
         contours, hierarchy = cv2.findContours(small_bin_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -60,6 +61,31 @@ class Fly_angle:
         ang = 180 - ang
         return ang
 
+    def algorithm3(self, small_bin_img):
+        '''
+        算法2有致命错误，算的不对，任何情况下都不会输出右下的方向，所以算错了。
+        特此更新，使用极坐标的方式计算方向，这回不会错了。
+        极坐标返回的角度范围是[-180,180]，如果是负值，会加上180（即相反方向）。
+        :param small_bin_img:
+        :return:角度，范围[0,180]
+        '''
+        contours, hierarchy = cv2.findContours(small_bin_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if len(contours) == 0:  # 没有发现轮廓，返回异常值
+            return self.outlier
+        max_id = np.argmax(np.array([len(_) for _ in contours]))  # 最大轮廓id
+        rec = cv2.minAreaRect(contours[max_id])  # 得到的是：（最小外接矩形的中心（x，y），（宽度，高度），旋转角度）
+        box = cv2.boxPoints(rec)  # 得到矩阵四个点坐标，该四个点是有顺序的
+        if self.isLine01bigthanLine03(box[0], box[1], box[3]):
+            a, b = box[0], box[1]
+        else:
+            a, b = box[0], box[3]
+        vect_ab = complex(b[0] - a[0], b[1] - a[1])
+        cn = cmath.polar(vect_ab)
+        ang = math.degrees(cn[1])
+        ang = ang if ang >= 0 else ang + 180  # 0-180
+        ang = 180 - ang  # 转换坐标系，从左上原点到左下原点
+        return ang
+
     def isLine01bigthanLine03(self, p0, p1, p3):
         l01 = (p0[0] - p1[0]) ** 2 + (p0[1] - p1[1]) ** 2
         l03 = (p0[0] - p3[0]) ** 2 + (p0[1] - p3[1]) ** 2
@@ -67,18 +93,6 @@ class Fly_angle:
 
 
 if __name__ == '__main__':
-    from time import time
-
-    da = np.load(r'D:\Pycharm_Projects\qu_holmes_su_release\tests\output\.cache\track_cor.npy')
-
-    fa = Fly_angle()
-    for i in range(1, 1000):
-        print(f'{i}\t', end='')
-        img = cv2.imread(r'C:\Users\33041\Pictures\sp{}.bmp'.format(i), 0)
-        if not isinstance(img, np.ndarray):
-            exit()
-        cv2.imshow('1', img)
-        ang = fa(img)
-        cv2.putText(img, f'{ang}', (0, 25), 0, 1, 255)
-        cv2.imshow('3', img)
-        cv2.waitKeyEx()
+    cn = cmath.polar(complex(-1, -3 ** 0.5))
+    ang = math.degrees(cn[1])
+    print(ang)

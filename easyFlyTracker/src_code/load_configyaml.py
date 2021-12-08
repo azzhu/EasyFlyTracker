@@ -13,9 +13,9 @@ config.yaml为最原始的配置文件，但是不能灵活配置，
 并且视服务器或者本机返回不同的路径。
 等等
 '''
-import math
-from pathlib import Path
 import platform
+from pathlib import Path
+
 import numpy as np
 import yaml
 

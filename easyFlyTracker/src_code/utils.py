@@ -6,15 +6,16 @@
 @FileName: utils.py
 @Software: PyCharm
 '''
-import sys, os
-import numpy as np
-from multiprocessing import Process
-from collections import Counter
-import time, yaml
-import inspect
 import ctypes
+import inspect
+import time
+import yaml
+from collections import Counter
+from multiprocessing import Process
 from pathlib import Path
+
 import pandas as pd
+
 from easyFlyTracker import __version__ as version
 
 
@@ -295,9 +296,7 @@ if __name__ == '__main__':
     import os, cv2
     import sys
     import numpy as np
-    import pickle
     from time import time
-    from matplotlib import pyplot as plt
 
     for i in range(2000, 2851):
         print(f'{i}/2850')

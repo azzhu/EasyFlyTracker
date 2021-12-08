@@ -6,13 +6,14 @@
 @FileName: show.py
 @Software: PyCharm
 '''
-import numpy as np
-import cv2, pickle
-import pandas as pd
 from pathlib import Path
+
+import cv2
 import matplotlib
+import numpy as np
+import pandas as pd
+import pickle
 from matplotlib.font_manager import FontProperties
-import seaborn as sns
 
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
@@ -436,10 +437,23 @@ def one_step_run(params):
     '''
     rois = params['rois']
 
+    # Analysis需要传入一个参数sleep_dist_th_per_second，先在这里计算出来
+    # 为啥呢？因为Analysis所有的计算都是基于像素单位，而不同比例尺下上面参数的值不应该相同，所以要先算出该值。
+    # 该参数不暴露给用户，在此定死，为下值，单位毫米：
+    sleep_dist_th_per_second_mm = 1.5
+    AB_dist_mm = params['AB_dist_mm']
+    cp = Path(params['output_dir'], 'config.pkl')
+    with open(cp, 'rb') as f:
+        AB_dist = pickle.load(f)[1]
+    pixel_per_mm = AB_dist / AB_dist_mm
+    sleep_dist_th_per_second = sleep_dist_th_per_second_mm * pixel_per_mm
+    sleep_dist_th_per_second = int(round(sleep_dist_th_per_second))
+
     for notfirst, (ids, flag) in enumerate(rois):
         ana_params = args_filter(params, Analysis)
         ana_params['roi_flys_flag'] = flag
         ana_params['roi_flys_ids'] = ids
+        ana_params['sleep_dist_th_per_second'] = sleep_dist_th_per_second
         show_params = args_filter(params, Show)
         show_params['roi_flys_ids'] = ids
         show_params['suffix'] = flag
@@ -457,10 +471,9 @@ def one_step_run(params):
 
 
 if __name__ == '__main__':
-    from easyFlyTracker.src_code.utils import __get_params
-
-    params = __get_params()
-    merge_sleep_time_result(params)
+    p = r'D:\Pycharm_Projects\qu_holmes_su_release\tests\output2\config.pkl'
+    with open(p, 'rb') as f:
+        data = pickle.load(f)
     exit()
 
     rois = [

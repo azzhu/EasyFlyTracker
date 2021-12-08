@@ -6,12 +6,9 @@
 @FileName: cli.py
 @Software: PyCharm
 '''
-import sys
-import yaml
-from pathlib import Path
+from easyFlyTracker.src_code.Camera_Calibration import cam_calibration
 from easyFlyTracker.src_code.fly_seg import FlySeg
 from easyFlyTracker.src_code.show import one_step_run
-from easyFlyTracker.src_code.Camera_Calibration import cam_calibration
 from easyFlyTracker.src_code.utils import (
     args_filter,
     __get_params,

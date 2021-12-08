@@ -6,17 +6,19 @@
 @FileName: fly_seg.py
 @Software: PyCharm
 '''
-import numpy as np
-import cv2, time, random, math, cv2_ext
+import math
+import random
+import time
 from pathlib import Path
+
+import cv2
+import numpy as np
 from scipy import stats
-# from multiprocessing import Pool
-# from threading import Thread
-from easyFlyTracker.src_code.utils import Pbar, Wait
+
 from easyFlyTracker.src_code.Camera_Calibration import Undistortion
-# from easyFlyTracker.src_code.utils import stop_thread
-from easyFlyTracker.src_code.gui_config import GUI_CFG
 from easyFlyTracker.src_code.fly_angle import Fly_angle
+from easyFlyTracker.src_code.gui_config import GUI_CFG
+from easyFlyTracker.src_code.utils import Pbar, Wait
 
 
 class FlySeg():

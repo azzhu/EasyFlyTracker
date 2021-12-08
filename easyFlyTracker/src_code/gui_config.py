@@ -6,10 +6,14 @@
 @FileName: gui_config.py
 @Software: PyCharm
 '''
-import numpy as np
-import cv2, cv2_ext, pickle, random
-import math, time
+import math
+import time
 from pathlib import Path
+
+import cv2
+import cv2_ext
+import numpy as np
+import pickle
 
 '''
 操作说明：

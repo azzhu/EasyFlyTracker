@@ -6,17 +6,18 @@
 @FileName: analysis.py
 @Software: PyCharm
 '''
-import numpy as np
-import cv2, time, random, math
-from pathlib import Path
-# import scipy.signal
-import pandas as pd
 import pickle
 import warnings
-# from easyFlyTracker.src_code.fly_seg import FlySeg
-from easyFlyTracker.src_code.utils import Pbar, Wait, equalizeHist_use_mask
-from easyFlyTracker.src_code.utils import NumpyArrayHasNanValuesExceptin
+from pathlib import Path
+
+import cv2
+import math
+import numpy as np
+import pandas as pd
+
 from easyFlyTracker.src_code.Camera_Calibration import Undistortion
+from easyFlyTracker.src_code.utils import NumpyArrayHasNanValuesExceptin
+from easyFlyTracker.src_code.utils import Pbar, equalizeHist_use_mask
 
 warnings.filterwarnings("ignore")
 

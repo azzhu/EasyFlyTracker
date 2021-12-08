@@ -24,9 +24,11 @@
 保存的图像尺寸最好跟视频尺寸一致，如不一致最好进行crop；
 同一个摄像头，类似环境，可以使用相同的畸变修正参数。即，同一拍摄环境只需一次采集标定图像，一次计算修正参数，然后后续都可以使用该参数。
 '''
-import numpy as np
-import cv2
 from pathlib import Path
+
+import cv2
+import numpy as np
+
 from easyFlyTracker.src_code.utils import Wait
 
 
