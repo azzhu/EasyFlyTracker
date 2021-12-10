@@ -329,9 +329,9 @@ class Show():
         plt.xlim((-10, 190))
         ax = plt.gca()
         ax.set_xticks([i * 10 for i in range(19)])
-        plt.xlabel('Angle region (degree)', fontproperties=self.font_timesbd)
+        plt.xlabel('Angle (degree)', fontproperties=self.font_timesbd)
         plt.ylabel('Probability Density', fontproperties=self.font_timesbd)
-        plt.title('Histogram of angle change per duration', fontproperties=self.font_timesbd)
+        plt.title('Probability density of angle change per duration', fontproperties=self.font_timesbd)
         for i, hi in enumerate(hists):
             plt.plot(xs, hi, label=f'Duration {i + 1}')
         plt.xticks(fontproperties=self.font_times)
@@ -415,6 +415,63 @@ def merge_sleep_time_result(params):
                       index=suffixs,
                       columns=[str(_ + 1) for _ in range(len(das[0][0]))])
     df.to_excel(Path(excel_dir, f'proportion_of_sleep_flies_{sleep_time_duration}_mins_[merge].xlsx'))
+
+
+def merge_angle_changes_result(params):
+    '''
+    已有的结果每个图上的线是按照duration来区分，现在是按照group来区分。
+    几个group几条线，时间维度是整个视频。
+    :return:
+    '''
+    from easyFlyTracker.src_code.kernel_density_estimation import get_KernelDensity
+
+    cap = cv2.VideoCapture(params['video_path'])
+    fps = int(round(cap.get(cv2.CAP_PROP_FPS)))
+    cap.release()
+
+    rois = params['rois']
+    flags = [r[1] for r in rois]
+    rois = [r[0] for r in rois]
+
+    npy_file_path_cor = Path(params['output_dir'], '.cache', 'analysis_result', 'fly_angles_cor.npy')
+    ang = np.load(npy_file_path_cor)
+    ang_sec = ang[::fps]
+    as1 = ang_sec[:-1]
+    as2 = ang_sec[1:]
+    changes = np.abs(as2 - as1)
+    changes = np.where(changes > 180, 360 - changes, changes)  # 相比前一秒的变化角度（0-180）
+    changes_gps = [changes[:, r] for r in rois]
+
+    hists = [get_KernelDensity(cg, bins=500, range=(0, 180)) for cg in changes_gps]
+    xs = hists[0][0]
+    hists = np.array([h[1] for h in hists])
+
+    font_times = FontProperties(fname=str(Path(Path(__file__).parent.parent, 'fonts/times.ttf')), size=12)
+    font_timesbd = FontProperties(fname=str(Path(Path(__file__).parent.parent, 'fonts/timesbd.ttf')), size=15)
+    plt.close()
+    plt.rcParams['figure.figsize'] = (15.0, 8.0)
+    plt.grid(linewidth=1)
+    plt.xlim((-10, 190))
+    ax = plt.gca()
+    ax.set_xticks([i * 10 for i in range(19)])
+    plt.xlabel('Angle (degree)', fontproperties=font_timesbd)
+    plt.ylabel('Probability Density', fontproperties=font_timesbd)
+    plt.title('Probability density of angle change per group', fontproperties=font_timesbd)
+    for i, hi in enumerate(hists):
+        plt.plot(xs, hi, label=f'{flags[i]}')
+    plt.xticks(fontproperties=font_times)
+    plt.yticks(fontproperties=font_times)
+    plt.legend(prop={'family': 'Times New Roman', 'size': 12})
+    plt.legend(loc='upper right')
+
+    saved_dir = Path(params['output_dir']) / 'plot_images'
+    saved_dir_npys = saved_dir / '.npys'
+    saved_dir_excels = Path(params['output_dir']) / 'plot_excels'
+    plt.savefig(str(Path(saved_dir, f'angle_change_per_group.png')))
+    np.save(str(Path(saved_dir_npys, f'angle_change_per_group.npy')), hists)
+    df = pd.DataFrame(data=hists, columns=xs, index=flags)
+    df.to_excel(Path(saved_dir_excels, f'angle_change_per_group.xlsx'))
+    ...
 
 
 def merge_result(params):
@@ -502,29 +559,9 @@ def one_step_run(params):
     if len(rois) > 1:
         merge_result(params)
 
+    # 最后再生成一张angle_changes的merge结果
+    merge_angle_changes_result(params)
+
 
 if __name__ == '__main__':
-    p = r'D:\Pycharm_Projects\qu_holmes_su_release\tests\output2\config.pkl'
-    with open(p, 'rb') as f:
-        data = pickle.load(f)
-    exit()
-
-    rois = [
-        [[0, 1, 2, 3], '1'],
-        [[4, 5, 6, 7], '2'],
-    ]
-    ana_params = {
-        'video_path': r'D:\Pycharm_Projects\qu_holmes_su_release\tests\demo.mp4',
-        'roi_flys_flag': '1', 'area_th': 0.5, 'ana_time_duration': 0.5,
-    }
-
-    for ids, flag in rois:
-        ana_params['roi_flys_flag'] = flag
-        ana_params['roi_flys_ids'] = ids
-        print(f'---------- {flag} ----------')
-        s = Show(video_path=r'D:\Pycharm_Projects\qu_holmes_su_release\tests\demo.mp4',
-                 roi_flys_ids=ids,
-                 suffix=flag,
-                 ana_params=ana_params,
-                 dish_radius_mm=10)
-        s.show_all()
+    pass
