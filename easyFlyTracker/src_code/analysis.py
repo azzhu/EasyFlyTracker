@@ -18,6 +18,7 @@ import pandas as pd
 from easyFlyTracker.src_code.Camera_Calibration import Undistortion
 from easyFlyTracker.src_code.utils import NumpyArrayHasNanValuesExceptin
 from easyFlyTracker.src_code.utils import Pbar, equalizeHist_use_mask
+from easyFlyTracker.src_code.kernel_density_estimation import get_KernelDensity
 
 warnings.filterwarnings("ignore")
 
@@ -593,7 +594,7 @@ class Analysis():
             np.save(self.fly_angles_cor_path, fly_ang_cor)
             return fly_ang_cor
 
-    def PARAM_angle_changes(self):
+    def PARAM_angle_changes_old(self):
         # if self.angle_changes_path.exists():
         #     return self.angle_changes_path
         ang = self._get_fly_angle_cor()
@@ -623,6 +624,30 @@ class Analysis():
             zeros_nums.append(np.sum(cha == 0))
         # np.save(self.angle_changes_path, hists)
         return hists, zeros_nums
+
+    def PARAM_angle_changes(self):
+        '''
+        相比old，使用核密度估计的方法来估计密度函数
+        :return:
+        '''
+        ang = self._get_fly_angle_cor()
+        ang_sec = ang[::self.fps, self.roi_flys_id]
+        as1 = ang_sec[:-1]
+        as2 = ang_sec[1:]
+        changes = np.abs(as2 - as1)
+        changes = np.where(changes > 180, 360 - changes, changes)  # 相比前一秒的变化角度（0-180）
+        ana_duration_secs = int(self.angle_time_duration * 60)
+        ana_times = int(len(changes) / ana_duration_secs) + 1
+        # 按照时间段来分出来
+        changes_es = [changes[i * ana_duration_secs:(i + 1) * ana_duration_secs] for i in range(ana_times)]
+        if len(changes_es[-1]) < len(changes_es[-2]) * 0.1:  # 最后一段太小的话就舍弃
+            changes_es = changes_es[:-1]
+        bins = 500  # 因为是密度函数，为了使曲线尽可能平滑，所以要设置稍微大一点
+        hists = []
+        for cha in changes_es:
+            hist = get_KernelDensity(cha, bins=bins, range=(0, 180))
+            hists.append(hist)
+        return hists
 
 
 if __name__ == '__main__':

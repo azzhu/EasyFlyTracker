@@ -62,6 +62,3 @@ if __name__ == '__main__':
     easyFlyTracker_analysis()
     # easyFlyTracker_cam_calibration()
 
-    # x = '[0,10)'
-    # x = '(' + x[1:]
-    # print(x)

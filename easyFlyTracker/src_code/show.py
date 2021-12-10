@@ -272,7 +272,10 @@ class Show():
         p2 = Path(self.saved_dir, f'heatmap_exclude_sleeptime_[{self.saved_suffix}].png')
         self.ana.PARAM_heatmap_exclude_sleeptime(p1, p2)
 
-    def SHOW_angle_changes(self):
+    def SHOW_angle_changes_old(self):
+        '''
+        !!!!!!!!!!!!!!!!!!!!deprecated!!!!!!!!!!!!!!!!!!!!!
+        '''
         hists, zeros_nums = self.ana.PARAM_angle_changes()
         edge = hists[0][1]
         hists = np.array([h[0] for h in hists])
@@ -308,6 +311,36 @@ class Show():
         plt.savefig(str(Path(self.saved_dir, f'angle_change_per_duration_[{self.saved_suffix}].png')))
         np.save(str(Path(self.saved_dir_npys, f'angle_change_per_duration_[{self.saved_suffix}].npy')), hists)
         df = pd.DataFrame(data=hists, columns=columns, index=[f'Duration {i + 1}' for i in range(len(hists))])
+        df.to_excel(Path(self.saved_dir_excels, f'angle_change_per_duration_[{self.saved_suffix}].xlsx'))
+        ...
+
+    def SHOW_angle_changes(self):
+        '''
+        为啥更新见self.ana.PARAM_angle_changes()中说明。
+        :return:
+        '''
+        hists = self.ana.PARAM_angle_changes()
+        xs = hists[0][0]
+        hists = np.array([h[1] for h in hists])
+
+        plt.close()
+        plt.rcParams['figure.figsize'] = (15.0, 8.0)
+        plt.grid(linewidth=1)
+        plt.xlim((-10, 190))
+        ax = plt.gca()
+        ax.set_xticks([i * 10 for i in range(19)])
+        plt.xlabel('Angle region (degree)', fontproperties=self.font_timesbd)
+        plt.ylabel('Probability Density', fontproperties=self.font_timesbd)
+        plt.title('Histogram of angle change per duration', fontproperties=self.font_timesbd)
+        for i, hi in enumerate(hists):
+            plt.plot(xs, hi, label=f'Duration {i + 1}')
+        plt.xticks(fontproperties=self.font_times)
+        plt.yticks(fontproperties=self.font_times)
+        plt.legend(prop={'family': 'Times New Roman', 'size': 12})
+        plt.legend(loc='upper right')
+        plt.savefig(str(Path(self.saved_dir, f'angle_change_per_duration_[{self.saved_suffix}].png')))
+        np.save(str(Path(self.saved_dir_npys, f'angle_change_per_duration_[{self.saved_suffix}].npy')), hists)
+        df = pd.DataFrame(data=hists, columns=xs, index=[f'Duration {i + 1}' for i in range(len(hists))])
         df.to_excel(Path(self.saved_dir_excels, f'angle_change_per_duration_[{self.saved_suffix}].xlsx'))
         ...
 

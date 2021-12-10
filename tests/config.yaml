@@ -6,16 +6,16 @@
 
 ##### 1. Must change parameters #####
 ## [MUST CHANGE] Modify the video path, only support absolute path.
-video_path: Z:\dataset\qususu\year_2020\1204\202012041013.avi
+video_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\demo.mp4
 
 ## [MUST CHANGE] Specify the path and name of the output, only support absolute path.
-output_dir: Z:\dataset\qususu\year_2020\1204\output_211207
+output_dir: D:\Pycharm_Projects\qu_holmes_su_release\tests\output2
 
 ## [MUST CHANGE] Real distance (mm) from 'point A' to 'point B' of your chamber. Default is "252" mm of our diagonal line.
 AB_dist_mm: 252
 
 ## [MUST CHANGE] Specify the group.file path, only support absolute path.
-group_path: Z:\dataset\qususu\year_2020\1204\grop.xlsx
+group_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\group.xlsx
 
 
 ##### 2. Optional change parameters #####
@@ -33,13 +33,13 @@ duration_time: None
 show_track_result: False
 
 ## [Optional CHANGE, used in analyzing and statistics] Specify the time interval of statistics of the activity plots. Default is "10" mins.
-ana_time_duration: 10
+ana_time_duration: 1
 
 ## [Optional CHANGE, used in analyzing and statistics] Specify the time interval of statistics of the sleep time plots. Default is "30" mins.
-sleep_time_duration: 10
+sleep_time_duration: 1
 
 ## [Optional CHANGE, used in analyzing and statistics] Specify the time interval of statistics of angle change plots. Default is "30" mins.
-angle_time_duration: 10
+angle_time_duration: 1
 
 ## [Optional CHANGE, used in analyzing and statistics] If or not to calculate the heatmap after keying out sleep, the default is False.
 heatmap_remove_sleep: False
