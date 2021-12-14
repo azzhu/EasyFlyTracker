@@ -38,7 +38,7 @@ class Analysis():
             area_th=0.5,  # 内圈面积占比
             roi_flys_ids=None,
             ana_time_duration=10.,  # 分析移动距离的时候每个值需要统计的时间跨度
-            sleep_time_duration=10.,  # 统计睡眠信息的时候每个值需要统计的时间跨度
+            sleep_time_duration=30.,  # 统计睡眠信息的时候每个值需要统计的时间跨度
             angle_time_duration=10,  # 统计角度变化信息的时候每个值需要统计的时间跨度
             sleep_dist_th_per_second=5,
             sleep_time_th=300,  # 每秒睡眠状态持续多久算是真正的睡眠
@@ -625,7 +625,7 @@ class Analysis():
         # np.save(self.angle_changes_path, hists)
         return hists, zeros_nums
 
-    def PARAM_angle_changes(self):
+    def PARAM_angle_changes_old2(self):
         '''
         相比old，使用核密度估计的方法来估计密度函数
         :return:
@@ -649,7 +649,34 @@ class Analysis():
             hists.append(hist)
         return hists
 
+    def PARAM_angle_changes(self):
+        '''
+        相比old2，从本质上做了改变，不再统计直方图或者密度函数，而是统计单位时间内角度变化的累加。
+        计算方式：逐帧所有角度相比前一帧的变化值的累加/时间
+                角度变化累加值/果蝇总数/总秒数
+        :return:
+        '''
+        ang = self._get_fly_angle_cor()
+        ang_sec = ang[:, self.roi_flys_id]
+        as1 = ang_sec[:-1]
+        as2 = ang_sec[1:]
+        changes = np.abs(as2 - as1)
+        changes = np.where(changes > 180, 360 - changes, changes)  # 相比前一秒的变化角度（0-180）
+        ang_th = 90
+        outlier_nb = np.sum(changes > ang_th)
+        sum_nb = changes.size
+        rr = (sum_nb - outlier_nb) / sum_nb  # 正确值占比，为了修正后续求mean的时候多除了的问题
+        changes = np.where(changes > ang_th, 0, changes)
+        ana_duration_frames_nb = int(round(self.angle_time_duration * 60 * self.fps))
+        ana_times = int(len(changes) / ana_duration_frames_nb) + 1
+        # 按照时间段来分出来
+        changes_es = [changes[i * ana_duration_frames_nb:(i + 1) * ana_duration_frames_nb] for i in range(ana_times)]
+        if len(changes_es[-1]) < len(changes_es[-2]) * 0.1:  # 最后一段太小的话就舍弃
+            changes_es = changes_es[:-1]
+
+        res = [c.mean() * self.fps / rr for c in changes_es]
+        return res
+
 
 if __name__ == '__main__':
-    da = np.array([1, 1, 2, 3, 9, 7, 4, 8, 19, 20])
-    print(np.histogram(da, bins=5, range=(0, 20)))
+    ...

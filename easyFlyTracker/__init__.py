@@ -7,13 +7,9 @@
 @Software: PyCharm
 '''
 
-__version__ = '0.9.3'
+__version__ = '0.10.0'
 
 __doc__ = \
     '''
     An easy-to-use program for analyzing Drosophila Activity.
     '''
-
-__all__ = (
-    '',
-)

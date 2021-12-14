@@ -79,20 +79,9 @@ class Show():
         self.heatmap_remove_sleep = heatmap_remove_sleep
 
         # 计算比例尺
-        # config_pk = pickle.load(open(Path(self.output_dir, 'config.pkl'), 'rb'))
-        # config_pk = np.array(config_pk)
-        # # self.cps = config_pk[:, :2]
-        # self.dish_radius = int(round(float(np.mean(config_pk[:, -1]))))
         pklf = Path(output_dir, 'config.pkl')
         _, AB_dist = pickle.load(open(pklf, 'rb'))
         self.sacle = AB_dist_mm / AB_dist
-        # print(f'scale: {self.sacle}')
-        # print('请输入所选两点之间的实际距离，单位毫米：')
-        # dist_mm = float(input())
-        # print('请输入所选两点之间的像素距离，单位像素：')
-        # dist_piexl = float(input())
-        # self.sacle = dist_mm / dist_piexl
-        # print(f'scale: {self.sacle}')
 
         # 获取视频对应的Analysis实例
         self.ana = Analysis(**ana_params)
@@ -122,8 +111,6 @@ class Show():
         plt.xticks(fontproperties=self.font_times)
         plt.yticks(fontproperties=self.font_times)
         plt.legend(prop={'family': 'Times New Roman', 'size': 12})
-        # sns.lineplot(x='x', y='y', data={'x': xs, 'y': datas}) Video Time (per 10 mins)
-        # plt.show()  average_distances_per_flies_per_x_mins_merge.png
         plt.savefig(str(Path(self.saved_dir,
                              f'average_distances_per_flies_per_{self.ana_time_duration}_mins_[{self.saved_suffix}].png')))
         np.save(str(Path(self.saved_dir_npys,
@@ -314,7 +301,7 @@ class Show():
         df.to_excel(Path(self.saved_dir_excels, f'angle_change_per_duration_[{self.saved_suffix}].xlsx'))
         ...
 
-    def SHOW_angle_changes(self):
+    def SHOW_angle_changes_old2(self):
         '''
         为啥更新见self.ana.PARAM_angle_changes()中说明。
         :return:
@@ -342,6 +329,39 @@ class Show():
         np.save(str(Path(self.saved_dir_npys, f'angle_change_per_duration_[{self.saved_suffix}].npy')), hists)
         df = pd.DataFrame(data=hists, columns=xs, index=[f'Duration {i + 1}' for i in range(len(hists))])
         df.to_excel(Path(self.saved_dir_excels, f'angle_change_per_duration_[{self.saved_suffix}].xlsx'))
+        ...
+
+    def SHOW_angle_changes(self):
+        '''
+        为啥更新见self.ana.PARAM_angle_changes()中说明。
+        :return:
+        '''
+        angle_changes_per_duration = self.ana.PARAM_angle_changes()
+        xs = np.array(list(range(len(angle_changes_per_duration)))) + 1  # 由1开始
+
+        plt.close()
+        plt.rcParams['figure.figsize'] = (15.0, 8.0)
+        plt.grid(linewidth=1)
+        # plt.xlim((-10, 190))
+        # ax = plt.gca()
+        # ax.set_xticks([i * 10 for i in range(19)])
+        plt.xlabel(f'Video Time (per {self.ana.angle_time_duration} mins)', fontproperties=self.font_timesbd)
+        plt.ylabel('Angle change value (degree)', fontproperties=self.font_timesbd)
+        plt.title('The angle change plot for the whole video time', fontproperties=self.font_timesbd)
+        plt.plot(xs, angle_changes_per_duration, label=self.video_stem)
+        plt.scatter(xs, angle_changes_per_duration)
+        plt.xticks(fontproperties=self.font_times)
+        plt.yticks(fontproperties=self.font_times)
+        plt.legend(prop={'family': 'Times New Roman', 'size': 12})
+        plt.savefig(str(
+            Path(self.saved_dir,
+                 f'angle_change_per_flies_per_{self.ana.angle_time_duration}_mins_[{self.saved_suffix}].png')))
+        np.save(str(Path(self.saved_dir_npys,
+                         f'angle_change_per_flies_per_{self.ana.angle_time_duration}_mins_[{self.saved_suffix}].npy')),
+                angle_changes_per_duration)
+        df = pd.DataFrame(data=angle_changes_per_duration, columns=[self.saved_suffix])
+        df.to_excel(Path(self.saved_dir_excels,
+                         f'angle_change_per_flies_per_{self.ana.angle_time_duration}_mins_[{self.saved_suffix}].xlsx'))
         ...
 
     def show_all(self):
@@ -419,6 +439,7 @@ def merge_sleep_time_result(params):
 
 def merge_angle_changes_result(params):
     '''
+    #### 对应SHOW_angle_changes_old2，已弃用！######
     已有的结果每个图上的线是按照duration来区分，现在是按照group来区分。
     几个group几条线，时间维度是整个视频。
     :return:
@@ -478,6 +499,7 @@ def merge_result(params):
     suffixs = [v[-1] for v in params['rois']]
     ana_time_duration = params['ana_time_duration']
     sleep_time_duration = params['sleep_time_duration']
+    angle_time_duration = params['angle_time_duration']
     prefixs = [  # 前缀、x轴标签、y轴标签，title
         [f'average_distances_per_flies_per_{ana_time_duration}_mins',
          f'Video Time (per {ana_time_duration} mins)',
@@ -487,6 +509,10 @@ def merge_result(params):
          f'Video Time (per {sleep_time_duration} mins)',
          'Sleep (min) ',
          'Average sleep time per flies per duration'],
+        [f'angle_change_per_flies_per_{angle_time_duration}_mins',
+         f'Video Time (per {angle_time_duration} mins)',
+         'Angle change value (degree)',
+         'The angle change plot for the whole video time'],
     ]
     font_times = FontProperties(fname=str(Path(Path(__file__).parent.parent, 'fonts/times.ttf')), size=12)
     font_timesbd = FontProperties(fname=str(Path(Path(__file__).parent.parent, 'fonts/timesbd.ttf')), size=15)
@@ -559,9 +585,9 @@ def one_step_run(params):
     if len(rois) > 1:
         merge_result(params)
 
-    # 最后再生成一张angle_changes的merge结果
-    merge_angle_changes_result(params)
+    # # 最后再生成一张angle_changes的merge结果
+    # merge_angle_changes_result(params)
 
 
 if __name__ == '__main__':
-    pass
+    ...

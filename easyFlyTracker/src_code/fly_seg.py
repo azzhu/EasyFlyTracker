@@ -389,15 +389,6 @@ https://github.com/opencv/opencv/issues/9053
 
 
 if __name__ == '__main__':
-    # f = FlySeg(
-    #     video_path=r'D:\Pycharm_Projects\qu_holmes_su_release\tests\demo.mp4',
-    #     save_txt_name='0000.txt',
-    #     begin_time=0,
-    #     duration_time=1,
-    #     # config_it=False,
-    # )
-    # f.run()
-    # f.play_and_show_trackingpoints()
     cap = cv2.VideoCapture(r'Z:\dataset\qususu\0923\easyflytracker_test\202009231045.avi')
     print(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     i = 0
