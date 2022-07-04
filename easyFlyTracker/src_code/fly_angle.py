@@ -69,7 +69,11 @@ class Fly_angle:
         :param small_bin_img:
         :return:角度，范围[0,180]
         '''
-        contours, hierarchy = cv2.findContours(small_bin_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        ctsout = cv2.findContours(small_bin_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if len(ctsout) == 3:
+            contours = ctsout[1]
+        else:
+            contours = ctsout[0]
         if len(contours) == 0:  # 没有发现轮廓，返回异常值
             return self.outlier
         max_id = np.argmax(np.array([len(_) for _ in contours]))  # 最大轮廓id

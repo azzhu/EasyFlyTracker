@@ -291,18 +291,10 @@ def gen_reqs():
 
 
 if __name__ == '__main__':
-    # with open(r'Z:\dataset\qususu\0809_0\cfg.yaml', 'r', encoding='utf-8') as f:
-    #     params = yaml.safe_load(f)
-    # res = __load_group(params)
-    # exit()
-    # import os, cv2
-    # import sys
-    # import numpy as np
-    # from time import time
-    #
-    # for i in range(2000, 2851):
-    #     print(f'{i}/2850')
-    #     p1 = f'Z:/temp/region/y/{i}_1y.tif'
-    #     p2 = f'Z:/temp/region/y/{i}.tif'
-    #     os.rename(p1, p2)
-    ...
+    import cv2
+
+    gray = np.array([[0, 5, 3, 9, 4],
+                     [5, 9, 6, 7, 4]])
+    mask = np.array([[0, 0, 1, 1, 0],
+                     [1, 0, 1, 0, 0]])
+    equalizeHist_use_mask(gray, mask)

@@ -389,12 +389,24 @@ https://github.com/opencv/opencv/issues/9053
 
 
 if __name__ == '__main__':
-    cap = cv2.VideoCapture(r'Z:\dataset\qususu\0923\easyflytracker_test\202009231045.avi')
-    print(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    i = 0
-    while True:
-        ret, frame = cap.read()
-        if not ret: break
-        i += 1
+    cap = cv2.VideoCapture(0)
 
-    print(i)
+    # ts = []
+    # while True:
+    #     ret, frame = cap.read()
+    #     if not ret:
+    #         break
+    #     cv2.imshow('', frame)
+    #     ts.append(time.time())
+    #     k = cv2.waitKeyEx(20)
+    #     if k == 13: break
+    #
+    # ts = np.array(ts)
+    # print(ts.shape)
+    # np.save('tstemp.npy', ts)
+
+    ts = np.load('tstemp.npy')
+    td = ts[1:] - ts[:-1]
+    td *= 1000
+
+    ...
