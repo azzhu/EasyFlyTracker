@@ -58,7 +58,13 @@ def easyFlyTracker_cam_calibration():
 
 
 if __name__ == '__main__':
-    easyFlyTracker_()
-    # easyFlyTracker_analysis()
+    # easyFlyTracker_()
+    easyFlyTracker_analysis()
     # easyFlyTracker_cam_calibration()
 
+    # import cv2
+    # import numpy as np
+    #
+    # img = cv2.imread(r'Z:\Desktop\fapiao2.jpg')
+    # cv2.imwrite(r'Z:\Desktop\fapiao__.jpg', img)
+    # pass

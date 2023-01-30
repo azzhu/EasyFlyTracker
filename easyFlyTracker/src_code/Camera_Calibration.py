@@ -26,7 +26,7 @@
 '''
 from pathlib import Path
 
-import cv2
+import cv2, cv2_ext
 import numpy as np
 
 from easyFlyTracker.src_code.utils import Wait
@@ -45,7 +45,7 @@ def calibration(imgfilelist, mapsavedpath, chess_size=(6, 9)):
     imgpoints = []  # 2d points in image plane.
 
     for fname in imgfilelist:
-        img = cv2.imread(fname)
+        img = cv2_ext.imread(fname)
         # img = img[:720]  # 由于截的图像把下面的状态栏也截了，所以这里把状态栏的部分去掉，使跟视频图像尺寸保持一致   #######################
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         # Find the chess board corners

@@ -90,10 +90,6 @@ class NumpyArrayHasNanValuesExceptin(Exception):
 
 class Pbar():
     '''
-    煞笔tqdm不好用，自己实现一个进度条，使用方法类似tqdm。
-    特点：
-    不会出现一直换行问题，只保留一行更新。
-    格式：
     【完成百分比 进度条 当前任务/总共任务 [总耗时<剩余时间，速度]】
     '''
 
@@ -272,7 +268,8 @@ def __load_group(params):
                 flag = c
                 gp = [int(v) for v in vs[:, i] if not np.isnan(v)]
                 gp = sorted(list(set(gp)))
-                groups.append([gp, flag])
+                if len(gp) > 0:
+                    groups.append([gp, flag])
 
             if len(groups) == 0:  # 空文件
                 return [[None, 'all']]

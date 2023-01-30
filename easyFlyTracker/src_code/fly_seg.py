@@ -11,7 +11,7 @@ import random
 import time
 from pathlib import Path
 
-import cv2
+import cv2, cv2_ext
 import numpy as np
 from scipy import stats
 
@@ -153,7 +153,7 @@ class FlySeg():
         frames_num_used = 800
 
         if self.bg_img_path.exists():
-            bg = cv2.imread(str(self.bg_img_path))
+            bg = cv2_ext.imread(str(self.bg_img_path))
         else:
             with Wait('Collect frames'):
                 tim = time.time()
@@ -175,7 +175,7 @@ class FlySeg():
                 sx = stats.mode(frames)
                 bg = sx[0][0]
                 bg = cv2.medianBlur(bg, 3)
-                cv2.imwrite(str(self.bg_img_path), bg)
+                cv2_ext.imwrite(str(self.bg_img_path), bg)
             print(f'Finished, time consuming:{time.time() - tim}s')
             self.video.set(cv2.CAP_PROP_POS_FRAMES, 0)
         self.bg = bg
@@ -201,8 +201,8 @@ class FlySeg():
                 # cv2.circle(frame, cp, cfg.Region.radius, 175, 1)
                 # cv2.circle(src, cp, cfg.Region.radius, 200, 1)
             if just_save_one_frame:
-                cv2.imwrite(str(Path(self.saved_dir, f'{self.video_stem}_1_mask.bmp')), frame)
-                cv2.imwrite(str(Path(self.saved_dir, f'{self.video_stem}_1_src.bmp')), src)
+                cv2_ext.imwrite(str(Path(self.saved_dir, f'{self.video_stem}_1_mask.bmp')), frame)
+                cv2_ext.imwrite(str(Path(self.saved_dir, f'{self.video_stem}_1_src.bmp')), src)
                 return
 
             cv2.imshow('mask', frame)
@@ -236,7 +236,7 @@ class FlySeg():
                 cv2.line(frame, (tp[0] - 10, tp[1]), (tp[0] + 10, tp[1]), (0, 0, 255), 1)
                 cv2.line(frame, (tp[0], tp[1] - 10), (tp[0], tp[1] + 10), (0, 0, 255), 1)
             if just_save_one_frame:
-                cv2.imwrite(str(Path(self.saved_dir, f'{self.video_stem}_3_frame.bmp')), frame)
+                cv2_ext.imwrite(str(Path(self.saved_dir, f'{self.video_stem}_3_frame.bmp')), frame)
                 return
             cv2.imshow('frame', frame)
             k = cv2.waitKey(3) & 0xFF
@@ -265,15 +265,30 @@ class FlySeg():
                 break
             frame = self.undistort.do(frame)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            # frame_src = frame.copy()
             foreground_mask = np.abs(frame.astype(np.int16) - self.gray_bg_int16) > self.background_th
             frame = frame < self.seg_th
             frame *= self.mask_all
+            # frame_src *= self.mask_all
             frame = frame.astype(np.uint8) * 255 * foreground_mask
+            # cv2.imshow('bin', frame)
+            # ker = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+            # frame = cv2.dilate(frame, ker)
+            # frame = cv2.erode(frame, ker)
+            # frame = cv2.morphologyEx(frame, cv2.MORPH_CLOSE, ker)
+            # cv2.imshow('bin_close', frame)
+            # cv2.waitKeyEx(10)
             self.heatmap += frame.astype(np.bool).astype(np.int)
             oneframe_centroids = []
             oneframe_angles = []
             for roi in self.rois:
                 img = frame[roi[0]:roi[1], roi[2]:roi[3]]
+                # img_src = frame_src[roi[0]:roi[1], roi[2]:roi[3]]
+                # foreground_mask_roi = foreground_mask.astype(np.uint8)[roi[0]:roi[1], roi[2]:roi[3]] * 255
+                # cv2.imshow('img', img)
+                # cv2.imshow('src', img_src)
+                # cv2.imshow('fore', foreground_mask_roi)
+                # cv2.waitKeyEx()
                 retval, labels, stats, centroids = cv2.connectedComponentsWithStats(img)
                 if retval < 2:
                     cent = (-1, -1)

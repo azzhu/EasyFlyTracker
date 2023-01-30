@@ -11,6 +11,7 @@ import warnings
 from pathlib import Path
 
 import cv2
+import cv2_ext
 import math
 import numpy as np
 import pandas as pd
@@ -189,6 +190,8 @@ class Analysis():
             return speed_npy, disp_npy
         duration_frames = int(round(self.ana_time_duration * 60 * self.fps))
         frame_start_ind = list(range(0, self.all_datas.shape[1], duration_frames))
+        if self.video_frames_num - frame_start_ind[-1] < duration_frames * 0.1:
+            frame_start_ind = frame_start_ind[:-1]
         all_fly_speeds = self.all_fly_speeds_per_frame * \
                          np.tile(self.roi_flys_list[:, np.newaxis],
                                  (1, self.all_fly_speeds_per_frame.shape[1]))
@@ -368,7 +371,7 @@ class Analysis():
         heatmap_img[:, :, 0] += mask_all
         # cv2.imshow('', heatmap_img)
         # cv2.waitKeyEx()
-        cv2.imwrite(str(p), heatmap_img)
+        cv2_ext.imwrite(str(p), heatmap_img)
 
     def PARAM_heatmap_barycenter(self, p, p_heatmap):
         '''
@@ -400,7 +403,7 @@ class Analysis():
 
         self.barycps = barycps
 
-        img = cv2.imread(str(p_heatmap))
+        img = cv2_ext.imread(str(p_heatmap))
         img = np.zeros_like(img)
 
         def dist2p(p1, p2):
@@ -424,7 +427,7 @@ class Analysis():
         # np.save(r'Z:\dataset\qususu\ceshishipin\v080\output_72hole_0330_v080\plot_images\barycps_r.npy', barycps_r)
         # cv2.imshow('', img)
         # cv2.waitKeyEx()
-        cv2.imwrite(str(p), img)
+        cv2_ext.imwrite(str(p), img)
 
     def PARAM_heatmap_of_roi(self, p):
         '''
@@ -445,7 +448,7 @@ class Analysis():
         # pcolor *= np.tile(mask[:, :, None], (1, 1, 3))
         # pcolor = cv2.resize(pcolor, dsize=None, fx=4, fy=4, interpolation=cv2.INTER_NEAREST)
         pcolor = cv2.resize(pcolor, dsize=None, fx=4, fy=4, interpolation=cv2.INTER_LINEAR)
-        cv2.imwrite(str(p), pcolor)
+        cv2_ext.imwrite(str(p), pcolor)
         # pcolor = cv2.GaussianBlur(pcolor, (5, 5), 0)
         # cv2.imshow('', pcolor)
         # cv2.waitKeyEx()
@@ -511,7 +514,7 @@ class Analysis():
             bg_img_path = Path(self.cache_dir, 'background_image_undistort.bmp')
         else:
             bg_img_path = Path(self.cache_dir, 'background_image.bmp')
-        bg = cv2.imread(str(bg_img_path))
+        bg = cv2_ext.imread(str(bg_img_path))
         gray_bg_int16 = cv2.cvtColor(bg, cv2.COLOR_BGR2GRAY).astype(np.int16)
         undistort = Undistortion(self.Undistortion_model_path)
         mask_imgs = np.load(Path(self.cache_dir, 'mask_imgs.npy')).astype(np.bool)
