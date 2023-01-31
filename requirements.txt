@@ -8,3 +8,4 @@ numpy
 matplotlib
 PyYAML
 openpyxl
+scikit-learn

@@ -48,7 +48,7 @@ def equalizeHist_use_mask(gray, mask, notuint8=False):
     bg_num = h * w - roi_num  # 背景区域像素个数
     gray *= mask
     dc = Counter(gray.flatten())
-    count = np.array([dc.get(i, 0) for i in range(mv + 1)], np.float)
+    count = np.array([dc.get(i, 0) for i in range(mv + 1)], float)
     count[0] -= bg_num  # 减去背景像素个数
     count = count / roi_num  # 得到概率
     # 计算累计概率

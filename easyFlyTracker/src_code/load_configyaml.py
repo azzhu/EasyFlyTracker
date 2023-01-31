@@ -47,7 +47,7 @@ def load_config(set_video_path=None, set_roi=None):
     cfg['video_name'] = video_name
     cfg['video_dir'] = video_dir
 
-    cfg['roi_flys_mask_arry'] = np.ones([cfg['h_num'], cfg['w_num']], np.bool)
+    cfg['roi_flys_mask_arry'] = np.ones([cfg['h_num'], cfg['w_num']], bool)
     # cfg['roi_flys_flag'] = [v[-1] for v in cfg['rois']]
 
     return cfg

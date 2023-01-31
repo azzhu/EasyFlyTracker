@@ -106,7 +106,7 @@ class Show():
         plt.xlabel(f'Video Time (per {self.ana_time_duration} mins)', fontproperties=self.font_timesbd)
         plt.ylabel('Distances (mm)', fontproperties=self.font_timesbd)
         plt.title('Average distances per duration at different time', fontproperties=self.font_timesbd)
-        plt.plot(xs, datas, label=self.video_stem)
+        plt.plot(xs, datas, label=self.saved_suffix)
         plt.scatter(xs, datas)
         plt.xticks(fontproperties=self.font_times)
         plt.yticks(fontproperties=self.font_times)
@@ -130,7 +130,7 @@ class Show():
         plt.xlabel('time (h)')
         plt.ylabel('distances (mm)')
         plt.title('Δ distance/hour compared with the first hour  (Distance(i)-Distance (0)) ')
-        plt.plot(vs, label=self.video_stem)
+        plt.plot(vs, label=self.saved_suffix)
         plt.legend(loc='upper left')
         # plt.show()
         plt.savefig(str(Path(self.saved_dir, f'dist_change_per_h_{self.saved_suffix}.png')))
@@ -154,7 +154,7 @@ class Show():
         plt.xlabel('time (h)')
         plt.ylabel('prob')
         plt.title('Ratio of Center Time to All Time per hour')
-        plt.plot(in_centre_prob_per_h, label=self.video_stem)
+        plt.plot(in_centre_prob_per_h, label=self.saved_suffix)
         plt.legend(loc='upper left')
         # plt.show()
         plt.savefig(str(Path(self.saved_dir, f'in_centre_prob_per_h_{self.saved_suffix}.png')))
@@ -184,7 +184,7 @@ class Show():
         plt.ylabel('Sleep (min) ', fontproperties=self.font_timesbd)
         plt.title('Average sleep time per flies per duration & Proportion of sleep flies',
                   fontproperties=self.font_timesbd)
-        plt.plot(xs, da, label=f'{self.video_stem}, Sleep')
+        plt.plot(xs, da, label=f'{self.saved_suffix}, Sleep')
         plt.scatter(xs, da)
         plt.ylim([0, da.max() * 1.2])
         plt.xticks(fontproperties=self.font_times)
@@ -193,7 +193,7 @@ class Show():
 
         # 绘制柱状图
         ax2 = plt.twinx()
-        ax2.bar(xs, proportion_of_sleep_flys, label=f'{self.video_stem}, Proportion of sleep flies',
+        ax2.bar(xs, proportion_of_sleep_flys, label=f'{self.saved_suffix}, Proportion of sleep flies',
                 width=0.3, alpha=0.2)
         ax2.set_ylim([0, 1])
         ax2.set_ylabel('Proportion of sleep flies', fontproperties=self.font_timesbd)
@@ -348,7 +348,7 @@ class Show():
         plt.xlabel(f'Video Time (per {self.ana.angle_time_duration} mins)', fontproperties=self.font_timesbd)
         plt.ylabel('Angle change value (degree)', fontproperties=self.font_timesbd)
         plt.title('The angle change plot for the whole video time', fontproperties=self.font_timesbd)
-        plt.plot(xs, angle_changes_per_duration, label=self.video_stem)
+        plt.plot(xs, angle_changes_per_duration, label=self.saved_suffix)
         plt.scatter(xs, angle_changes_per_duration)
         plt.xticks(fontproperties=self.font_times)
         plt.yticks(fontproperties=self.font_times)

@@ -67,7 +67,7 @@ class Analysis():
         self.cps = config_pk[:, :2]
         self.dish_radius = int(round(float(np.mean(config_pk[:, -1]))))
         self.mask_imgs = np.load(Path(self.cache_dir, 'mask_imgs.npy'))
-        self.mask_imgs = self.mask_imgs.astype(np.bool)
+        self.mask_imgs = self.mask_imgs.astype(bool)
 
         self.roi_flys_flag = roi_flys_flag
         self.ana_time_duration = ana_time_duration
@@ -272,7 +272,7 @@ class Analysis():
                 sleep_time = 0  # 用于保存截止当前秒已经睡了多久（单位秒）
                 sleep_status_per_s = np.concatenate(
                     [sleep_status_per_s, np.array([False])])  # 在末尾加一个false，防止末尾是True时遍历结束时无法判断睡眠
-                sleep_status = np.zeros([len(sleep_status_per_s) - 1, ], np.bool)  # 新创建的list，用于保存睡眠状态
+                sleep_status = np.zeros([len(sleep_status_per_s) - 1, ], bool)  # 新创建的list，用于保存睡眠状态
                 for i, ss in enumerate(sleep_status_per_s):
                     if ss:
                         sleep_time += 1
@@ -299,13 +299,13 @@ class Analysis():
             all_sleep_status_duration = all_sleep_status[:, start_ind[i]:start_ind[i + 1]]
             value = all_sleep_status_duration.sum() / flys_num
             value = value / 60  # 转化为分钟
-            sleep_flys_nubs = np.sum(all_sleep_status_duration, axis=-1).astype(np.bool).sum()
+            sleep_flys_nubs = np.sum(all_sleep_status_duration, axis=-1).astype(bool).sum()
             proportion_of_sleep_flys = sleep_flys_nubs / flys_num  # 当前时间段睡觉的果蝇的比例
             values_durations.append([value, dt, proportion_of_sleep_flys])
         last_da = all_sleep_status[:, start_ind[-1]:]
         value = last_da.sum() / flys_num
         value = value / 60  # 转化为分钟
-        sleep_flys_nubs = np.sum(last_da, axis=-1).astype(np.bool).sum()
+        sleep_flys_nubs = np.sum(last_da, axis=-1).astype(bool).sum()
         proportion_of_sleep_flys = sleep_flys_nubs / flys_num  # 当前时间段睡觉的果蝇的比例
         values_durations.append([value, last_da.shape[1], proportion_of_sleep_flys])
         values_durations = np.array(values_durations)
@@ -488,11 +488,11 @@ class Analysis():
         h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         fps = int(cap.get(cv2.CAP_PROP_FPS))
-        sleeptime_heatmap = np.zeros((h, w), np.int)  # 初始化返回值
+        sleeptime_heatmap = np.zeros((h, w), int)  # 初始化返回值
 
         # 先计算哪些时间段是睡眠时间（有果蝇在睡觉）
         sleep_status = np.load(Path(self.cache_dir, 'all_sleep_status.npy'))
-        timeline = sleep_status.sum(0).astype(np.bool)
+        timeline = sleep_status.sum(0).astype(bool)
         if timeline.sum() == 0:  # 说明没有果蝇在睡觉，所以这里直接返回零矩阵，后面就不用折腾了
             np.save(sleeptime_heatmap_path, sleeptime_heatmap)
             return sleeptime_heatmap
@@ -517,8 +517,8 @@ class Analysis():
         bg = cv2_ext.imread(str(bg_img_path))
         gray_bg_int16 = cv2.cvtColor(bg, cv2.COLOR_BGR2GRAY).astype(np.int16)
         undistort = Undistortion(self.Undistortion_model_path)
-        mask_imgs = np.load(Path(self.cache_dir, 'mask_imgs.npy')).astype(np.bool)
-        mask_all = mask_imgs.sum(0).astype(np.bool)
+        mask_imgs = np.load(Path(self.cache_dir, 'mask_imgs.npy')).astype(bool)
+        mask_all = mask_imgs.sum(0).astype(bool)
         sleep_status = np.repeat(sleep_status, fps, axis=-1)
         for du_i, (st, ed) in enumerate(sleep_durations):
             print(f'\nsleep duration: {du_i + 1}/{len(sleep_durations)}')
@@ -545,7 +545,7 @@ class Analysis():
                     frame *= mask_all
                     frame = frame.astype(np.uint8) * 255 * foreground_mask  # 该值是原始heatmap累加分割区域图
                     frame *= mask_sleep  # 原始累加分割区域图跟睡眠果蝇区域mask相乘
-                    sleeptime_heatmap += frame.astype(np.bool).astype(np.int)
+                    sleeptime_heatmap += frame.astype(bool).astype(int)
 
                 nub += 1
                 if nub >= ed - st:

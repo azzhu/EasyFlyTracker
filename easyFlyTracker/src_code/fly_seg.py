@@ -74,8 +74,7 @@ class FlySeg():
         _, temp_frame = self.video.read()
 
         # 热力图累计值。累计的不是坐标值，二十整个二值化区域，累计一帧加一而不是255
-        self.heatmap = np.zeros(temp_frame.shape[:2], np.int)
-
+        self.heatmap = np.zeros(temp_frame.shape[:2], int)
         # 在这判断训练畸变矫正模型所使用的图像分辨率是否跟当前视频一致，前提是加畸变矫正
         if Undistortion_model_path:
             map_sp = self.undistort.mapxy.shape[-2:]
@@ -137,9 +136,9 @@ class FlySeg():
             cv2.circle(np.zeros((h, w), np.uint8), cp, self.dish_radius, 255, -1)
             for cp in self.cps
         ]
-        mask_all = np.zeros((h, w), np.bool)
+        mask_all = np.zeros((h, w), bool)
         for img in self.mask_imgs:
-            mask_all += img.astype(np.bool)
+            mask_all += img.astype(bool)
         # mask_all = mask_all.astype(np.uint8) * 255
         self.mask_all = mask_all
 
@@ -278,7 +277,7 @@ class FlySeg():
             # frame = cv2.morphologyEx(frame, cv2.MORPH_CLOSE, ker)
             # cv2.imshow('bin_close', frame)
             # cv2.waitKeyEx(10)
-            self.heatmap += frame.astype(np.bool).astype(np.int)
+            self.heatmap += frame.astype(bool).astype(int)
             oneframe_centroids = []
             oneframe_angles = []
             for roi in self.rois:
