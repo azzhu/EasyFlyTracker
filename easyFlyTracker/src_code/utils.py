@@ -211,15 +211,19 @@ def _duration_params_validity_judgment(params):
             exit()
 
 
-def __get_params():
-    args = sys.argv
-    if len(args) == 1:
-        print(HELP)
-        exit()
-    if args[1] == '-h' or args[1] == '--help':
-        print(HELP)
-        exit()
-    cfg_p = Path(args[1])
+def __get_params(config_path=None):
+    if config_path is None:
+        args = sys.argv
+        if len(args) == 1:
+            print(HELP)
+            exit()
+        if args[1] == '-h' or args[1] == '--help':
+            print(HELP)
+            exit()
+        cfg_p = Path(args[1])
+    else:
+        cfg_p = Path(config_path)
+
     if not cfg_p.exists():
         print('please check that if the config file path is correct')
         exit()

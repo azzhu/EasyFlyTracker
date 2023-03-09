@@ -18,8 +18,9 @@ from easyFlyTracker.src_code.utils import (
 
 
 # Command line 1
-def easyFlyTracker_():
-    params = __get_params()
+def easyFlyTracker_(params=None):
+    if params is None:
+        params = __get_params()
     params.update({
         'save_txt_name': f'track.txt'
     })
@@ -39,8 +40,9 @@ def easyFlyTracker_():
 
 
 # Command line 2
-def easyFlyTracker_analysis():
-    params = __get_params()
+def easyFlyTracker_analysis(params=None):
+    if params is None:
+        params = __get_params()
     _duration_params_validity_judgment(params)
     rois = __load_group(params)
     params.update({
@@ -52,14 +54,15 @@ def easyFlyTracker_analysis():
 
 
 # Command line 3
-def easyFlyTracker_cam_calibration():
-    params = __get_params()
+def easyFlyTracker_cam_calibration(params=None):
+    if params is None:
+        params = __get_params()
     cam_calibration(params)
 
 
 if __name__ == '__main__':
-    # easyFlyTracker_()
-    easyFlyTracker_analysis()
+    easyFlyTracker_()
+    # easyFlyTracker_analysis()
     # easyFlyTracker_cam_calibration()
 
     # import cv2
