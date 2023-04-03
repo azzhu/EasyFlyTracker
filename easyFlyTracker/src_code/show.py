@@ -18,7 +18,7 @@ from matplotlib.font_manager import FontProperties
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from easyFlyTracker.src_code.analysis import Analysis
-from easyFlyTracker.src_code.utils import args_filter, Wait
+from easyFlyTracker.src_code.utils import args_filter, Wait, mat_info_to_str
 
 
 class Show():
@@ -45,11 +45,13 @@ class Show():
             heatmap_remove_sleep=False,  # 是否计算抠除睡眠后的heatmap
             isfirst=True,  # 通常不同roi组会计算多次，但是有的结果只需计算一次，为避免重复计算这里用来标识是否是第一次
             ana_time_duration=None,  # 主要是为了生成的图片命名的时候用到
+            log=None
     ):
         '''
 
         :param suffix: 保存的图片或者npy文件的后缀，用于区分不同统计方式的结果
         '''
+        self.log = log
         # 初始化各种文件夹
         self.video_path = Path(video_path)
         self.output_dir = output_dir
@@ -77,18 +79,22 @@ class Show():
             self.roi_flys_list[roi_flys_ids] = True
         self.roi_flys_id = [i for i, r in enumerate(self.roi_flys_list) if r]
         self.heatmap_remove_sleep = heatmap_remove_sleep
+        self.log.info(f'roi_flys_id:{self.roi_flys_id}')
 
         # 计算比例尺
         pklf = Path(output_dir, 'config.pkl')
         _, AB_dist = pickle.load(open(pklf, 'rb'))
         self.sacle = AB_dist_mm / AB_dist
+        self.log.info(f'scale:{self.sacle}')
 
         # 获取视频对应的Analysis实例
         self.ana = Analysis(**ana_params)
 
         # 设置字体格式
-        self.font_times = FontProperties(fname=str(Path(Path(__file__).parent.parent, 'fonts/times.ttf')), size=12)
-        self.font_timesbd = FontProperties(fname=str(Path(Path(__file__).parent.parent, 'fonts/timesbd.ttf')), size=15)
+        self.font_times = FontProperties(fname=str(Path(__file__).parent.parent / 'fonts/times.ttf'), size=12)
+        self.font_timesbd = FontProperties(fname=str(Path(__file__).parent.parent / 'fonts/timesbd.ttf'), size=15)
+        self.log.info(f"font_times:{str(Path(__file__).parent.parent / 'fonts/times.ttf')}")
+        self.log.info(f"font_timesbd:{str(Path(__file__).parent.parent / 'fonts/font_timesbd.ttf')}")
 
     def SHOW_avg_dist_per10min(self):
         '''
@@ -108,6 +114,8 @@ class Show():
         plt.title('Average distances per duration at different time', fontproperties=self.font_timesbd)
         plt.plot(xs, datas, label=self.saved_suffix)
         plt.scatter(xs, datas)
+        self.log.info(f'plot_x:{xs}')
+        self.log.info(f'plot_y:{datas}')
         plt.xticks(fontproperties=self.font_times)
         plt.yticks(fontproperties=self.font_times)
         plt.legend(prop={'family': 'Times New Roman', 'size': 12})
@@ -186,6 +194,8 @@ class Show():
                   fontproperties=self.font_timesbd)
         plt.plot(xs, da, label=f'{self.saved_suffix}, Sleep')
         plt.scatter(xs, da)
+        self.log.info(f'plot_x:{xs}')
+        self.log.info(f'plot_y:{da}')
         plt.ylim([0, da.max() * 1.2])
         plt.xticks(fontproperties=self.font_times)
         plt.yticks(fontproperties=self.font_times)
@@ -195,6 +205,8 @@ class Show():
         ax2 = plt.twinx()
         ax2.bar(xs, proportion_of_sleep_flys, label=f'{self.saved_suffix}, Proportion of sleep flies',
                 width=0.3, alpha=0.2)
+        self.log.info(f'plot_bar_x:{xs}')
+        self.log.info(f'plot_bar_y:{proportion_of_sleep_flys}')
         ax2.set_ylim([0, 1])
         ax2.set_ylabel('Proportion of sleep flies', fontproperties=self.font_timesbd)
         ax2.legend(loc='upper right', frameon=True, prop={'family': 'Times New Roman', 'size': 12})
@@ -244,6 +256,7 @@ class Show():
             # 保存excel
             barycps, cps = self.ana.barycps, self.ana.cps
             barycps = np.array(barycps)
+            self.log.info(mat_info_to_str([cps, barycps], ['cps', 'barycps']))
             data = np.concatenate([cps, barycps], axis=1)
             df = pd.DataFrame(data=data, index=list(range(len(data))),
                               columns=['centre-x', 'centre-y', 'barycenter-x', 'barycenter-y'])
@@ -350,6 +363,8 @@ class Show():
         plt.title('The angle change plot for the whole video time', fontproperties=self.font_timesbd)
         plt.plot(xs, angle_changes_per_duration, label=self.saved_suffix)
         plt.scatter(xs, angle_changes_per_duration)
+        self.log.info(f'plot_x:{xs}')
+        self.log.info(f'plot_y:{angle_changes_per_duration}')
         plt.xticks(fontproperties=self.font_times)
         plt.yticks(fontproperties=self.font_times)
         plt.legend(prop={'family': 'Times New Roman', 'size': 12})
@@ -365,15 +380,22 @@ class Show():
         ...
 
     def show_all(self):
+        self.log.info(f'SHOW_avg_dist_per10min')
         self.SHOW_avg_dist_per10min()
         # self.SHOW_dist_change_per_h()
         # self.SHOW_in_centre_prob_per_h()
+        self.log.info(f'SHOW_sleep_time_per_h')
         self.SHOW_sleep_time_per_h()
+        self.log.info(f'SHOW_heatmap')
         self.SHOW_heatmap()
+        self.log.info(f'SHOW_heatmap_of_roi')
         self.SHOW_heatmap_of_roi()
+        self.log.info(f'SHOW_heatmap_barycenter')
         self.SHOW_heatmap_barycenter()
         if self.heatmap_remove_sleep:
+            self.log.info(f'SHOW_heatmap_exclude_sleeptime')
             self.SHOW_heatmap_exclude_sleeptime()
+        self.log.info(f'SHOW_angle_changes')
         self.SHOW_angle_changes()
 
 
@@ -530,8 +552,9 @@ def merge_result(params):
         plt.title(title, fontproperties=font_timesbd)
         das = [np.load(Path(dir, f'{pre}_[{suf}].npy')) for suf in suffixs]
         for da, lb in zip(das, suffixs):
-            da = np.squeeze(da)
-            xs = list(range(1, len(da) + 1))
+            # da = np.squeeze(da)
+            da = da.reshape([-1])
+            xs = list(range(1, da.shape[0] + 1))
             xs = [str(_) for _ in xs]
             plt.plot(xs, da, label=' ' + str(lb))
             plt.scatter(xs, da)
@@ -552,6 +575,7 @@ def one_step_run(params):
     :return:
     '''
     rois = params['rois']
+    log = params['log']
 
     # Analysis需要传入一个参数sleep_dist_th_per_second，先在这里计算出来
     # 为啥呢？因为Analysis所有的计算都是基于像素单位，而不同比例尺下上面参数的值不应该相同，所以要先算出该值。
@@ -566,6 +590,8 @@ def one_step_run(params):
     sleep_dist_th_per_second = int(round(sleep_dist_th_per_second))
 
     for notfirst, (ids, flag) in enumerate(rois):
+        log.info(f'{"-" * 30} Group {"-" * 30}')
+        log.info(f'{notfirst} \t{flag} \t{ids}')
         ana_params = args_filter(params, Analysis)
         ana_params['roi_flys_flag'] = flag
         ana_params['roi_flys_ids'] = ids
@@ -583,6 +609,7 @@ def one_step_run(params):
             s.show_all()
 
     if len(rois) > 1:
+        log.info('merge_result')
         merge_result(params)
 
     # # 最后再生成一张angle_changes的merge结果

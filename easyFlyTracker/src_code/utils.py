@@ -169,8 +169,22 @@ class Wait():
             print('\b/', end='', flush=True)
 
 
+cai = \
+    '''
+    ⠀⠀⠀⠀⠰⢷⢿⠄
+    ⠀⠀⠀⠀⠀⣼⣷⣄
+    ⠀⠀⣤⣿⣇⣿⣿⣧⣿⡄
+    ⢴⠾⠋⠀⠀⠻⣿⣷⣿⣿⡀
+    ○ ⠀⢀⣿⣿⡿⢿⠈⣿
+    ⠀⠀⠀⢠⣿⡿⠁⠀⡊⠀⠙
+    ⠀⠀⠀⢿⣿⠀⠀⠹⣿
+    ⠀⠀⠀⠀⠹⣷⡀⠀⣿⡄
+    ⠀⠀⠀⠀⣀⣼⣿⠀⢈⣧.
+    '''
+
 HELP = \
-    f'''
+    f'''{cai}
+    
 Version: 
     {version}
 
@@ -229,6 +243,9 @@ def __get_params(config_path=None):
         exit()
     with open(cfg_p, 'r', encoding='utf-8') as f:
         params = yaml.safe_load(f)
+        # if isinstance(params['duration_time'], str):
+        #     params['duration_time'] = float(params['duration_time'].strip())
+    params.update({'config_file_path': cfg_p})
     vp = params['video_path']
     if vp is None or not Path(vp).exists():
         print('The [video_path] is not existing, please check it!')
@@ -289,6 +306,18 @@ def __load_group(params):
 def gen_reqs():
     import os
     os.system('pipreqs ./ --encoding utf-8')
+
+
+def mat_info_to_str(ms, names):
+    info = f'\n{"-" * 80}\n'
+    name_occ = max([len(n) for n in names]) + 3
+    info += f'{"data":<{name_occ}s}{"min":<15s}{"max":<15s}{"dtype":<10s}{"have_nan":<10s}{"shape"}\n'
+    for m, name in zip(ms, names):
+        m = np.array(m)
+        info += f'{name:<{name_occ}s}{str(m.min())[:12]:<15s}{str(m.max())[:12]:<15s}' \
+                f'{str(m.dtype):<10s}{str(np.isnan(m).any()):<10s}{m.shape}\n'
+    info += f'{"-" * 80}'
+    return info
 
 
 if __name__ == '__main__':

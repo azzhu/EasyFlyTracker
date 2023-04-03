@@ -18,7 +18,7 @@ import pandas as pd
 
 from easyFlyTracker.src_code.Camera_Calibration import Undistortion
 from easyFlyTracker.src_code.utils import NumpyArrayHasNanValuesExceptin
-from easyFlyTracker.src_code.utils import Pbar, equalizeHist_use_mask
+from easyFlyTracker.src_code.utils import Pbar, equalizeHist_use_mask, mat_info_to_str
 from easyFlyTracker.src_code.kernel_density_estimation import get_KernelDensity
 
 warnings.filterwarnings("ignore")
@@ -44,7 +44,9 @@ class Analysis():
             sleep_dist_th_per_second=5,
             sleep_time_th=300,  # 每秒睡眠状态持续多久算是真正的睡眠
             Undistortion_model_path=None,  # 畸变矫正参数路径
+            log=None
     ):
+        self.log = log
         # 初始化各种文件夹及路径
         self.video_path = Path(video_path)
         self.res_dir = Path(output_dir)  # 保存用户需要的结果
@@ -89,7 +91,9 @@ class Analysis():
             self.roi_flys_list = np.array([False] * len(self.cps))
         self.roi_flys_list[roi_flys_ids] = True
         self.roi_flys_id = [i for i, r in enumerate(self.roi_flys_list) if r]
+        self.log.info(f'roi_flys_id:{self.roi_flys_id}')
         self.roi_flys_nubs = self.roi_flys_list.sum()
+        self.log.info(f'roi_flys_nubs:{self.roi_flys_nubs}')
 
         # 初始化加载某些数据
         self._get_all_res()
@@ -105,7 +109,9 @@ class Analysis():
         else:
             res = np.load(self.npy_file_path)
             self.all_datas = np.transpose(res, [1, 0, 2])
+            self.log.info(mat_info_to_str([self.all_datas], ['all_datas']))
             self._cor()
+            self.log.info(mat_info_to_str([self.all_datas], ['all_datas_cor']))
             np.save(self.npy_file_path_cor, self.all_datas)
 
     def _cor(self):
@@ -176,6 +182,8 @@ class Analysis():
         np.save(self.dist_npy, all_fly_displacement)
         self.all_fly_speeds_per_frame = np.array(all_fly_speeds)
         self.all_fly_dist_per_frame = np.array(all_fly_displacement)
+        self.log.info(mat_info_to_str([self.all_fly_speeds_per_frame, self.all_fly_dist_per_frame],
+                                      ['all_fly_speeds_per_frame', 'all_fly_dist_per_frame']))
 
     def PARAM_speed_displacement(self, redo=False):
         '''
@@ -199,16 +207,10 @@ class Analysis():
                                np.tile(self.roi_flys_list[:, np.newaxis],
                                        (1, self.all_fly_dist_per_frame.shape[1]))
 
-        # res = []
-        # for ind in frame_start_ind:
-        #     x = np.sum(self.all_fly_dist_per_frame[:, ind:ind + duration_frames], axis=1)
-        #     res.append(x)
-        # res = np.stack(res, axis=-1)
-        # res = res * 0.26876426270157516
-        # np.save(r'Z:\dataset\qususu\ceshishipin\v080\output_72hole_0330_v080\plot_images\qudashen.npy', res)
-        # df = pd.DataFrame(data=res)
-        # df.to_excel(r'Z:\dataset\qususu\ceshishipin\v080\output_72hole_0330_v080\plot_images\qudashen.xlsx')
-        # exit()
+        self.log.info(mat_info_to_str(
+            [all_fly_speeds, all_fly_displacement],
+            ['all_fly_speeds', 'all_fly_displacement']
+        ))
 
         time_duration_stat_speed = []  # 10分钟总速度/帧数/果蝇个数
         time_duration_stat_displacement = []  # 10分钟总位移/果蝇个数
@@ -217,6 +219,10 @@ class Analysis():
                 all_fly_speeds[:, ind:ind + duration_frames].sum() / duration_frames / self.roi_flys_nubs)
             time_duration_stat_displacement.append(
                 all_fly_displacement[:, ind:ind + duration_frames].sum() / self.roi_flys_nubs)
+        self.log.info(mat_info_to_str(
+            [time_duration_stat_speed, time_duration_stat_displacement],
+            ['time_duration_stat_speed', 'time_duration_stat_displacement']
+        ))
         np.save(speed_npy, time_duration_stat_speed)
         np.save(disp_npy, time_duration_stat_displacement)
         return speed_npy, disp_npy
@@ -309,6 +315,10 @@ class Analysis():
         proportion_of_sleep_flys = sleep_flys_nubs / flys_num  # 当前时间段睡觉的果蝇的比例
         values_durations.append([value, last_da.shape[1], proportion_of_sleep_flys])
         values_durations = np.array(values_durations)
+        self.log.info(mat_info_to_str(
+            [all_sleep_status, values_durations],
+            ['all_sleep_status', 'values_durations']
+        ))
         np.save(str(npy_path), values_durations)
         return str(npy_path)
 
@@ -445,15 +455,11 @@ class Analysis():
         cv2.circle(mask, (r, r), r, 255, -1)
         mask = mask != 0
         pcolor = self.heatmap_to_pcolor(heatmap_sum, mask)
+        self.log.info(mat_info_to_str([heatmap_sum, pcolor], ['heatmap_sum', 'pcolor']))
         # pcolor *= np.tile(mask[:, :, None], (1, 1, 3))
         # pcolor = cv2.resize(pcolor, dsize=None, fx=4, fy=4, interpolation=cv2.INTER_NEAREST)
         pcolor = cv2.resize(pcolor, dsize=None, fx=4, fy=4, interpolation=cv2.INTER_LINEAR)
         cv2_ext.imwrite(str(p), pcolor)
-        # pcolor = cv2.GaussianBlur(pcolor, (5, 5), 0)
-        # cv2.imshow('', pcolor)
-        # cv2.waitKeyEx()
-        # exit()
-        # ...
 
     def PARAM_heatmap_exclude_sleeptime(self, p1, p2):
         '''
@@ -467,6 +473,7 @@ class Analysis():
 
         sleeptime_heatmap = self._get_sleeptime_heatmap()
         heatmap_exclude_sleeptime = self.heatmap - sleeptime_heatmap
+        self.log.info(mat_info_to_str([heatmap_exclude_sleeptime], ['heatmap_exclude_sleeptime']))
         self.heatmap = heatmap_exclude_sleeptime
         if not p1.exists():
             self.PARAM_heatmap(p1)
@@ -595,6 +602,10 @@ class Analysis():
             mask = (diff > 90) * (diff < 270)
             fly_ang_cor = np.where(mask, fly_ang + 180, fly_ang)
             np.save(self.fly_angles_cor_path, fly_ang_cor)
+            self.log.info(mat_info_to_str(
+                [move_ang, fly_ang, fly_ang_cor],
+                ['move_ang', 'fly_ang', 'fly_ang_cor']
+            ))
             return fly_ang_cor
 
     def PARAM_angle_changes_old(self):
@@ -674,8 +685,9 @@ class Analysis():
         ana_times = int(len(changes) / ana_duration_frames_nb) + 1
         # 按照时间段来分出来
         changes_es = [changes[i * ana_duration_frames_nb:(i + 1) * ana_duration_frames_nb] for i in range(ana_times)]
-        if len(changes_es[-1]) < len(changes_es[-2]) * 0.1:  # 最后一段太小的话就舍弃
-            changes_es = changes_es[:-1]
+        if len(changes_es) > 1:  # 首先有多段
+            if len(changes_es[-1]) < len(changes_es[-2]) * 0.1:  # 最后一段太小的话就舍弃
+                changes_es = changes_es[:-1]
 
         res = [c.mean() * self.fps / rr for c in changes_es]
         return res

@@ -46,22 +46,14 @@ def calibration(imgfilelist, mapsavedpath, chess_size=(6, 9)):
 
     for fname in imgfilelist:
         img = cv2_ext.imread(fname)
-        # img = img[:720]  # 由于截的图像把下面的状态栏也截了，所以这里把状态栏的部分去掉，使跟视频图像尺寸保持一致   #######################
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         # Find the chess board corners
         ret, corners = cv2.findChessboardCorners(gray, chess_size, None)
         # If found, add object points, image points (after refining them)
-        # print(ret, fname)
         if ret == True:
             objpoints.append(objp)
             corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
             imgpoints.append(corners2)
-
-            # Draw and display the corners
-            # img = cv2.drawChessboardCorners(img, chess_size, corners2, ret)
-            # cv2.imshow('img', img)
-            # cv2.waitKey(30)
-    # cv2.destroyAllWindows()
 
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
     h, w = gray.shape[:2]
@@ -93,6 +85,11 @@ def cam_calibration(params):
 
     imgfilelist = list(img_dir.iterdir())
     imgfilelist = [str(f) for f in imgfilelist if f.suffix[1:] in ['tif', 'tiff', 'png', 'bmp', 'jpg', 'jpeg']]
+    params['log'].info(f'Camera Calibration chess_size:{chess_size}')
+    info = 'Camera Calibration imgfilelist:'
+    for f in imgfilelist:
+        info += f'\n{f}'
+    params['log'].info(info)
 
     with Wait('Camera Calibration'):
         # 开始相机标定参数计算
@@ -100,12 +97,13 @@ def cam_calibration(params):
 
 
 class Undistortion():
-    def __init__(self, mapxy_path):
+    def __init__(self, mapxy_path, log):
         self.notdo = False
         if mapxy_path == None:
             self.notdo = True
         else:
             self.mapxy = np.load(mapxy_path)
+        log.info(f'Undistortion.notdo:{self.notdo}')
 
     def do(self, img):
         if self.notdo: return img

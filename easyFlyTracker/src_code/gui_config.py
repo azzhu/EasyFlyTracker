@@ -42,7 +42,7 @@ class GUI_CFG():
     修改所有圆环统一半径
     '''
 
-    def __init__(self, img_path, init_res, saved_dir=None):
+    def __init__(self, img_path, init_res, saved_dir=None, log=None):
         '''
         传入两个参数
         :param img_path: 可以是其中一帧的路径，也可以是背景图的路径；
@@ -50,11 +50,14 @@ class GUI_CFG():
                          可以传空list，不管传什么，只要同文件夹下有config.pkl文件，
                          则读取其结果作为默认config。
         '''
+        self.log = log
         if type(img_path) is str:
+            self.log.info(img_path)
             img = cv2_ext.imread(img_path)
             self.res_pkl = str(Path(img_path).parent) + '/config.pkl'
         else:
             img = img_path
+            self.log.info(img.shape)
             self.res_pkl = str(saved_dir) + '/config.pkl'
         self.col = (0, 0, 0) if img.mean() > 256 / 2 else (255, 255, 255)
         h, w = img.shape[:2]
@@ -154,6 +157,7 @@ class GUI_CFG():
         if Path(self.res_pkl).exists():
             self.res, self.AB_dist = pickle.load(open(self.res_pkl, 'rb'))
             print(f'config params load from: {self.res_pkl}')
+            self.log.info(f'config params load from: {self.res_pkl}')
         else:
             self.res = self.init_res
         # 统一的半径
@@ -258,6 +262,7 @@ class GUI_CFG():
                         break
         # 根据勾股定理计算AB之间的距离
         a, b = self.AB_ps[0], self.AB_ps[1]
+        self.log.info(f'point A:{a}, point B:{b}')
         return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5
 
     def CFG_circle(self, direct_get_res=False):
@@ -265,10 +270,13 @@ class GUI_CFG():
             # 直接退出之前还是得保存config.bmp给用户看
             self._draw_img_from_res(skip_ABline=True)
             cv2_ext.imwrite(str(self.res_pkl)[:-3] + 'bmp', self.drawed_img)
+            self.log.info(f'GUI config result:\n{self.res}')
+            self.log.info(f'AB_dist:\n{self.AB_dist}')
             return self.res, self.AB_dist
 
         # 先进行第一步：配置比例尺，配置AB两点
         AB_dist = self.CFG_sacle()
+        self.log.info(f'AB_dist:\n{AB_dist}')
 
         # 后面再进行第二步，配置圆环
 
@@ -325,7 +333,9 @@ class GUI_CFG():
         with open(self.res_pkl, 'wb') as f:
             pickle.dump(res, f)
             print(f'saved config params to: {self.res_pkl}')
+            self.log.info(f'saved config params to: {self.res_pkl}')
         cv2_ext.imwrite(str(self.res_pkl)[:-3] + 'bmp', self.drawed_img)
+        self.log.info(f'GUI config result:\n{res}')
         return res
 
 
@@ -335,7 +345,7 @@ if __name__ == '__main__':
     # frame = np.ones([500, 700, 3], np.uint8) * 255
     g = GUI_CFG(frame, [], r'Z:\dataset\qususu')
     g.CFG_circle()
-    # exit()
+    exit()
 
     # 这个配置的结果转为之前程序可以使用的
     dir = Path(r'Z:\dataset\qususu')

@@ -9,3 +9,4 @@ matplotlib
 PyYAML
 openpyxl
 scikit-learn
+loguru

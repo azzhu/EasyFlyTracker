@@ -18,7 +18,7 @@ from scipy import stats
 from easyFlyTracker.src_code.Camera_Calibration import Undistortion
 from easyFlyTracker.src_code.fly_angle import Fly_angle
 from easyFlyTracker.src_code.gui_config import GUI_CFG
-from easyFlyTracker.src_code.utils import Pbar, Wait
+from easyFlyTracker.src_code.utils import Pbar, Wait, mat_info_to_str
 
 
 class FlySeg():
@@ -45,11 +45,13 @@ class FlySeg():
             area_th=0.5,  # 内圈面积阈值
             # minR_maxR_minD=(40, 50, 90),  # 霍夫检测圆时的参数，最小半径，最大半径，最小距离
             skip_config=False,
+            log=None  # 日志
     ):
         # 初始化各种文件夹
         self.video_path = Path(video_path)
         self.output_dir = Path(output_dir)
         self.saved_dir = Path(self.output_dir, '.cache')  # 中间结果文件夹
+        self.log = log
         # 因为加畸变矫正跟不加畸变矫正背景图像不一样，所以用两个文件名来区分
         if Undistortion_model_path:
             self.bg_img_path = Path(self.saved_dir, 'background_image_undistort.bmp')
@@ -63,37 +65,51 @@ class FlySeg():
 
         self.video_stem = str(Path(video_path).stem)
         self.seg_th = seg_th
-        self.undistort = Undistortion(Undistortion_model_path)
+        self.log.info(f'seg_th:{seg_th}')
+        self.undistort = Undistortion(Undistortion_model_path, log=self.log)
         self.background_th = background_th
+        self.log.info(f'background_th:{background_th}')
 
         self.video = cv2.VideoCapture(str(self.video_path))
         self.video_frames_num = int(self.video.get(cv2.CAP_PROP_FRAME_COUNT))
         self.video_fps = round(self.video.get(cv2.CAP_PROP_FPS))
+        self.log.info(f'video_frames_num:{self.video_frames_num}')
+        self.log.info(f'video_fps:{self.video_fps}')
 
         # gui config
         _, temp_frame = self.video.read()
 
-        # 热力图累计值。累计的不是坐标值，二十整个二值化区域，累计一帧加一而不是255
+        # 热力图累计值。累计的不是坐标值，而是整个二值化区域，累计一帧加1而不是255
         self.heatmap = np.zeros(temp_frame.shape[:2], int)
         # 在这判断训练畸变矫正模型所使用的图像分辨率是否跟当前视频一致，前提是加畸变矫正
         if Undistortion_model_path:
             map_sp = self.undistort.mapxy.shape[-2:]
             frame_sp = temp_frame.shape[:2]
+            self.log.info(f'map_sp:{map_sp}')
+            self.log.info(f'frame_sp:{frame_sp}')
             if map_sp != frame_sp:
                 print('The resolution of training calibration_model images is not same as the resolution of video!')
+                self.log.error(
+                    'The resolution of training calibration_model images is not same as the resolution of video!')
+                self.log.error('exit!')
                 exit()
         # 如果跳过config，那么必须有config.pkl文件
         if skip_config:
             if not Path(self.output_dir, 'config.pkl').exists():
                 print("'config.pkl' file is not exists!")
+                self.log.error("'config.pkl' file is not exists!")
                 exit()
         temp_frame = self.undistort.do(temp_frame)
-        g = GUI_CFG(temp_frame, [], str(self.output_dir))
+        g = GUI_CFG(temp_frame, [], str(self.output_dir), log=self.log)
         res, AB_dist = g.CFG_circle(direct_get_res=skip_config)
-        if len(res) == 0: raise ValueError
+        if len(res) == 0:
+            self.log.info(f'len(res) == 0, raise ValueError')
+            raise ValueError
         rs = [re[-1] for re in res]
         self.dish_radius = int(round(float(np.mean(np.array(rs)))))
+        self.log.info(f'dish_radius:{self.dish_radius}')
         self.region_radius = int(round(math.sqrt(area_th) * self.dish_radius))
+        self.log.info(f'region_radius:{self.region_radius}')
         self.cps = [tuple(re[:2]) for re in res]
 
         # get rois and mask images
@@ -108,6 +124,8 @@ class FlySeg():
 
         # set begin frame
         begin_frame = round(begin_time * 60 * self.video_fps)
+        self.log.info(f'begin_time:{begin_time}')
+        self.log.info(f'begin_frame:{begin_frame}')
         self.begin_frame = begin_frame
         self.video.set(cv2.CAP_PROP_POS_FRAMES, self.begin_frame)
 
@@ -119,6 +137,7 @@ class FlySeg():
         # 如果用户配置不合理，设置的时间点超出了视频时长，则按照真实视频时长来截取
         if self.duration_frames > self.video_frames_num:
             self.duration_frames = self.video_frames_num
+        self.log.info(f'duration_frames:{self.duration_frames}')
 
     def _get_rois(self):
         r = self.dish_radius
@@ -150,6 +169,7 @@ class FlySeg():
     def comp_bg(self):
         # params
         frames_num_used = 800
+        self.log.info(f'comp_bg frames_num_used:{frames_num_used}')
 
         if self.bg_img_path.exists():
             bg = cv2_ext.imread(str(self.bg_img_path))
@@ -216,6 +236,11 @@ class FlySeg():
 
     def play_and_show_trackingpoints(self, just_save_one_frame=False):
         res = np.load(self.res_npy_path)
+        self.log.info(f'res_npy_path:{self.res_npy_path}')
+        self.log.info(mat_info_to_str(
+            [res],
+            ['res']
+        ))
 
         i = 0
         print('showing...')
@@ -253,41 +278,23 @@ class FlySeg():
         self.fly_angles = []
         pbar = Pbar(total=self.duration_frames)
         i = 0
-        # print(f'begin_frame:{self.begin_frame} duration_frames:{self.duration_frames}')
-        # self.video.set(cv2.CAP_PROP_POS_FRAMES, 0)
-        # print(f'all_frames_nub:{self.video.get(cv2.CAP_PROP_FRAME_COUNT)}')
         print('tracking...')
         while True:
             ret, frame = self.video.read()
             if not ret:
-                # print('\nret break\n')
+                self.log.warning(f"ret: False, have reached the cap's end. so, break")
                 break
             frame = self.undistort.do(frame)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            # frame_src = frame.copy()
             foreground_mask = np.abs(frame.astype(np.int16) - self.gray_bg_int16) > self.background_th
             frame = frame < self.seg_th
             frame *= self.mask_all
-            # frame_src *= self.mask_all
             frame = frame.astype(np.uint8) * 255 * foreground_mask
-            # cv2.imshow('bin', frame)
-            # ker = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
-            # frame = cv2.dilate(frame, ker)
-            # frame = cv2.erode(frame, ker)
-            # frame = cv2.morphologyEx(frame, cv2.MORPH_CLOSE, ker)
-            # cv2.imshow('bin_close', frame)
-            # cv2.waitKeyEx(10)
             self.heatmap += frame.astype(bool).astype(int)
             oneframe_centroids = []
             oneframe_angles = []
             for roi in self.rois:
                 img = frame[roi[0]:roi[1], roi[2]:roi[3]]
-                # img_src = frame_src[roi[0]:roi[1], roi[2]:roi[3]]
-                # foreground_mask_roi = foreground_mask.astype(np.uint8)[roi[0]:roi[1], roi[2]:roi[3]] * 255
-                # cv2.imshow('img', img)
-                # cv2.imshow('src', img_src)
-                # cv2.imshow('fore', foreground_mask_roi)
-                # cv2.waitKeyEx()
                 retval, labels, stats, centroids = cv2.connectedComponentsWithStats(img)
                 if retval < 2:
                     cent = (-1, -1)
@@ -310,7 +317,7 @@ class FlySeg():
             i += 1
             pbar.update()
             if i >= self.duration_frames:
-                # print('\n>= break\n')
+                self.log.warning('i >= self.duration_frames. so, break.')
                 break
         pbar.close()
         self._save()
@@ -326,6 +333,10 @@ class FlySeg():
         np.save(self.res_npy_path, np.array(self.fly_centroids, dtype=np.float64))
         np.save(self.fly_angles_path, np.array(self.fly_angles, dtype=np.float64))
         np.save(self.heatmap_path, self.heatmap)
+        self.log.info(mat_info_to_str(
+            [self.fly_centroids, self.fly_angles, self.heatmap],
+            ['fly_centroids', 'fly_angles', 'heatmap']
+        ))
 
 
 '''
@@ -338,86 +349,8 @@ https://github.com/opencv/opencv/issues/9053
 
 '''
 
-# def pbarFilenubs(dir, total, fmt='*.npy'):
-#     pbar = Pbar(total=total)
-#     d = Path(dir)
-#     while True:
-#         if d.exists():
-#             filenub = len(list(d.rglob(fmt)))
-#         else:
-#             filenub = 0
-#         pbar.update(set=True, set_value=filenub)
-#         time.sleep(0.2)
-#
-#
-# def fn(params):
-#     s = FlySeg(**params)
-#     s.run()
-#
-#
-# def multiprocessing(seg_params, cpus=45):
-#     cap = cv2.VideoCapture(seg_params['video_path'])
-#     frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
-#     fps = round(cap.get(cv2.CAP_PROP_FPS))
-#     time = frames / fps / 60
-#
-#     params = []
-#     for t in range(0, round(time), seg_params['duration_time']):
-#         params.append({**seg_params, 'begin_time': t, 'save_txt_name': f'{t:0>4d}.txt'})
-#     FlySeg(**params[0])  # 先初始化一下，计算一下背景图和中心点，后面多进程的时候就不用每个都计算了
-#
-#     print(f'total length: {len(params)}')
-#     kwargs = {
-#         'dir': Path(Path(seg_params['video_path']).parent, Path(seg_params['video_path']).stem),
-#         'total': len(params),
-#         'fmt': '*.npy'
-#     }
-#     thr = Thread(target=pbarFilenubs, kwargs=kwargs)
-#     thr.start()
-#     pool = Pool(cpus)
-#     pool.map(fn, params)
-#     stop_thread(thr)
-#     print('done')
-#
-#
-# def run(cf, mode, just_save_one_frame=True):
-#     args = ['video_path', 'h_num', 'w_num', 'duration_time', 'seg_th', 'background_th',
-#             'area_th', 'minR_maxR_minD', 'dish_exclude', 'Undistortion_model_path']
-#     seg_params = {arg: cf[arg] for arg in args}
-#     seg_params_play = {
-#         **seg_params,
-#         'save_txt_name': '0.txt',
-#         'begin_time': 150,
-#     }
-#     if mode == 1:
-#         s = FlySeg(**seg_params_play)
-#         s.play(just_save_one_frame=just_save_one_frame)
-#         # s.run()
-#     elif mode == 2:
-#         t1 = time.time()
-#         multiprocessing(seg_params, cpus=cf['cpus'])
-#         print(f'time_used: {(time.time() - t1) / 60} minutes')
-#     elif mode == 3:
-#         s = FlySeg(**seg_params_play)
-#         s.play_and_show_trackingpoints(just_save_one_frame=just_save_one_frame)
-
-
 if __name__ == '__main__':
     cap = cv2.VideoCapture(0)
-
-    # ts = []
-    # while True:
-    #     ret, frame = cap.read()
-    #     if not ret:
-    #         break
-    #     cv2.imshow('', frame)
-    #     ts.append(time.time())
-    #     k = cv2.waitKeyEx(20)
-    #     if k == 13: break
-    #
-    # ts = np.array(ts)
-    # print(ts.shape)
-    # np.save('tstemp.npy', ts)
 
     ts = np.load('tstemp.npy')
     td = ts[1:] - ts[:-1]

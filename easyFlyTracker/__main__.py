@@ -10,17 +10,42 @@ from easyFlyTracker.cli import (
     easyFlyTracker_analysis,
     easyFlyTracker_cam_calibration,
 )
+import easyFlyTracker
+
+version = easyFlyTracker.__version__
+
+cai = \
+    '''
+    ⠀⠀⠀⠀⠰⢷⢿⠄
+    ⠀⠀⠀⠀⠀⣼⣷⣄
+    ⠀⠀⣤⣿⣇⣿⣿⣧⣿⡄
+    ⢴⠾⠋⠀⠀⠻⣿⣷⣿⣿⡀
+    ○ ⠀⢀⣿⣿⡿⢿⠈⣿
+    ⠀⠀⠀⢠⣿⡿⠁⠀⡊⠀⠙
+    ⠀⠀⠀⢿⣿⠀⠀⠹⣿
+    ⠀⠀⠀⠀⠹⣷⡀⠀⣿⡄
+    ⠀⠀⠀⠀⣀⣼⣿⠀⢈⣧.
+    '''
 
 '''
 该文件的作用是满足HELP这种用法.
 '''
 HELP = \
-    f'''\n
+    f'''\n{cai}
+    
+Version: 
+    {version}
+
 Usage example:
-python -m easyFlyTracker [config_path]      # Corresponding terminal command: easyFlyTracker [config_path]
-python -m easyFlyTracker -a [config_path]   # Corresponding terminal command: easyFlyTracker_analysis [config_path]
-python -m easyFlyTracker -c [config_path]   # Corresponding terminal command: easyFlyTracker_cam_calibration [config_path]
+    python -m easyFlyTracker [config_path]      # Corresponding terminal command: easyFlyTracker [config_path]
+    python -m easyFlyTracker -a [config_path]   # Corresponding terminal command: easyFlyTracker_analysis [config_path]
+    python -m easyFlyTracker -c [config_path]   # Corresponding terminal command: easyFlyTracker_cam_calibration [config_path]
+
+You can find more detail information on our website: http://easyflytracker.cibr.ac.cn
 \n'''
+
+print(HELP)
+exit()
 
 args = sys.argv
 
