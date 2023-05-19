@@ -10,3 +10,4 @@ PyYAML
 openpyxl
 scikit-learn
 loguru
+psutil

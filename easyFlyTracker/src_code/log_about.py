@@ -65,7 +65,8 @@ def copy_track_file(params):
     for fid in frameids:
         cap.set(cv2.CAP_PROP_POS_FRAMES, fid)
         _, frame = cap.read()
-        cv2.imwrite(str(saved_dir / f'{fid}.tif'), frame)
+        if _:  # opencv bug，按照读出来的帧数设置位置竟然读不出来frame，所以这里加个判断
+            cv2.imwrite(str(saved_dir / f'{fid}.tif'), frame)
     cap.release()
 
 

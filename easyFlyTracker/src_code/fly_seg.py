@@ -42,6 +42,7 @@ class FlySeg():
             # dish_exclude=None,  # 排除的特殊圆盘，比如空盘、死果蝇等情况,可以一维或者（h_num, w_num），被排除的圆盘结果用(-1,-1)表示
             seg_th=120,  # 分割阈值
             background_th=70,  # 跟背景差的阈值
+            reverse=False,  # 默认目标是深色的，使用<seg_th来判断，若目标是浅色的，要使用>seg_th来判断，则这里设为True
             area_th=0.5,  # 内圈面积阈值
             # minR_maxR_minD=(40, 50, 90),  # 霍夫检测圆时的参数，最小半径，最大半径，最小距离
             skip_config=False,
@@ -69,6 +70,8 @@ class FlySeg():
         self.undistort = Undistortion(Undistortion_model_path, log=self.log)
         self.background_th = background_th
         self.log.info(f'background_th:{background_th}')
+        self.reverse = reverse
+        self.log.info(f'reverse:{reverse}')
 
         self.video = cv2.VideoCapture(str(self.video_path))
         self.video_frames_num = int(self.video.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -138,6 +141,84 @@ class FlySeg():
         if self.duration_frames > self.video_frames_num:
             self.duration_frames = self.video_frames_num
         self.log.info(f'duration_frames:{self.duration_frames}')
+
+        # 如果seg_th和background_th有一个为None，则进入手动配置界面
+        if self.seg_th is None or self.background_th is None:
+            self.seg_th, self.background_th, self.reverse = self._config_th()
+            self.log.info(f'After config:')
+            self.log.info(f'seg_th:{self.seg_th}')
+            self.log.info(f'background_th:{self.background_th}')
+            self.log.info(f'reverse:{self.reverse}')
+        print(f'seg_th:{self.seg_th}')
+        print(f'background_th:{self.background_th}')
+        print(f'reverse:{self.reverse}')
+
+    def _config_th(self):
+        maxlen = 1000  # 窗口最大1000个像素，再大就缩放
+        big_flag = False
+        h = self.video.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        w = self.video.get(cv2.CAP_PROP_FRAME_WIDTH)
+        if max(h, w) > maxlen:
+            big_flag = True
+            r = maxlen / max(h, w)
+            h = int(round(h * r))
+            w = int(round(w * r))
+        img = np.zeros([int(h), int(w)], np.uint8)
+        winname1 = 'Frame'
+        winname2 = 'Threshold'
+        cv2.namedWindow(winname1)
+        cv2.namedWindow(winname2)
+        cv2.imshow(winname1, img)
+        cv2.imshow(winname2, img)
+        bar_frameid = 'frames_id'
+        bar_seg_th = 'seg_th'
+        bar_background_th = 'background_th'
+        bar_reverse = 'reverse'
+
+        def nothing(x):
+            pass
+
+        def get_seg_img(frame, seg_th, background_th, reverse):
+            frame = self.undistort.do(frame)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            foreground_mask = np.abs(frame.astype(np.int16) - self.gray_bg_int16) > background_th
+            if reverse:
+                frame = frame > seg_th
+            else:
+                frame = frame < seg_th
+            frame *= self.mask_all
+            frame = frame.astype(np.uint8) * 255 * foreground_mask
+            return frame
+
+        cv2.createTrackbar(bar_frameid, winname1, 0, self.video_frames_num - 1, nothing)
+        cv2.createTrackbar(bar_seg_th, winname2, 120, 255, nothing)
+        cv2.createTrackbar(bar_background_th, winname2, 70, 255, nothing)
+        cv2.createTrackbar(bar_reverse, winname2, 0, 1, nothing)
+        while True:
+            # 返回滑块所在位置对应的值
+            frame_id = cv2.getTrackbarPos(bar_frameid, winname1)
+            seg_th = cv2.getTrackbarPos(bar_seg_th, winname2)
+            background_th = cv2.getTrackbarPos(bar_background_th, winname2)
+            reverse = cv2.getTrackbarPos(bar_reverse, winname2)
+            reverse = bool(reverse)
+            self.video.set(cv2.CAP_PROP_POS_FRAMES, frame_id)
+            _, frame = self.video.read()
+            if _:
+                img = frame
+
+            if big_flag:
+                cv2.imshow(winname1, cv2.resize(img, dsize=None, fx=r, fy=r))
+                cv2.imshow(winname2,
+                           cv2.resize(get_seg_img(img, seg_th, background_th, reverse), dsize=None, fx=r, fy=r))
+            else:
+                cv2.imshow(winname1, img)
+                cv2.imshow(winname2, get_seg_img(img, seg_th, background_th, reverse))
+            if cv2.waitKey(20) == 13:  # 回车退出
+                break
+        cv2.destroyAllWindows()
+
+        self.video.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        return seg_th, background_th, reverse
 
     def _get_rois(self):
         r = self.dish_radius
@@ -287,7 +368,10 @@ class FlySeg():
             frame = self.undistort.do(frame)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             foreground_mask = np.abs(frame.astype(np.int16) - self.gray_bg_int16) > self.background_th
-            frame = frame < self.seg_th
+            if self.reverse:
+                frame = frame > self.seg_th
+            else:
+                frame = frame < self.seg_th
             frame *= self.mask_all
             frame = frame.astype(np.uint8) * 255 * foreground_mask
             self.heatmap += frame.astype(bool).astype(int)

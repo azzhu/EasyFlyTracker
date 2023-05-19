@@ -93,8 +93,8 @@ def easyFlyTracker_cam_calibration(params=None):
 
 
 if __name__ == '__main__':
-    # easyFlyTracker_()
-    easyFlyTracker_analysis()
+    easyFlyTracker_()
+    # easyFlyTracker_analysis()
     # easyFlyTracker_cam_calibration()
 
     # from easyFlyTracker.src_code.log import log

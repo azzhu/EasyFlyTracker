@@ -9,7 +9,7 @@
 video_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\demo.mp4
 
 ## [MUST CHANGE] Specify the path and name of the output, only support absolute path.
-output_dir: D:\Pycharm_Projects\qu_holmes_su_release\tests\output2
+output_dir: D:\Pycharm_Projects\qu_holmes_su_release\tests\output4
 
 ## [MUST CHANGE] Real distance (mm) from 'point A' to 'point B' of your chamber. Default is "252" mm of our diagonal line.
 AB_dist_mm: 252
@@ -19,6 +19,13 @@ group_path: D:\Pycharm_Projects\qu_holmes_su_release\tests\group.xlsx
 
 
 ##### 2. Optional change parameters #####
+
+# 分割阈值，当设置为None时，会进入手动配置阈值界面，当设置具体值时会跳过手动配置步骤
+seg_th: None
+# 与背景差的阈值，当设置为None时，会进入手动配置阈值界面，当设置具体值时会跳过手动配置步骤
+background_th: None
+# 当目标相对背景是深色设为False，当目标相对背景是浅色设为True
+reverse: False
 
 ## [Optional CHANGE, used in tracking] Skip the configuration of charmber circles because the '.pkl' file already exists and does not need to be reconfigured. Default is "False".
 skip_config: True

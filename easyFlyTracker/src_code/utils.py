@@ -267,8 +267,26 @@ def __get_params(config_path=None):
         if isinstance(params[key], str) and params[key].lower() in ['none', 'null']:
             params[key] = None
 
-    # 这一版这个参数没有暴露给用户，为防止后续代码出问题，这里强制给它设置个默认值0.5
-    params['area_th'] = 0.5
+    # 设置默认参数
+    defaults = {
+        'area_th': 0.5,  # 这一版这个参数没有暴露给用户，为防止后续代码出问题，这里强制给它设置个默认值0.5
+        'seg_th': None,  # 分割阈值 None时会进入手动配置界面
+        'background_th': None,  # 跟背景差的阈值 None时会进入手动配置界面
+        'reverse': False,
+        'skip_config': False,
+        'begin_time': 0,
+        'duration_time': None,
+        'show_track_result': False,
+        'ana_time_duration': 1,
+        'sleep_time_duration': 1,
+        'angle_time_duration': 1,
+        'heatmap_remove_sleep': False,
+    }
+    for k, v in defaults.items():
+        if k not in params:
+            params[k] = v
+        elif params[k] is None:
+            params[k] = v
 
     return params
 
