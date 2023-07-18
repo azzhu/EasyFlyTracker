@@ -268,12 +268,16 @@ class FlySeg():
                     frame = self.undistort.do(frame)
                     if ret == False:
                         break
+                    if np.isnan(frame).any():  # 如果含有nan跳过
+                        break
                     frames.append(frame)
                 frames = np.array(frames)
             # print(frames.shape)
             with Wait('Calculate the background image'):
                 sx = stats.mode(frames)
                 bg = sx[0][0]
+                bg = np.clip(bg, 0, 255)
+                bg = np.round(bg).astype(np.uint8)
                 bg = cv2.medianBlur(bg, 3)
                 cv2_ext.imwrite(str(self.bg_img_path), bg)
             print(f'Finished, time consuming:{time.time() - tim}s')
